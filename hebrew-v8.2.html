@@ -262,6 +262,10 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 .home-title-line{width:60px;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:12px auto 0;}
 .home-intro.card{padding:18px 16px;overflow:visible;background:linear-gradient(145deg,#f5ecda,#efe3cc);}
 .home-intro-layout{--home-rabbi-h:clamp(320px,72vw,470px);--home-icon-size:clamp(92px,calc(var(--home-rabbi-h) * .29),132px);display:grid;grid-template-columns:max-content max-content;column-gap:clamp(14px,4vw,34px);align-items:end;justify-content:center;position:relative;min-height:calc(var(--home-rabbi-h) + 14px);}
+.home-intro-layout.auth-gate{grid-template-columns:max-content minmax(240px,320px);align-items:center;}
+.home-login-card{max-width:320px;justify-self:center;align-self:center;text-align:left;padding:18px 16px;background:linear-gradient(145deg,rgba(255,255,255,.76),rgba(247,239,223,.94));border:1px solid rgba(168,136,88,.45);border-radius:18px;box-shadow:0 10px 28px rgba(30,18,8,.12);}
+.home-login-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.home-login-note{font-size:12px;color:var(--ink3);line-height:1.45;}
 .home-rabbi-wrap{position:relative;left:0;bottom:0;z-index:1;opacity:1;pointer-events:none;justify-self:start;align-self:end;background:transparent;isolation:isolate;}
 .home-rabbi-wrap .rabbi-img{height:var(--home-rabbi-h);width:auto;animation:rabbiFloat 2.8s ease-in-out infinite;transition:transform .6s cubic-bezier(.22,.64,.2,1),filter .6s ease;filter:drop-shadow(0 8px 16px rgba(30,18,8,.18));background:transparent;mix-blend-mode:multiply;}
 .home-rabbi-wrap .rabbi-bubble{opacity:1;max-width:220px;font-size:16px;font-family:var(--heb);padding:9px 11px;left:-6px;right:auto;top:34%;bottom:auto;transform:translate(-100%,-50%);background:linear-gradient(145deg,#f7efdf,#efe2ca);border:1.5px solid rgba(168,136,88,.55);border-radius:14px;box-shadow:0 4px 14px rgba(30,18,8,.12),inset 0 1px 0 rgba(255,255,255,.7);color:var(--ink2);text-shadow:none;white-space:normal;line-height:1.35;}
@@ -289,11 +293,15 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
   .home-rabbi-wrap .rabbi-bubble{max-width:240px;font-size:17px;top:33%;}
   .home-intro-icons{width:150px;}
 }
+@media (max-width:767px){
+  .home-intro-layout.auth-gate{grid-template-columns:1fr;justify-items:center;row-gap:16px;}
+  .home-login-card{max-width:min(100%,340px);}
+}
 </style>
 <!-- PDF.js and Tesseract load on demand when Library upload is used — no block on initial load -->
 </head>
 <body>
-<nav>
+<nav id="top-nav" style="display:none;">
   <div class="nav-inner">
     <span class="nlogo">עִבְרִית</span>
     <button class="nb active" onclick="go('home')">Home</button>
@@ -313,7 +321,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
   </div>
 </div>
 <div class="page au" id="app"></div>
-<div id="next-up" class="next-up-bar">
+<div id="next-up" class="next-up-bar" style="display:none;">
   <div class="icon">📚</div>
   <div class="label"><strong>NEXT UP</strong><span id="next-up-txt">Continue Course — Aleph</span></div>
   <button onclick="goNextUp()" style="background:none;border:none;font-size:24px;color:var(--rust);cursor:pointer;">→</button>
@@ -791,8 +799,16 @@ function poseScreenAnimEntry(screen){
   if(v&&typeof v==='object')return {tokens:Array.isArray(v.tokens)?v.tokens:[],gifDataUrl:v.gifDataUrl||'',gifPath:v.gifPath||'',updatedAt:v.updatedAt||0,fps:Math.max(1,parseInt(v.fps||6,10)||6),mode:v.mode||'loop'};
   return {tokens:[],gifDataUrl:'',gifPath:'',updatedAt:0,fps:6,mode:'loop'};
 }
-function homeAnimRuntime(){return ls(HOME_ANIM_RUNTIME_KEY,{playedSig:''},true);}
-function homeAnimRuntimeSet(v){lsSet(HOME_ANIM_RUNTIME_KEY,v,true);}
+function homeAnimRuntimeKey(){return `${HOME_ANIM_RUNTIME_KEY}__${authCurrentUser()||'guest'}`;}
+function homeAnimRuntime(){
+  try{
+    const s=sessionStorage.getItem(homeAnimRuntimeKey());
+    return s?JSON.parse(s):{playedSig:''};
+  }catch(e){return {playedSig:''};}
+}
+function homeAnimRuntimeSet(v){
+  try{sessionStorage.setItem(homeAnimRuntimeKey(),JSON.stringify(v||{playedSig:''}));}catch(e){}
+}
 function rabbiExerciseIdleFrames(){
   const cfg=poseScreenAnimEntry('review');
   const arr=(cfg.tokens||[]).map(poseLoopFrameSrc).filter(Boolean);
@@ -1084,6 +1100,13 @@ function homeRabbiStartIntro(){
   clearHomeIntroTimers();homeRabbiStopIdle();
   ['intro-learn','intro-review','intro-library'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('revealed');});
   if(greeting)greeting.classList.remove('show');
+  if(!authIsLoggedIn()){
+    homeRabbiSetPoseClass('hips');
+    homeRabbiSetImg(RABBI_HOME_POSES.hips);
+    homeRabbiSetBubble(instr.h,instr.e);
+    if(greeting)greeting.classList.add('show');
+    return;
+  }
   if((savedHome.tokens||[]).length){
     homeRabbiSetPoseClass('teach');
     const sig=(savedHome.tokens||[]).join('|');
@@ -1104,6 +1127,15 @@ function homeRabbiStartIntro(){
       if(greeting)greeting.classList.add('show');
       return;
     }
+  }
+  const defaultSig='default_intro_v1';
+  if(homeAnimRuntime().playedSig===defaultSig){
+    homeRabbiSetPoseClass('hips');
+    homeRabbiSetImg(RABBI_HOME_POSES.hips);
+    homeRabbiSetBubble(instr.h,instr.e);
+    ['intro-learn','intro-review','intro-library'].forEach(homeRevealIcon);
+    if(greeting)greeting.classList.add('show');
+    return;
   }
   _homeRabbiIdleIdx=0;
   homeRabbiSetPoseClass('walk');
@@ -1148,6 +1180,7 @@ function homeRabbiStartIntro(){
     homeRabbiSetPoseClass('hips');
     homeRabbiSetImg(RABBI_HOME_POSES.hips);
     homeRabbiSetBubble('בּוֹאוּ נַתְחִיל!','Let us begin.');
+    homeAnimRuntimeSet({playedSig:defaultSig});
   },7000));
 }
 function rabbiHTML(){const _arr=rabbiExerciseIdleFrames();const prompt=rabbiGuidePrompt();const bubble=rabbiGuideLine(prompt.he,prompt.en);setTimeout(()=>{rabbiStartIdleLoop();rabbiEnableExerciseIdle();rabbiGuideApplyBubble();},100);return `<div id="rabbi-float" class="rabbi-float" onclick="rabbiWakeFromSleepy();openAskRabbi()" title="Rabbi Guide">
@@ -1350,12 +1383,22 @@ function authGreetingInstruction(){
   if(authIsLoggedIn())return {h:`שָׁלוֹם, ${authDisplayName()}! מוּכָן לְהַמְשִׁיךְ?`,e:`Shalom, ${authDisplayName()}! Ready to continue your journey?`};
   return {h:'שָׁלוֹם! כְּדַאי לְהִתְחַבֵּר לִפְנֵי שֶׁמַּתְחִילִים.',e:'Shalom! Please log in to begin your learning path.'};
 }
+function updateShellChrome(){
+  const nav=document.getElementById('top-nav');
+  const next=document.getElementById('next-up');
+  const install=document.getElementById('ibanner');
+  const showChrome=authIsLoggedIn()&&S&&S.page!=='home';
+  if(nav)nav.style.display=showChrome?'block':'none';
+  if(next)next.style.display=showChrome?'flex':'none';
+  if(install&&!showChrome)install.classList.remove('show');
+}
 function updateAuthButton(){
   const b=document.getElementById('auth-btn');if(!b)return;
-  b.style.display=(S&&S.page==='home')?'inline-flex':'none';
+  b.style.display=(authIsLoggedIn()&&S&&S.page!=='home')?'inline-flex':'none';
   b.textContent=authIsLoggedIn()?`👤 ${authDisplayName()}`:'Login';
+  updateShellChrome();
 }
-function openLoginModal(){
+function openLoginModal(mode){
   const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   if(authIsLoggedIn()){
     const name=authDisplayName();
@@ -1367,7 +1410,8 @@ function openLoginModal(){
     </div>`);
     return;
   }
-  openSubModal(`${ghdr('Login','Continue your learning path','#4a6830')}
+  const createMode=mode==='signup';
+  openSubModal(`${ghdr(createMode?'Create User':'Login',createMode?'Create your learning account':'Continue your learning path','#4a6830')}
   <div class="mbody">
     <div style="margin-bottom:10px;">
       <label style="font-size:10px;font-family:var(--lbl);letter-spacing:1px;color:var(--ink3);">Username</label>
@@ -1396,6 +1440,7 @@ async function authSubmit(mode){
     users[u]={name:u,ph:await authHashPassword(p),createdAt:Date.now()};
     authSetUsers(users);
     authSetSession(u);
+    homeAnimRuntimeSet({playedSig:''});
     closeSubModal();location.reload();
     return;
   }
@@ -1403,6 +1448,7 @@ async function authSubmit(mode){
   const ok=(users[u].ph===await authHashPassword(p));
   if(!ok){if(m)m.innerHTML='<span style="color:var(--err2);">Incorrect password.</span>';return;}
   authSetSession(u);
+  homeAnimRuntimeSet({playedSig:''});
   closeSubModal();location.reload();
 }
 function authLogout(){authSetSession('');closeSubModal();location.reload();}
@@ -7255,6 +7301,7 @@ const RD=[
 //  ROUTING + MODAL
 // ═══════════════════════════════════════════════════════════
 function go(pg,opts){
+  if(!authIsLoggedIn()&&pg!=='home')pg='home';
   const prevPage=S.page;
   const prevScrollY=window.scrollY||window.pageYOffset||0;
   const keepScroll=!!(opts&&opts.keepScroll)||pg===prevPage;
@@ -7270,7 +7317,7 @@ function go(pg,opts){
               numbers:rNumbers,roots:rRoots,library:rLibrary,dashboard:rDash,read:rRead,saved:rSaved,poses:rDeveloper,developer:rDeveloper};
   app.innerHTML=(fns[pg]||rHome)();
   if(pg==='read')carouselDragInit();
-  updateNextUp();closeModal();updateAuthButton();
+  updateNextUp();closeModal();updateAuthButton();updateShellChrome();
   setTimeout(()=>{if(S.page===pg)rabbiGuideApplyBubble();},80);
   if(keepScroll){
     requestAnimationFrame(()=>window.scrollTo(0,prevScrollY));
@@ -7451,22 +7498,39 @@ function ghdr(title,sub,col){
 //  HOME
 // ═══════════════════════════════════════════════════════════
 function rHome(){
-  setTimeout(homeRabbiStartIntro,90);
-  const l=S.learner;const has=l.total>0;
-  const pct=fluencyPct();const lbl=fluencyLabel(pct);
-  const mastered=Object.values(l.vocab).filter(v=>v.lv>=3).length;
-  const weak=Object.entries(l.vocab).filter(([,v])=>v.w>0).sort(([,a],[,b])=>b.w-a.w).slice(0,3);
-  const ra=l.rq.length>=3?`<div class="rev-band" onclick="go('review')" style="cursor:pointer;margin-bottom:16px;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div style="font-size:26px;">🔁</div>
-      <div><div style="color:var(--amber2);font-family:var(--lbl);font-size:10px;letter-spacing:2px;margin-bottom:2px;">STUDY SESSION READY</div>
-      <div style="color:#d4b060;font-size:13px;">${l.rq.length} items need reinforcement</div></div>
-      <div style="margin-left:auto;color:var(--amber2);font-size:20px;">→</div>
-    </div></div>`:'';
-  return`
+  if(!authIsLoggedIn())return`
   <div class="home-hero">
     <div class="home-title-he">בְּרוּכִים הַבָּאִים לַיְשִׁיבָה</div>
     <div class="home-title-en">Welcome to the Yeshiva</div>
+    <div class="home-title-line"></div>
+  </div>
+  <div class="card home-intro home-intro-stage" id="home-intro-stage">
+    <div class="home-intro-layout auth-gate">
+      <div class="rabbi-wrap home-rabbi-wrap" id="home-rabbi-fig">
+        <img id="home-rabbi-img" src="${RABBI_IMGS.idle[0]}" alt="Rabbi" class="rabbi-img" onerror="this.style.display=\\'none\\';if(this.nextElementSibling)this.nextElementSibling.style.display=\\'inline-block\\'"/>
+        <span class="rabbi-fallback" style="display:none;font-size:74px;line-height:1;">✡</span>
+        <span class="rabbi-bubble show" id="home-rabbi-bubble">שָׁלוֹם!</span>
+        <div class="home-greeting-line show" id="home-greeting-line">שָׁלוֹם! הִתְחַבֵּר כְּדֵי לְהַתְחִיל</div>
+      </div>
+      <div class="home-login-card">
+        <div class="sec-hdr" style="margin-bottom:8px;">YOUR YESHIVA ENTRY</div>
+        <div style="font-size:24px;font-family:var(--heb);color:var(--rust);line-height:1.6;">שָׁלוֹם</div>
+        <div style="font-size:15px;color:var(--ink2);font-weight:600;margin-top:4px;">Log in to enter your personalized study path.</div>
+        <div class="home-login-note" style="margin-top:8px;">Your progress, Rabbi guidance, study queue, and library activity will be tied to your own account.</div>
+        <div class="home-login-actions">
+          <button onclick="openLoginModal('login')" class="btn-p btn-w" style="justify-content:center;">LOG IN</button>
+          <button onclick="openLoginModal('signup')" class="btn-g btn-w" style="justify-content:center;">CREATE USER</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(homeRabbiStartIntro,90);
+  const l=S.learner;
+  const guide=authGreetingInstruction();
+  return`
+  <div class="home-hero">
+    <div class="home-title-he">בְּרוּכִים הַבָּאִים לַיְשִׁיבָה</div>
+    <div class="home-title-en">Shalom, ${escHtml(authDisplayName())}</div>
     <div class="home-title-line"></div>
   </div>
   <div class="card home-intro home-intro-stage" id="home-intro-stage">
@@ -7475,7 +7539,7 @@ function rHome(){
         <img id="home-rabbi-img" src="${RABBI_IMGS.idle[0]}" alt="Rabbi" class="rabbi-img" onerror="this.style.display=\\'none\\';if(this.nextElementSibling)this.nextElementSibling.style.display=\\'inline-block\\'"/>
         <span class="rabbi-fallback" style="display:none;font-size:74px;line-height:1;">✡</span>
         <span class="rabbi-bubble show" id="home-rabbi-bubble">שָׁלוֹם!</span>
-        <div class="home-greeting-line" id="home-greeting-line">שָׁלוֹם! בְּרוּכִים הַבָּאִים לַיְשִׁיבָה</div>
+        <div class="home-greeting-line" id="home-greeting-line">${escHtml(guide.e)}</div>
       </div>
       <div class="home-intro-icons">
         <div class="home-intro-item" id="intro-learn">
@@ -7492,30 +7556,7 @@ function rHome(){
         </div>
       </div>
     </div>
-  </div>
-  ${ra}
-  <div class="card card-sm" style="margin-bottom:18px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <span style="font-family:var(--lbl);font-size:9px;letter-spacing:2px;color:var(--ink3);">YOUR PATH</span>
-      <span style="font-family:var(--lbl);font-size:10px;color:var(--amber);">${lbl}</span>
-    </div>
-    <div class="fluency-bar"><div class="fluency-fill" style="width:${pct.toFixed(2)}%;"></div></div>
-    <div style="display:flex;justify-content:space-between;margin-top:4px;">
-      <span style="font-size:11px;color:var(--ink3);">${mastered} mastered</span>
-      <span style="font-size:11px;color:var(--ink4);">${FLUENCY_TARGET.toLocaleString()} target</span>
-    </div>
-  </div>
-  ${has?`<div class="card card-sm" style="margin-bottom:18px;">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);overflow:hidden;margin-bottom:${weak.length?'12px':'0'};">
-      ${[['Answered',l.total,'var(--amber)'],['Mastered',mastered,'var(--ok2)'],['Study',l.rq.length,'var(--err2)']].map(([lb,val,col],i)=>`
-      <div style="padding:10px 0;text-align:center;${i<2?'border-right:1px solid var(--bdr);':''}">
-        <div style="font-size:20px;color:${col};font-family:var(--lbl);font-weight:700;">${val}</div>
-        <div style="font-size:8px;color:var(--ink3);letter-spacing:2px;margin-top:2px;font-family:var(--lbl);">${lb}</div>
-      </div>`).join('')}
-    </div>
-    ${weak.length?`<div style="font-family:var(--lbl);font-size:8px;letter-spacing:2px;color:var(--err2);margin-bottom:7px;">NEEDS WORK</div>
-    <div style="display:flex;flex-wrap:wrap;gap:5px;">${weak.map(([w])=>`<button onclick="speak('${w}')" style="background:rgba(168,48,48,.08);border:1.5px solid var(--err2);padding:3px 12px;border-radius:20px;font-family:var(--heb);font-size:18px;color:var(--err2);">${w} 🔊</button>`).join('')}</div>`:''}
-  </div>`:''}`;
+  </div>`;
 }
 
 function rPoses(){
@@ -10047,6 +10088,7 @@ function unsaveWord(i){const s=ls('ivrit_saved',[]);s.splice(i,1);lsSet('ivrit_s
 // ═══════════════════════════════════════════════════════════
 function showInstallBanner(){
   const b=document.getElementById('ibanner');
+  if(!authIsLoggedIn()||(S&&S.page==='home'))return;
   if(b&&!b.classList.contains('show'))b.classList.add('show');
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;showInstallBanner();});
