@@ -181,6 +181,10 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 .vc:hover{transform:translateY(-2px);box-shadow:var(--sm);border-color:var(--amber);}
 .vc.open{border-color:var(--amber);}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.match-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;}
+.match-grid .ch{min-width:0;padding:10px 8px;}
+.match-grid .match-he-btn{font-family:var(--heb);font-size:24px;line-height:1.35;}
+.match-grid .match-en-btn{font-size:13px;line-height:1.35;}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
 .rev-band{background:linear-gradient(135deg,#2a1005,#3d1a08);border:2px solid var(--amber);border-radius:var(--r);
   padding:18px;margin-bottom:18px;box-shadow:0 4px 20px rgba(139,58,26,.3);}
@@ -301,6 +305,14 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
   .home-rabbi-wrap .rabbi-bubble .en{font-size:14px;}
   .home-intro-icons{gap:14px;width:100%;flex-wrap:wrap;}
   .home-intro-item{min-width:82px;}
+  .mbody.rabbi-safe .g2.match-grid,
+  .rabbi-safe-card .g2.match-grid{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:6px;
+  }
+  .match-grid .ch{padding:9px 6px;}
+  .match-grid .match-he-btn{font-size:20px;}
+  .match-grid .match-en-btn{font-size:12px;}
 }
 </style>
 <!-- PDF.js and Tesseract load on demand when Library upload is used — no block on initial load -->
@@ -8092,8 +8104,11 @@ function getCoursePool(n){
 }
 function wordStars(h){const v=S.learner.vocab[h];const lv=v?Math.min(v.lv,5):0;return '★'.repeat(lv)+'☆'.repeat(5-lv);}
 function wordMasteryPct(h){const v=S.learner.vocab[h];if(!v)return 0;return Math.round((v.lv||0)/5*100);}
+function wordPracticeCount(h){const v=S.learner.vocab[h];return v?((v.c||0)+(v.w||0)):0;}
 const WORD_EXAMPLES={'שָׁלוֹם':'שָׁלוֹם! מַה שְּׁלוֹמְךָ?','תּוֹדָה':'תּוֹדָה רַבָּה!','בְּבַקָּשָׁה':'בְּבַקָּשָׁה, סְלִיחָה.','כֵּן':'כֵּן, בְּוַדַּאי.','אֲנִי':'אֲנִי טוֹב.','אַתָּה':'אַתָּה מֵבִין?','הוּא':'הוּא הוֹלֵךְ.','זֶה':'זֶה טוֹב.','יֵשׁ':'יֵשׁ לִי.','אֵין':'אֵין בְּסֵדֶר.','מַה':'מַה זֶה?','אֵיפֹה':'אֵיפֹה הַשֵּׁרוּתִים?','טוֹב':'טוֹב מְאוֹד!','לֶחֶם':'אֲנִי אוֹכֵל לֶחֶם.','מַיִם':'תֵּן לִי מַיִם.'};
+const WORD_EXAMPLES_EN={'שָׁלוֹם':'Shalom! How are you?','תּוֹדָה':'Thank you very much!','בְּבַקָּשָׁה':'Please, excuse me.','כֵּן':'Yes, certainly.','אֲנִי':'I am well.','אַתָּה':'Do you understand?','הוּא':'He is going.','זֶה':'This is good.','יֵשׁ':'I have some.','אֵין':'It is not okay.','מַה':'What is this?','אֵיפֹה':'Where is the restroom?','טוֹב':'Very good!','לֶחֶם':'I am eating bread.','מַיִם':'Give me water.'};
 function getWordExample(w){const h=w.h||'';if(w.col){const m=w.col.match(/[\u05D0-\u05EA][^=]*/);return m?m[0].trim():w.col.split('—')[0].trim();}return WORD_EXAMPLES[h]||'';}
+function getWordExampleEn(w){const h=w.h||'';return WORD_EXAMPLES_EN[h]||((w&&w.e)?`Meaning here: ${w.e}.`:'');}
 function openSection(n,sectionId){
   S.courseExpanded=null;S.courseSectionId=sectionId;S.courseDrill=true;S.practiceLevel=n;
   const sections=getCourseSections(n);const sec=sections.find(s=>s.id===sectionId);
@@ -8112,7 +8127,7 @@ function openCourseRead(n,sectionId){
   <div class="mbody">
     <div class="passage" style="margin-bottom:16px;">
       <div style="font-family:var(--heb);font-size:22px;direction:rtl;text-align:right;line-height:2.0;">${cl.story.h}</div>
-      <div style="color:var(--ink3);font-size:14px;font-style:italic;margin-top:12px;border-top:1px solid var(--bdr);padding-top:12px;">${esc(cl.story.e)}</div>
+      <div style="color:var(--ink2);font-size:clamp(16px,4vw,19px);line-height:1.6;font-style:italic;margin-top:12px;border-top:1px solid var(--bdr);padding-top:12px;">${esc(cl.story.e)}</div>
     </div>
     <button onclick="markSectionComplete('${sectionId}');S.courseDrill=false;S.courseSectionId=null;closeModal();go('learn')" class="btn-p btn-w" style="width:100%;padding:12px;border-radius:var(--rs);font-family:var(--lbl);letter-spacing:2px;">✓ I read it — Continue</button>
   </div>`);
@@ -8150,8 +8165,8 @@ function showCourseWord(n,sectionId,idx){
   const sec=getCourseSections(n).find(s=>s.id===sectionId);const secLabel=sec?sec.label:'';
   const prevBtn=idx>0?`<button onclick="showCourseWord(${n},'${sectionId}',${idx-1})" class="btn-o" style="border-radius:var(--rs);font-family:var(--lbl);font-size:10px;letter-spacing:2px;">← Prev</button>`:'';
   const nextBtn=idx<total-1?`<button onclick="showCourseWord(${n},'${sectionId}',${idx+1})" class="btn-p" style="border-radius:var(--rs);font-family:var(--lbl);font-size:10px;letter-spacing:2px;">Next →</button>`:'';
-  const ex=getWordExample(w);const exBlock=ex?`<div style="padding:10px 14px;background:rgba(74,104,48,.08);border:1px solid rgba(74,104,48,.3);border-radius:var(--rs);font-size:13px;color:var(--sage);margin-bottom:16px;max-width:380px;margin-left:auto;margin-right:auto;direction:rtl;font-family:var(--heb);">📌 ${esc(ex)}</div>`:'';
-  const stars=wordStars(w.h);const pct=wordMasteryPct(w.h);const progBar=pct>0?`<div style="margin-top:8px;"><div style="font-size:9px;color:var(--ink3);margin-bottom:2px;">Your progress: ${stars}</div><div class="ptrack"><div class="pfill" style="width:${pct}%;"></div></div></div>`:'';
+  const ex=getWordExample(w),exEn=getWordExampleEn(w);const exBlock=ex?`<div style="padding:10px 14px;background:rgba(74,104,48,.08);border:1px solid rgba(74,104,48,.3);border-radius:var(--rs);margin-bottom:16px;max-width:430px;margin-left:auto;margin-right:auto;"><div style="font-size:15px;color:var(--sage);direction:rtl;font-family:var(--heb);line-height:1.9;">📌 ${esc(ex)}</div>${exEn?`<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(74,104,48,.18);font-size:17px;line-height:1.55;color:var(--ink2);text-align:left;font-style:italic;">${escHtml(exEn)}</div>`:''}</div>`:'';
+  const stars=wordStars(w.h);const pct=wordMasteryPct(w.h);const practiceTarget=5;const practiceDone=wordPracticeCount(w.h);const practiceShown=Math.min(practiceDone,practiceTarget);const practicePct=Math.min(100,Math.round(practiceShown/practiceTarget*100));const progBar=`<div style="margin-top:10px;max-width:420px;margin-left:auto;margin-right:auto;text-align:left;"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap;"><span style="font-size:10px;color:var(--ink3);font-family:var(--lbl);letter-spacing:1px;">Practice progress</span><span style="font-size:11px;color:var(--ink2);">${practiceShown}/${practiceTarget} rounds complete${practiceDone>practiceTarget?` • ${practiceDone} total`:''}</span></div><div class="ptrack" style="height:8px;"><div class="pfill" style="width:${practicePct}%;"></div></div><div style="font-size:10px;color:var(--ink4);margin-top:4px;">Mastery: ${stars} (${pct}%)</div></div>`;
   const practiceBtn=`<button onclick="coursePracticeWord(${n},'${sectionId}',${idx})" class="btn-p btn-w" style="border-radius:var(--rs);font-family:var(--lbl);font-size:11px;letter-spacing:2px;margin-top:4px;">⚡ Practice</button>`;
   const backBtn=`<button onclick="closeModal();S.courseDrill=false;S.courseExpanded=${n};go('learn')" class="btn-o" style="border-radius:var(--rs);font-family:var(--lbl);font-size:10px;letter-spacing:2px;">← Back</button>`;
   openModal(`
@@ -8374,9 +8389,9 @@ function buildMatch(pool){
   S.GM.mwords=words;S.GM.mshuf=shE;S.GM.mmatched=[];S.GM.mselH=null;
   return`${ghdr('MATCH PAIRS','Tap Hebrew → then its English')}
   <div class="mbody rabbi-safe">
-    <div class="g2" style="gap:8px;">
-      <div>${words.map((w,i)=>`<button class="ch" id="mh${i}" onclick="mPickH(${i})" style="display:block;width:100%;margin-bottom:7px;font-family:var(--heb);font-size:24px;">${w.h}</button>`).join('')}</div>
-      <div>${shE.map((w,i)=>`<button class="ch" id="me${i}" onclick="mPickE(${i})" style="display:block;width:100%;margin-bottom:7px;font-size:13px;">${w.e}</button>`).join('')}</div>
+    <div class="g2 match-grid">
+      <div>${words.map((w,i)=>`<button class="ch match-he-btn" id="mh${i}" onclick="mPickH(${i})" style="display:block;width:100%;margin-bottom:7px;">${w.h}</button>`).join('')}</div>
+      <div>${shE.map((w,i)=>`<button class="ch match-en-btn" id="me${i}" onclick="mPickE(${i})" style="display:block;width:100%;margin-bottom:7px;">${w.e}</button>`).join('')}</div>
     </div>
     <div id="match-r"></div>
     ${rabbiHTML()}
