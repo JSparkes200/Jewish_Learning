@@ -39,7 +39,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 button{cursor:pointer;font-family:inherit;border:none;background:none;}
 textarea,input,select{font-family:inherit;max-width:100%;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:10px;}
-nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8b8,#dfc8a0);border-bottom:2px solid var(--bdr);box-shadow:var(--sm);}
+nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,#dfc8a0);border-bottom:2px solid var(--bdr);box-shadow:var(--sm);}
 .nav-inner{display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:0 12px;overflow:visible;scrollbar-width:none;max-width:1200px;margin:0 auto;min-height:54px;position:relative;}
 .nav-inner::-webkit-scrollbar{display:none;}
 .nav-menu-toggle{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--bdr);background:linear-gradient(145deg,#f8f0e0,#ede0c8);color:var(--rust);box-shadow:var(--ss);transition:all .2s;}
@@ -124,7 +124,8 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
   display:flex;align-items:center;justify-content:center;padding:16px;}
 .overlay.sub-overlay{z-index:201;}
 .mbox{background:linear-gradient(160deg,#fff,#fdf8f0);border-radius:20px;position:relative;
-  box-shadow:var(--sx),inset 0 0 0 1px rgba(255,255,255,.8);width:100%;max-width:760px;max-height:92vh;overflow-y:auto;overflow-x:hidden;}
+  box-shadow:var(--sx),inset 0 0 0 1px rgba(255,255,255,.8);width:100%;max-width:640px;max-height:78vh;overflow:hidden;}
+.mbox.scrollable{max-width:760px;max-height:92vh;overflow-y:auto;overflow-x:hidden;}
 .modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
   background:rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.25);color:#fff;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s;}
 .modal-close:hover{background:rgba(0,0,0,.3);transform:scale(1.08);}
@@ -151,7 +152,8 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
 .mbody{padding:22px;}
 .mbody.rabbi-safe,.rabbi-safe-card{position:relative;}
 @media (min-width:768px){
-  .mbox{max-width:1000px;}
+  .mbox{max-width:700px;}
+  .mbox.scrollable{max-width:960px;}
   .mbody.word-details .modal-def{font-size:18px;}
   .mbody.word-details .modal-ex-he{font-size:18px !important;}
   .mbody.word-details .modal-ex-en{font-size:16px !important;}
@@ -159,7 +161,8 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
 }
 @media (max-width:767px){
   .overlay{padding:6px;align-items:flex-start;}
-  .mbox{max-height:calc(100vh - 12px);border-radius:16px;}
+  .mbox{max-height:calc(100vh - 84px);border-radius:16px;}
+  .mbox.scrollable{max-height:calc(100vh - 12px);}
   .mhdr{border-radius:16px 16px 0 0;padding:16px 18px;}
   .mbody{padding:16px;}
   .mbody.rabbi-safe{
@@ -306,9 +309,9 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
 .home-rabbi-wrap{grid-area:rabbi;position:relative;left:0;bottom:0;z-index:1;opacity:1;pointer-events:none;justify-self:center;align-self:end;width:min(100%,760px);display:flex;justify-content:center;background:transparent;isolation:isolate;padding-right:0;}
 .home-rabbi-wrap .rabbi-img{height:var(--home-rabbi-h);width:auto;animation:rabbiFloat 2.8s ease-in-out infinite;transition:transform .6s cubic-bezier(.22,.64,.2,1),filter .6s ease;filter:drop-shadow(0 8px 16px rgba(30,18,8,.18));background:transparent;mix-blend-mode:multiply;}
 .home-rabbi-wrap .rabbi-video{height:var(--home-rabbi-h);width:auto;max-width:min(100%,52vw);object-fit:contain;display:none;filter:drop-shadow(0 8px 16px rgba(30,18,8,.18));background:transparent;mix-blend-mode:multiply;}
-.home-rabbi-wrap .rabbi-bubble{opacity:1;z-index:4;max-width:clamp(220px,34vw,320px);font-size:20px;font-family:var(--heb);padding:12px 16px;left:44%;right:auto;top:8%;bottom:auto;transform:translate(-50%,0);background:linear-gradient(160deg,#fbf3e4,#f1e1c5);border:2px solid rgba(168,136,88,.72);border-radius:22px;box-shadow:0 8px 22px rgba(30,18,8,.14),inset 0 1px 0 rgba(255,255,255,.88);color:var(--ink2);text-shadow:none;white-space:normal;line-height:1.48;}
+.home-rabbi-wrap .rabbi-bubble{opacity:1;z-index:4;max-width:clamp(220px,34vw,320px);font-size:20px;font-family:var(--heb);padding:12px 16px;left:26%;right:auto;top:11%;bottom:auto;transform:translate(-92%,0);background:linear-gradient(160deg,#fbf3e4,#f1e1c5);border:2px solid rgba(168,136,88,.72);border-radius:22px;box-shadow:0 8px 22px rgba(30,18,8,.14),inset 0 1px 0 rgba(255,255,255,.88);color:var(--ink2);text-shadow:none;white-space:normal;line-height:1.48;}
 .home-rabbi-wrap .rabbi-bubble::before{content:'';position:absolute;inset:0;border-radius:22px;pointer-events:none;opacity:.18;background-image:radial-gradient(circle at 1px 1px,rgba(150,120,80,.22) 1px,transparent 1px);background-size:7px 7px;}
-.home-rabbi-wrap .rabbi-bubble::after{display:block;content:'';position:absolute;top:100%;left:52%;width:24px;height:24px;transform:translate(-50%, -42%) rotate(45deg);background:linear-gradient(160deg,#f8ecd6,#f1e1c5);border-right:2px solid rgba(168,136,88,.72);border-bottom:2px solid rgba(168,136,88,.72);border-radius:0 0 8px 0;box-shadow:3px 3px 8px rgba(30,18,8,.06);}
+.home-rabbi-wrap .rabbi-bubble::after{display:block;content:'';position:absolute;top:58%;left:100%;width:24px;height:24px;transform:translate(-42%, -50%) rotate(45deg);background:linear-gradient(160deg,#f8ecd6,#f1e1c5);border-right:2px solid rgba(168,136,88,.72);border-bottom:2px solid rgba(168,136,88,.72);border-radius:0 0 8px 0;box-shadow:3px 3px 8px rgba(30,18,8,.06);}
 .home-rabbi-wrap .rabbi-bubble .en{display:block;font-family:var(--body);font-size:15px;color:var(--ink3);margin-top:7px;direction:ltr;}
 .home-rabbi-wrap.pose-walk .rabbi-img{animation:homeRabbiWalkIn 1.1s cubic-bezier(.18,.78,.2,1) both;}
 .home-rabbi-wrap.pose-point .rabbi-img{transform:translateY(-4px) rotate(-6deg);}
@@ -318,7 +321,7 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
 .home-rabbi-wrap.gesture-library .rabbi-img{transform:translate(-10px,-2px) rotate(5deg);}
 .home-greeting-line{opacity:0;transform:translateY(6px);transition:opacity .7s ease,transform .7s ease;color:var(--ink3);font-size:12px;font-style:italic;margin-top:6px;display:none;}
 .home-greeting-line.show{opacity:1;transform:translateY(0);}
-.home-intro-icons{grid-area:icons;display:flex;flex-direction:row;justify-content:center;align-items:flex-start;gap:clamp(10px,2vw,18px);position:relative;z-index:2;width:min(100%,520px);justify-self:center;align-self:start;padding-top:2px;}
+.home-intro-icons{grid-area:icons;display:flex;flex-direction:row;justify-content:center;align-items:flex-start;gap:clamp(6px,1.2vw,12px);position:relative;z-index:2;width:min(100%,420px);justify-self:center;align-self:start;padding-top:2px;}
 .home-intro-item{display:flex;flex-direction:column;align-items:center;gap:5px;opacity:0;transform:translateY(12px) scale(.92);transition:opacity .6s cubic-bezier(.2,.7,.18,1),transform .6s cubic-bezier(.18,.78,.2,1);pointer-events:none;min-width:74px;}
 .home-intro-item.revealed{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;animation:homeIconSoftBounce .62s cubic-bezier(.22,.8,.25,1);}
 .home-intro-item .circle-btn{width:var(--home-icon-size);height:var(--home-icon-size);}
@@ -328,20 +331,20 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
 @media (min-width:900px){
   .home-intro-layout{--home-rabbi-h:360px;--home-icon-size:104px;row-gap:14px;justify-items:center;}
   .home-rabbi-wrap{left:0;bottom:0;padding-right:0;width:min(100%,720px);}
-  .home-rabbi-wrap .rabbi-bubble{max-width:320px;font-size:21px;top:7%;}
-  .home-intro-icons{width:min(100%,500px);}
+  .home-rabbi-wrap .rabbi-bubble{max-width:320px;font-size:21px;left:24%;top:10%;}
+  .home-intro-icons{width:min(100%,400px);}
 }
 @media (max-width:767px){
   .page.home-page{padding:12px 16px 18px;}
-  nav{top:22px;}
+  nav{top:0;}
   .home-intro-layout.auth-gate{grid-template-columns:1fr;justify-items:center;row-gap:16px;}
   .home-login-card{max-width:min(100%,340px);}
   .home-rabbi-wrap{justify-self:center;width:100%;padding-right:0;}
   .home-rabbi-wrap .rabbi-video{max-width:min(100%,74vw);}
-  .home-rabbi-wrap .rabbi-bubble{max-width:220px;font-size:18px;left:50%;top:4%;}
+  .home-rabbi-wrap .rabbi-bubble{max-width:210px;font-size:18px;left:20%;top:8%;transform:translate(-68%,0);}
   .home-rabbi-wrap .rabbi-bubble .en{font-size:14px;}
-  .home-intro-icons{gap:10px;width:min(100%,340px);flex-wrap:nowrap;}
-  .home-intro-item{min-width:72px;}
+  .home-intro-icons{gap:6px;width:min(100%,300px);flex-wrap:nowrap;}
+  .home-intro-item{min-width:66px;}
   .mbody.rabbi-safe .g2.match-grid,
   .rabbi-safe-card .g2.match-grid{
     grid-template-columns:minmax(0,1fr) minmax(0,1fr);
@@ -1319,6 +1322,9 @@ function rabbiHTML(){const _arr=rabbiExerciseIdleFrames();const prompt=rabbiGuid
     <span class="rabbi-bubble${bubble?' show':''}" id="rabbi-bubble">${escHtml(bubble)}</span>
   </div>
 </div>`;}
+function rabbiAskButton(label){
+  return `<button onclick="openAskRabbi()" class="aud" style="background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;border:none;">${label||'✡ Ask the Rabbi'}</button>`;
+}
 function showRabbiFeedback(ok){
   const fig=document.getElementById('rabbi-fig'),bub=document.getElementById('rabbi-bubble');
   if(!fig||!bub)return;
@@ -1496,11 +1502,13 @@ async function rabbiLoadLiveSources(ctx){
   const data=await rabbiFetchSourceMaterial(ctx);
   const sameBox=document.getElementById('rabbi-live-sources');
   if(!sameBox)return;
+  const modalBox=sameBox.closest('.mbox');
+  const wasNearBottom=modalBox?((modalBox.scrollHeight-modalBox.scrollTop-modalBox.clientHeight)<90):false;
   const sections=[];
   if(data&&data.sefaria&&(data.sefaria.lexicon||data.sefaria.exampleHe||data.sefaria.exampleEn)){
-    const lexicon=trimSnippet(stripHtmlToText(data.sefaria.lexicon||''),320);
-    const exampleHe=trimSnippet(stripHtmlToText(data.sefaria.exampleHe||''),220);
-    const exampleEn=trimSnippet(stripHtmlToText(data.sefaria.exampleEn||''),180);
+    const lexicon=sourceSnippetText(data.sefaria.lexicon,320);
+    const exampleHe=sourceSnippetText(data.sefaria.exampleHe,220);
+    const exampleEn=sourceSnippetText(data.sefaria.exampleEn,180);
     sections.push(`<div style="margin-top:8px;padding:10px 12px;border-radius:var(--rs);background:rgba(106,24,40,.06);border:1px solid rgba(106,24,40,.18);">
       <div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--burg);margin-bottom:5px;">SEFARIA</div>
       ${lexicon?`<div class="rabbi-source-card" style="font-size:13px;line-height:1.55;color:var(--ink2);margin-bottom:${exampleHe||exampleEn?'8px':'0'};">${escHtml(lexicon)}</div>`:''}
@@ -1512,10 +1520,11 @@ async function rabbiLoadLiveSources(ctx){
   if(data&&data.wiktionary&&data.wiktionary.summary){
     sections.push(`<div style="margin-top:8px;padding:10px 12px;border-radius:var(--rs);background:rgba(74,104,48,.06);border:1px solid rgba(74,104,48,.24);">
       <div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--sage);margin-bottom:5px;">HEBREW WIKTIONARY</div>
-      <div class="rabbi-source-card" style="font-size:13px;line-height:1.55;color:var(--ink2);">${escHtml(trimSnippet(stripHtmlToText(data.wiktionary.summary||''),360))}</div>
+      <div class="rabbi-source-card" style="font-size:13px;line-height:1.55;color:var(--ink2);">${escHtml(sourceSnippetText(data.wiktionary.summary,360))}</div>
     </div>`);
   }
   sameBox.innerHTML=sections.length?sections.join(''):'<div style="color:var(--ink3);font-size:12px;">No live source notes were found for this word yet.</div>';
+  if(wasNearBottom&&modalBox)requestAnimationFrame(()=>{modalBox.scrollTop=modalBox.scrollHeight;});
 }
 function rabbiQuestionIntent(q){
   const s=String(q||'').trim().toLowerCase();
@@ -7589,9 +7598,22 @@ function goNextUp(ev){
   if(rec.action==='openSection'&&rec.sectionId){openSection(rec.level||S.level,rec.sectionId);return;}
   go(rec.action||'learn');
 }
-function openModal(html){document.getElementById('modal-root').innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="mbox ai"><button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>${html}</div></div>`;}
+function _modalBoxClass(html){
+  return `mbox ai${String(html||'').includes('modal-scrollable')?' scrollable':''}`;
+}
+function openModal(html){
+  document.getElementById('modal-root').innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="${_modalBoxClass(html)}"><button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>${html}</div></div>`;
+  const box=document.querySelector('#modal-root .overlay .mbox');
+  if(box)requestAnimationFrame(()=>{box.scrollTop=0;});
+}
 function closeModal(){rabbiStopIdleLoop();rabbiStopExerciseIdle();document.getElementById('modal-root').innerHTML='';}
-function openSubModal(html){const r=document.getElementById('modal-root');r.insertAdjacentHTML('beforeend',`<div class="overlay sub-overlay" onclick="if(event.target===this)closeSubModal()"><div class="mbox ai"><button class="modal-close" onclick="closeSubModal()" aria-label="Close">×</button>${html}</div></div>`);}
+function openSubModal(html){
+  const r=document.getElementById('modal-root');
+  r.insertAdjacentHTML('beforeend',`<div class="overlay sub-overlay" onclick="if(event.target===this)closeSubModal()"><div class="${_modalBoxClass(html)}"><button class="modal-close" onclick="closeSubModal()" aria-label="Close">×</button>${html}</div></div>`);
+  const boxes=r.querySelectorAll('.sub-overlay .mbox');
+  const box=boxes.length?boxes[boxes.length-1]:null;
+  if(box)requestAnimationFrame(()=>{box.scrollTop=0;});
+}
 function closeSubModal(){const r=document.getElementById('modal-root');const sub=r.querySelector('.sub-overlay');if(sub)sub.remove();}
 
 function getDrillNext(gt){if(!(S.courseDrill&&S.courseSectionId))return `launchGame('${gt}')`;if(S.courseReviewRemaining!==undefined)return 'courseReviewNext()';return 'courseDrillNext()';}
@@ -7677,7 +7699,7 @@ async function openWordDetails(){
   const audioBtn=heEx?`<button onclick="var d=this.closest('[data-he-ex]');if(d)speak(d.getAttribute('data-he-ex')||'',this);" class="aud ex-audio-btn" title="Hear in context" style="margin-left:6px;padding:4px 8px;font-size:12px;vertical-align:middle;">🔊</button>`:'';
   const exBlock=heEx||enEx?`<div class="modal-example-block" style="margin-top:10px;padding:8px 10px;background:rgba(74,104,48,.06);border:1px solid rgba(74,104,48,.2);border-radius:var(--rs);" ${heEx?`data-he-ex="${esc(heEx)}"`:''}><div class="modal-ex-label" style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--sage);margin-bottom:4px;">EXAMPLE / NOTE${audioBtn}</div>${heEx?`<div class="modal-ex-he" style="font-family:var(--heb);font-size:14px;direction:rtl;text-align:right;line-height:1.6;">${heExHtml}</div>`:''}${enEx?`<div class="modal-ex-en" style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:6px;">${esc(enEx)}</div>`:''}</div>`:'';
   S._rabbiCtx={wordHe:w.h||'',wordEn:w.e||'',wordPron:w.p||'',sentenceHe:heEx||'',sentenceEn:enEx||''};
-  const rabbiBtn=`<button onclick="openAskRabbi()" style="margin-top:12px;padding:8px 14px;border-radius:var(--rs);border:1px solid var(--rust);background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;cursor:pointer;font-size:12px;font-family:var(--lbl);letter-spacing:1px;">✡ Study with the Rabbi</button>`;
+  const rabbiBtn=`<button onclick="openAskRabbi()" style="margin-top:12px;padding:8px 14px;border-radius:var(--rs);border:1px solid var(--rust);background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;cursor:pointer;font-size:12px;font-family:var(--lbl);letter-spacing:1px;">✡ Ask the Rabbi</button>`;
   openSubModal(`${ghdr('📖 '+w.h,'Definition, examples & grammar','#4a6830')}<div class="mbody word-details"><div class="modal-def" style="font-size:14px;color:var(--ink2);"><strong>${esc(w.e)||'(definition)'}</strong> ${w.p?`<span style="font-style:italic;color:var(--ink3);">— ${esc(w.p)}</span>`:''}</div>${exBlock}${gram}${rabbiBtn}</div></div>`);
 }
 function openAskRabbi(ctx){
@@ -7692,7 +7714,7 @@ function openAskRabbi(ctx){
   const titleWord=lesson.wordHe?lesson.wordHe:'your lesson';
   const quickBubble=rabbiGuideLine('בּוֹא נִלְמַד זֹאת יַחַד.','Let us study this together.');
   openSubModal(`${ghdr('✡ Ask the Rabbi',`${escHtml(titleWord)} — guided notes and study help`,'#6a1828')}
-  <div class="mbody rabbi-modal-body">
+  <div class="mbody rabbi-modal-body modal-scrollable">
     ${ctxBlock}
     <div style="padding:10px 12px;border-radius:var(--rs);background:rgba(106,24,40,.06);border:1px solid rgba(106,24,40,.18);margin-bottom:10px;">
       <div style="font-family:var(--lbl);font-size:9px;letter-spacing:2px;color:var(--burg);margin-bottom:4px;">RABBI OVERVIEW</div>
@@ -7736,14 +7758,14 @@ async function submitAskRabbi(){
   let body=answer.body||'';
   if(live&&intent==='example'&&live.sefaria&&(live.sefaria.exampleHe||live.sefaria.exampleEn)){
     body+=`\n\nFrom Sefaria:\n${[
-      trimSnippet(stripHtmlToText(live.sefaria.exampleHe||''),220),
-      trimSnippet(stripHtmlToText(live.sefaria.exampleEn||''),180),
+      sourceSnippetText(live.sefaria.exampleHe,220),
+      sourceSnippetText(live.sefaria.exampleEn,180),
       live.sefaria.ref
     ].filter(Boolean).join('\n')}`;
   }else if(live&&intent==='meaning'&&live.wiktionary&&live.wiktionary.summary){
-    body+=`\n\nHebrew Wiktionary note:\n${trimSnippet(stripHtmlToText(live.wiktionary.summary||''),360)}`;
+    body+=`\n\nHebrew Wiktionary note:\n${sourceSnippetText(live.wiktionary.summary,360)}`;
   }else if(live&&intent==='root'&&live.sefaria&&live.sefaria.lexicon){
-    body+=`\n\nSefaria lexicon:\n${trimSnippet(stripHtmlToText(live.sefaria.lexicon||''),320)}`;
+    body+=`\n\nSefaria lexicon:\n${sourceSnippetText(live.sefaria.lexicon,320)}`;
   }
   ansEl.innerHTML=`<div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--burg);margin-bottom:6px;">${escHtml(answer.title)}</div><div style="font-size:13px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;">${escHtml(body).replace(/\n/g,'<br>')}</div>`;
   btn.disabled=false;btn.textContent='Guide me';
@@ -8588,6 +8610,7 @@ function openSection(n,sectionId){
 function openCourseRead(n,sectionId){
   const cl=LVS.find(c=>c.n===n);const sec=getCourseSections(n).find(s=>s.id===sectionId);const story=sec&&sec.h?{h:sec.h,e:sec.e||'',note:sec.note||'',source:sec.source||''}:(cl&&cl.story?cl.story:null);if(!cl||!story){closeModal();go('learn');return;}
   const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  S._rabbiCtx={sentenceHe:story.h||'',sentenceEn:story.e||''};
   openModal(`${ghdr('📖 '+(sec&&sec.label?sec.label:cl.label),(sec&&sec.source)||'Read the story for this level',cl.hex)}
   <div class="mbody">
     <div class="passage" style="margin-bottom:16px;">
@@ -8595,6 +8618,7 @@ function openCourseRead(n,sectionId){
       <div style="color:var(--ink2);font-size:clamp(16px,4vw,19px);line-height:1.6;font-style:italic;margin-top:12px;border-top:1px solid var(--bdr);padding-top:12px;">${esc(story.e)}</div>
     </div>
     ${story.note?`<div style="padding:10px 12px;background:rgba(74,104,48,.08);border:1px solid rgba(74,104,48,.25);border-radius:var(--rs);font-size:12px;color:var(--ink2);margin-bottom:14px;">${esc(story.note)}</div>`:''}
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
     <button onclick="markSectionComplete('${sectionId}');S.courseDrill=false;S.courseSectionId=null;closeModal();go('learn')" class="btn-p btn-w" style="width:100%;padding:12px;border-radius:var(--rs);font-family:var(--lbl);letter-spacing:2px;">✓ I read it — Continue</button>
   </div>`);
 }
@@ -8602,12 +8626,14 @@ function openCourseNumbers(n,sectionId){
   const cl=LVS.find(c=>c.n===n);
   const i=~~(Math.random()*Math.min(11,NUMS.roman.length));const correct=NUMS.cardinal_m[i];
   const wrong=shuf(NUMS.cardinal_m.filter((_,j)=>j!==i)).slice(0,3);const opts=shuf([correct,...wrong]);
+  S._rabbiCtx={wordHe:correct||'',wordEn:NUMS.roman[i]||'',wordPron:NUMS.pron_m[i]||''};
   S.GM={numAns:i,numOpts:opts,done:false,courseNumsSectionId:sectionId};
   openModal(`${ghdr('🔢 Numbers practice','Which number do you hear?',cl?cl.hex:'#8B3A1A')}
   <div class="mbody">
     <button id="cnq-a" class="aud" onclick="spk('${correct.replace(/'/g,"\\'")}','cnq-a')" style="margin-bottom:16px;display:block;width:100%;padding:12px;">🔊 Play number</button>
     <div class="g2">${opts.map((o,j)=>`<button class="ch ch-he" id="cnq${j}" onclick="ansCourseNum(${j},'${o.replace(/'/g,"\\'")}','${sectionId}')">${o}</button>`).join('')}</div>
     <div id="cnq-r"></div>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
     <div style="margin-top:12px;font-size:11px;color:var(--ink4);"><a href="#" onclick="closeModal();go('numbers');return false">More number activities →</a></div>
   </div>`);
 }
@@ -8631,14 +8657,14 @@ function openCourseComprehension(n,sectionId){
   S.courseComp={n,sectionId,qIdx:0,score:0,done:false};
   S._rabbiCtx={sentenceHe:sec.h||'',sentenceEn:sec.e||''};
   openModal(`${ghdr(sec.label,sec.source||'Read carefully, then answer the Rabbi.',cl.hex)}
-  <div class="mbody rabbi-safe">
+  <div class="mbody">
     <div class="passage" style="margin-bottom:16px;">
       <div style="font-family:var(--heb);font-size:21px;direction:rtl;text-align:right;line-height:2.0;">${sec.h||''}</div>
       <div style="color:var(--ink2);font-size:clamp(16px,4vw,19px);line-height:1.6;font-style:italic;margin-top:12px;border-top:1px solid var(--bdr);padding-top:12px;">${esc(sec.e||'')}</div>
     </div>
     ${sec.note?`<div style="padding:10px 12px;border-radius:var(--rs);background:rgba(74,104,48,.08);border:1px solid rgba(74,104,48,.28);font-size:12px;color:var(--ink2);margin-bottom:14px;">${esc(sec.note)}</div>`:''}
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
     <button onclick="startCourseComprehension()" class="btn-p btn-w" style="width:100%;padding:12px;border-radius:var(--rs);font-family:var(--lbl);letter-spacing:2px;">Begin questions</button>
-    ${rabbiHTML()}
   </div>`);
 }
 function startCourseComprehension(){
@@ -8652,7 +8678,7 @@ function showCourseComprehensionQuestion(){
   const q=sec.questions[st.qIdx];const total=sec.questions.length;
   S._rabbiCtx={sentenceHe:sec.h||'',sentenceEn:sec.e||''};
   openModal(`${ghdr(sec.label,`Question ${st.qIdx+1} of ${total}`,cl.hex)}
-  <div class="mbody rabbi-safe">
+  <div class="mbody">
     <div style="margin-bottom:12px;padding:10px 12px;border-radius:var(--rs);background:rgba(200,112,32,.08);border:1px solid rgba(200,112,32,.25);font-size:11px;color:var(--ink2);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
       <span>Score: ${st.score}/${total}</span>
       <span>Unlock goal: guided reading + meaning</span>
@@ -8665,7 +8691,7 @@ function showCourseComprehensionQuestion(){
     <div style="font-size:19px;color:var(--ink);line-height:1.5;margin-bottom:12px;">${q.q}</div>
     <div id="cc-opts" style="display:flex;flex-direction:column;gap:9px;">${(q.opts||[]).map((opt,i)=>`<button class="ch" id="ccq${i}" onclick="ansCourseComprehension(${i})" style="min-height:48px;text-align:left;">${opt}</button>`).join('')}</div>
     <div id="cc-r"></div>
-    ${rabbiHTML()}
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`);
 }
 function ansCourseComprehension(i){
@@ -8734,7 +8760,7 @@ function showCourseWord(n,sectionId,idx){
       ${progBar}
       <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
         <button id="cw-aud" class="aud" onclick="spk('${w.h.replace(/'/g,"\\'")}','cw-aud')">🔊 Listen</button>
-        <button onclick="S._rabbiCtx={wordHe:'${(w.h||'').replace(/'/g,"\\'")}',wordEn:'${(w.e||'').replace(/'/g,"\\'")}',wordPron:'${(w.p||'').replace(/'/g,"\\'")}',sentenceHe:'${(ex||'').replace(/'/g,"\\'")}'};openAskRabbi()" class="aud" style="background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;border:none;">✡ Study with the Rabbi</button>
+        <button onclick="S._rabbiCtx={wordHe:'${(w.h||'').replace(/'/g,"\\'")}',wordEn:'${(w.e||'').replace(/'/g,"\\'")}',wordPron:'${(w.p||'').replace(/'/g,"\\'")}',sentenceHe:'${(ex||'').replace(/'/g,"\\'")}'};openAskRabbi()" class="aud" style="background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;border:none;">✡ Ask the Rabbi</button>
       </div>
       <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center;">
         ${backBtn}
@@ -8840,7 +8866,7 @@ function buildMC(w,pool){
   S._rabbiCtx={wordHe:w.h||'',wordEn:w.e||'',wordPron:w.p||''};
   const opts=shuf([w.e,...dist(w,pool,3)]);S.GM.opts=opts;S.GM.ci=opts.indexOf(w.e);
   return`${ghdr('MULTIPLE CHOICE','What does this word mean?')}
-  <div class="mbody rabbi-safe">
+  <div class="mbody">
     <div style="text-align:center;padding:16px 0 20px;">
       <div style="font-family:var(--heb);font-size:50px;line-height:1.6;">${w.h}</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;">
@@ -8851,7 +8877,7 @@ function buildMC(w,pool){
     </div>
     <div id="mc-opts" style="display:flex;flex-direction:column;gap:9px;direction:ltr;touch-action:manipulation;" onclick="ansMCHandle(event)">${opts.map((o,i)=>`<button type="button" class="ch" id="mc${i}" data-idx="${i}" style="min-height:48px;">${o}</button>`).join('')}</div>
     <div id="mc-r"></div>
-    ${rabbiHTML()}
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`;
 }
 function _closestBtn(el){
@@ -8886,7 +8912,7 @@ function buildFill(w,pool){
   const sentHe=`אֲנִי ${w.h} כָּל יוֹם.`;
   const sentEn=getFillSentenceEn(w);
   return`${ghdr('FILL IN THE BLANK','Complete the sentence')}
-  <div class="mbody rabbi-safe">
+  <div class="mbody">
     <div style="text-align:center;padding:12px 0 18px;">
       <div style="font-family:var(--heb);font-size:30px;direction:rtl;line-height:2.0;">אֲנִי <span id="fbl" style="border-bottom:3px solid var(--amber);padding:0 12px;color:var(--amber);display:inline-block;min-width:50px;">　</span> כָּל יוֹם.</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -8896,7 +8922,7 @@ function buildFill(w,pool){
     </div>
     <div class="g2">${opts.map((o,i)=>`<button class="ch ch-he" id="fo${i}" onclick="ansFill(${i},'${o.replace(/'/g,"\\'")}')">${o}</button>`).join('')}</div>
     <div id="fill-r"></div>
-    ${rabbiHTML()}
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`;
 }
 function _fillMeaningCore(v){
@@ -8924,7 +8950,7 @@ function buildTap(w,pool){
   S._rabbiCtx={wordHe:w.h||'',wordEn:w.e||'',wordPron:w.p||''};
   const ot=shuf(pool.filter(x=>x.h!==w.h)).slice(0,4);const words=shuf([w,...ot]);S.GM.twords=words;
   return`${ghdr('TAP THE WORD',`Tap: "${w.e}"`)}
-  <div class="mbody rabbi-safe">
+  <div class="mbody">
     <div style="text-align:center;margin-bottom:18px;">
       <div style="font-size:20px;color:var(--rust);font-family:var(--lbl);">"${w.e}"</div>
       <div style="font-size:11px;color:var(--ink3);margin-top:2px;">${w.p}</div>
@@ -8933,7 +8959,7 @@ function buildTap(w,pool){
       ${words.map((x,i)=>`<button class="ch" id="tw${i}" onclick="ansTap(${i})" style="padding:12px 18px;font-family:var(--heb);font-size:30px;">${x.h}</button>`).join('')}
     </div>
     <div id="tap-r"></div>
-    ${rabbiHTML()}
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`;
 }
 function ansTap(i){
@@ -8947,15 +8973,17 @@ function ansTap(i){
 
 function buildMatch(pool){
   const words=shuf(pool).slice(0,4);const shE=shuf([...words]);
+  const base=words[0]||{};
+  S._rabbiCtx={wordHe:base.h||'',wordEn:base.e||'',wordPron:base.p||''};
   S.GM.mwords=words;S.GM.mshuf=shE;S.GM.mmatched=[];S.GM.mselH=null;
   return`${ghdr('MATCH PAIRS','Tap Hebrew → then its English')}
-  <div class="mbody rabbi-safe">
+  <div class="mbody">
     <div class="g2 match-grid">
       <div>${words.map((w,i)=>`<button class="ch match-he-btn" id="mh${i}" onclick="mPickH(${i})" style="display:block;width:100%;margin-bottom:7px;">${w.h}</button>`).join('')}</div>
       <div>${shE.map((w,i)=>`<button class="ch match-en-btn" id="me${i}" onclick="mPickE(${i})" style="display:block;width:100%;margin-bottom:7px;">${w.e}</button>`).join('')}</div>
     </div>
     <div id="match-r"></div>
-    ${rabbiHTML()}
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`;
 }
 function mPickH(i){if(S.GM.mmatched.some(m=>m.h===i))return;S.GM.mselH=i;document.querySelectorAll('[id^=mh]').forEach((el,j)=>{el.classList.remove('sel');if(j===i)el.classList.add('sel');});}
@@ -8968,6 +8996,7 @@ function mPickE(i){
 }
 
 function buildTrans(w,pool){
+  S._rabbiCtx={wordHe:w.h||'',wordEn:w.e||'',wordPron:w.p||''};
   const bank=shuf([w.h,...shuf(pool.filter(x=>x.h!==w.h)).slice(0,5).map(x=>x.h)]);S.GM.bank=bank;S.GM.tchosen=[];
   return`${ghdr('TRANSLATE','Tap the correct Hebrew word')}
   <div class="mbody">
@@ -8983,6 +9012,7 @@ function buildTrans(w,pool){
     </div>
     <div id="trans-r"></div>
     <div id="trans-chk" style="display:none;"><button onclick="chkTrans()" class="btn-a btn-w" style="border-radius:var(--rs);font-family:var(--lbl);font-size:10px;letter-spacing:2px;">CHECK</button></div>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`;
 }
 function tAdd(w){
@@ -9008,6 +9038,8 @@ const EMOJIS=[{h:"כֶּלֶב",p:"kelev",e:"dog",em:"🐕"},{h:"חָתוּל",p
   {h:"מְכוֹנִית",p:"mechonit",e:"car",em:"🚗"},{h:"כּוֹכָב",p:"kochav",e:"star",em:"⭐"}];
 function buildImg(){
   const items=shuf(EMOJIS).slice(0,4);const shE=shuf([...items]);
+  const base=items[0]||{};
+  S._rabbiCtx={wordHe:base.h||'',wordEn:base.e||'',wordPron:base.p||''};
   S.GM.iitems=items;S.GM.ishuf=shE;S.GM.imatched=[];S.GM.iselW=null;
   return`${ghdr('WORD & IMAGE','Tap Hebrew word → then its emoji')}
   <div class="mbody">
@@ -9016,6 +9048,7 @@ function buildImg(){
       <div>${shE.map((it,i)=>`<button class="ch" id="ie${i}" onclick="iPkE(${i})" style="display:block;width:100%;margin-bottom:7px;font-size:32px;">${it.em}</button>`).join('')}</div>
     </div>
     <div id="img-r"></div>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`;
 }
 function iPkW(i){if(S.GM.imatched.some(m=>m.w===i))return;S.GM.iselW=i;document.querySelectorAll('[id^=iw]').forEach((el,j)=>{el.classList.remove('sel');if(j===i)el.classList.add('sel');});}
@@ -9043,12 +9076,14 @@ function showGramQ(){
       </div></div>`);
     return;
   }
+  S._rabbiCtx={wordHe:item.h||'',wordEn:item.cue||'',sentenceHe:item.h||'',sentenceEn:item.note||''};
   openModal(`${ghdr('GRAMMAR DRILL — '+g.topic,g.prompt,'#4a6830')}
   <div class="mbody">
     <div style="font-family:var(--heb);font-size:28px;direction:rtl;text-align:center;padding:16px 0 8px;">${item.h}</div>
     <div style="text-align:center;font-size:13px;color:var(--ink3);margin-bottom:16px;font-style:italic;">${item.cue}</div>
     <div class="g2">${item.opts.map((o,i)=>`<button class="ch" id="gq${i}" onclick="ansGram(${i})">${o}</button>`).join('')}</div>
     <div id="gram-r"></div>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`);
 }
 function ansGram(i){
@@ -9833,7 +9868,7 @@ function rReview(){
     </div>
     <div style="color:var(--ink3);font-size:13px;font-style:italic;">Random quiz from all sections — vocab, grammar, numbers, roots, readings.</div>
     ${l.rq.length?`<div style="margin-top:8px;padding:7px 11px;background:rgba(168,48,48,.08);border:1px solid rgba(168,48,48,.3);border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;color:var(--err2);">${l.rq.length} ITEMS IN QUEUE</div>`:''}</div>
-  <div class="card card-top rabbi-safe-card" style="text-align:center;padding:28px 22px 22px;">
+  <div class="card card-top" style="text-align:center;padding:28px 22px 22px;">
     <div style="font-family:var(--heb);font-size:50px;margin-bottom:8px;">${w.h}</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px;">
       <span style="font-size:13px;color:var(--ink3);font-style:italic;">${w.p}</span>
@@ -9844,7 +9879,7 @@ function rReview(){
       ${opts.map((o,i)=>`<button type="button" class="ch" id="rv${i}" data-idx="${i}" style="min-height:48px;">${o}</button>`).join('')}
     </div>
     <div id="rv-r"></div>
-    ${rabbiHTML()}
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;">${rabbiAskButton('✡ Ask the Rabbi')}</div>
   </div>`;
 }
 function ansRevHandle(ev){
@@ -9895,6 +9930,13 @@ function trimSnippet(s,max){
   if(!txt)return '';
   if(txt.length<=(max||260))return txt;
   return txt.slice(0,Math.max(40,(max||260)-1)).trim()+'…';
+}
+function sourceSnippetText(v,max){
+  if(v==null)return '';
+  const flat=typeof v==='string'?v:flattenTextBlock(v);
+  const plain=/<[a-z!/][\s\S]*>/i.test(flat)?stripHtmlToText(flat):String(flat||'').replace(/\s+/g,' ').trim();
+  if(!plain||plain==='[object Object]')return '';
+  return trimSnippet(plain,max);
 }
 async function loadSefariaRefData(ref){
   try{
@@ -10643,7 +10685,7 @@ function libPrepareConfirm(){
   const newW=words.filter(w=>w.status==='new').length;
 
   openModal(`${ghdr('THE LIBRARIAN','Review words before saving — fill in any blanks','#4a6830')}
-  <div class="mbody">
+  <div class="mbody modal-scrollable">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
       <span style="background:rgba(45,90,40,.12);border:1px solid rgba(45,90,40,.3);color:var(--ok);padding:3px 10px;border-radius:20px;font-family:var(--lbl);font-size:9px;letter-spacing:1px;">✓ ${known} KNOWN</span>
       <span style="background:rgba(200,112,32,.12);border:1px solid rgba(200,112,32,.3);color:var(--amber);padding:3px 10px;border-radius:20px;font-family:var(--lbl);font-size:9px;letter-spacing:1px;">★ ${newW} NEW</span>
