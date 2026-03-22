@@ -37,11 +37,19 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);min-height:10
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.03;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");}
 button{cursor:pointer;font-family:inherit;border:none;background:none;}
-textarea,input{font-family:inherit;}
+textarea,input,select{font-family:inherit;max-width:100%;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:10px;}
 nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8b8,#dfc8a0);border-bottom:2px solid var(--bdr);box-shadow:var(--sm);}
-.nav-inner{display:flex;align-items:center;padding:0 12px;overflow-x:auto;scrollbar-width:none;max-width:1200px;margin:0 auto;}
+.nav-inner{display:flex;align-items:center;justify-content:flex-start;padding:0 12px;overflow:visible;scrollbar-width:none;max-width:1200px;margin:0 auto;min-height:54px;position:relative;}
 .nav-inner::-webkit-scrollbar{display:none;}
+.nav-menu-toggle{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--bdr);background:linear-gradient(145deg,#f8f0e0,#ede0c8);color:var(--rust);box-shadow:var(--ss);transition:all .2s;}
+.nav-menu-toggle:hover{border-color:var(--amber);color:var(--amber);}
+.nav-menu-lines{display:flex;flex-direction:column;gap:4px;}
+.nav-menu-lines span{display:block;width:18px;height:2px;border-radius:999px;background:currentColor;}
+.nav-links{display:none;position:absolute;top:calc(100% + 8px);left:12px;right:12px;z-index:120;flex-direction:column;background:linear-gradient(160deg,#fff,#f8f0e0);border:1px solid var(--bdr);border-radius:16px;box-shadow:var(--sl);padding:8px;}
+.nav-links.open{display:flex;}
+.nav-links .nb{width:100%;padding:12px 14px;border-bottom:none;border-radius:10px;text-align:left;font-size:11px;}
+.nav-links .nb.active{background:rgba(139,58,26,.08);border-bottom:none;}
 .nlogo{color:var(--rust);font-size:17px;font-family:var(--lbl);letter-spacing:3px;margin-right:16px;padding:13px 0;flex-shrink:0;font-weight:700;}
 .nb{padding:13px 9px;font-size:10px;letter-spacing:1.2px;font-family:var(--lbl);color:var(--ink3);border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;font-weight:600;}
 .nb:hover,.nb.active{color:var(--rust);}
@@ -114,7 +122,7 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
   display:flex;align-items:center;justify-content:center;padding:16px;}
 .overlay.sub-overlay{z-index:201;}
 .mbox{background:linear-gradient(160deg,#fff,#fdf8f0);border-radius:20px;position:relative;
-  box-shadow:var(--sx),inset 0 0 0 1px rgba(255,255,255,.8);width:100%;max-width:760px;max-height:92vh;overflow-y:auto;}
+  box-shadow:var(--sx),inset 0 0 0 1px rgba(255,255,255,.8);width:100%;max-width:760px;max-height:92vh;overflow-y:auto;overflow-x:hidden;}
 .modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
   background:rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.25);color:#fff;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s;}
 .modal-close:hover{background:rgba(0,0,0,.3);transform:scale(1.08);}
@@ -148,6 +156,10 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
   .mbody.word-details .modal-ex-label{font-size:11px !important;}
 }
 @media (max-width:767px){
+  .overlay{padding:6px;align-items:flex-start;}
+  .mbox{max-height:calc(100vh - 12px);border-radius:16px;}
+  .mhdr{border-radius:16px 16px 0 0;padding:16px 18px;}
+  .mbody{padding:16px;}
   .mbody.rabbi-safe{
     padding-right:clamp(150px,40vw,190px);
     padding-bottom:clamp(180px,30vh,250px);
@@ -160,6 +172,9 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
   .rabbi-safe-card .g2{
     grid-template-columns:1fr;
   }
+  .rabbi-modal-body textarea,
+  .rabbi-modal-body input{font-size:16px !important;}
+  .rabbi-modal-body .rabbi-quick-asks{grid-template-columns:1fr 1fr;}
 }
 .mfoot{padding:0 22px 22px;}
 .ch{width:100%;padding:13px 15px;
@@ -243,6 +258,16 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
 .next-up-bar .label{flex:1;}
 .next-up-bar .label strong{font-family:var(--lbl);font-size:12px;letter-spacing:1px;color:var(--ink);}
 .next-up-bar .label span{font-size:11px;color:var(--ink3);display:block;}
+.next-up-toggle,.next-up-action{display:inline-flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;}
+.next-up-toggle{width:44px;height:44px;border-radius:50%;font-size:20px;background:linear-gradient(135deg,var(--rust),var(--rust2));color:#fff;flex-shrink:0;}
+.next-up-action{font-size:24px;color:var(--rust);padding:0 4px;}
+.next-up-bar.collapsed{left:auto;right:12px;bottom:12px;width:56px;height:56px;padding:0;border:2px solid var(--bdr);border-radius:999px;justify-content:center;box-shadow:0 10px 28px rgba(30,18,8,.18);}
+.next-up-bar.collapsed .label,.next-up-bar.collapsed .next-up-action{display:none;}
+.rabbi-modal-body{overflow-x:hidden;}
+.rabbi-modal-body .rabbi-quick-asks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.rabbi-modal-body .rabbi-source-card,
+.rabbi-modal-body #rabbi-ans,
+.rabbi-modal-body #rabbi-live-sources{overflow-wrap:anywhere;word-break:break-word;}
 .page{padding-bottom:90px;}
 /* Rabbi character — multi-frame animation */
 .rabbi-wrap{position:relative;display:inline-flex;flex-direction:column;align-items:center;}
@@ -337,13 +362,17 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
 </div>
 <nav id="top-nav" style="display:none;">
   <div class="nav-inner">
-    <span class="nlogo">עִבְרִית</span>
-    <button class="nb active" onclick="go('home')">Home</button>
-    <button class="nb" onclick="go('learn')">Learn</button>
-    <button class="nb" onclick="go('reviewHub')">Study</button>
-    <button class="nb" onclick="go('library')">Library</button>
-    <button class="nb" onclick="go('dashboard')">Progress</button>
-    <button class="nb" onclick="go('developer')">Developer</button>
+    <button id="nav-menu-btn" class="nav-menu-toggle" onclick="toggleNavMenu(event)" aria-label="Open navigation menu" aria-expanded="false">
+      <span class="nav-menu-lines"><span></span><span></span><span></span></span>
+    </button>
+    <div id="top-nav-links" class="nav-links">
+      <button class="nb active" onclick="go('home')">Home</button>
+      <button class="nb" onclick="go('learn')">Learn</button>
+      <button class="nb" onclick="go('reviewHub')">Study</button>
+      <button class="nb" onclick="go('library')">Library</button>
+      <button class="nb" onclick="go('dashboard')">Progress</button>
+      <button class="nb" onclick="go('developer')">Developer</button>
+    </div>
   </div>
 </nav>
 <div id="ibanner">
@@ -354,10 +383,10 @@ nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8
   </div>
 </div>
 <div class="page au" id="app"></div>
-<div id="next-up" class="next-up-bar" style="display:none;" onclick="goNextUp(event)">
-  <div class="icon">📚</div>
-  <div class="label"><strong>NEXT UP</strong><span id="next-up-txt">Continue Course — Aleph</span></div>
-  <button onclick="goNextUp()" style="background:none;border:none;font-size:24px;color:var(--rust);cursor:pointer;">→</button>
+<div id="next-up" class="next-up-bar collapsed" style="display:none;">
+  <button id="next-up-toggle" class="next-up-toggle" onclick="toggleNextUpPanel(event)" aria-label="Toggle next up" aria-expanded="false">📚</button>
+  <div class="label" onclick="goNextUp(event)"><strong>NEXT UP</strong><span id="next-up-txt">Continue Course — Aleph</span></div>
+  <button class="next-up-action" onclick="goNextUp(event)" aria-label="Open next up">→</button>
 </div>
 <div id="modal-root"></div>
 <script>
@@ -1470,18 +1499,21 @@ async function rabbiLoadLiveSources(ctx){
   if(!sameBox)return;
   const sections=[];
   if(data&&data.sefaria&&(data.sefaria.lexicon||data.sefaria.exampleHe||data.sefaria.exampleEn)){
+    const lexicon=trimSnippet(stripHtmlToText(data.sefaria.lexicon||''),320);
+    const exampleHe=trimSnippet(stripHtmlToText(data.sefaria.exampleHe||''),220);
+    const exampleEn=trimSnippet(stripHtmlToText(data.sefaria.exampleEn||''),180);
     sections.push(`<div style="margin-top:8px;padding:10px 12px;border-radius:var(--rs);background:rgba(106,24,40,.06);border:1px solid rgba(106,24,40,.18);">
       <div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--burg);margin-bottom:5px;">SEFARIA</div>
-      ${data.sefaria.lexicon?`<div style="font-size:13px;line-height:1.55;color:var(--ink2);margin-bottom:${data.sefaria.exampleHe||data.sefaria.exampleEn?'8px':'0'};">${escHtml(data.sefaria.lexicon)}</div>`:''}
-      ${data.sefaria.exampleHe?`<div style="font-family:var(--heb);direction:rtl;text-align:right;font-size:15px;line-height:1.7;">${escHtml(data.sefaria.exampleHe)}</div>`:''}
-      ${data.sefaria.exampleEn?`<div style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:4px;">${escHtml(data.sefaria.exampleEn)}</div>`:''}
+      ${lexicon?`<div class="rabbi-source-card" style="font-size:13px;line-height:1.55;color:var(--ink2);margin-bottom:${exampleHe||exampleEn?'8px':'0'};">${escHtml(lexicon)}</div>`:''}
+      ${exampleHe?`<div class="rabbi-source-card" style="font-family:var(--heb);direction:rtl;text-align:right;font-size:15px;line-height:1.7;">${escHtml(exampleHe)}</div>`:''}
+      ${exampleEn?`<div class="rabbi-source-card" style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:4px;">${escHtml(exampleEn)}</div>`:''}
       ${data.sefaria.ref?`<div style="font-size:10px;color:var(--burg);margin-top:5px;">${escHtml(data.sefaria.ref)}</div>`:''}
     </div>`);
   }
   if(data&&data.wiktionary&&data.wiktionary.summary){
     sections.push(`<div style="margin-top:8px;padding:10px 12px;border-radius:var(--rs);background:rgba(74,104,48,.06);border:1px solid rgba(74,104,48,.24);">
       <div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--sage);margin-bottom:5px;">HEBREW WIKTIONARY</div>
-      <div style="font-size:13px;line-height:1.55;color:var(--ink2);">${escHtml(data.wiktionary.summary)}</div>
+      <div class="rabbi-source-card" style="font-size:13px;line-height:1.55;color:var(--ink2);">${escHtml(trimSnippet(stripHtmlToText(data.wiktionary.summary||''),360))}</div>
     </div>`);
   }
   sameBox.innerHTML=sections.length?sections.join(''):'<div style="color:var(--ink3);font-size:12px;">No live source notes were found for this word yet.</div>';
@@ -1537,6 +1569,34 @@ function closeAccountMenu(){
   const menu=document.getElementById('auth-menu');
   if(menu){menu.classList.remove('open');menu.innerHTML='';}
 }
+function closeNavMenu(){
+  const links=document.getElementById('top-nav-links');
+  const btn=document.getElementById('nav-menu-btn');
+  if(links)links.classList.remove('open');
+  if(btn)btn.setAttribute('aria-expanded','false');
+}
+function toggleNavMenu(ev){
+  if(ev){ev.preventDefault();ev.stopPropagation();}
+  const links=document.getElementById('top-nav-links');
+  const btn=document.getElementById('nav-menu-btn');
+  if(!links)return;
+  const open=!links.classList.contains('open');
+  links.classList.toggle('open',open);
+  if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+}
+function applyNextUpPanelState(){
+  const next=document.getElementById('next-up');
+  const btn=document.getElementById('next-up-toggle');
+  if(!next)return;
+  const expanded=!!S._nextUpExpanded;
+  next.classList.toggle('collapsed',!expanded);
+  if(btn)btn.setAttribute('aria-expanded',expanded?'true':'false');
+}
+function toggleNextUpPanel(ev){
+  if(ev){ev.preventDefault();ev.stopPropagation();}
+  S._nextUpExpanded=!S._nextUpExpanded;
+  applyNextUpPanelState();
+}
 function toggleAccountMenu(ev){
   if(ev){ev.preventDefault();ev.stopPropagation();}
   if(!authIsLoggedIn()){openLoginModal('login');return;}
@@ -1560,9 +1620,9 @@ function updateShellChrome(){
   const install=document.getElementById('ibanner');
   const showChrome=authIsLoggedIn()&&S&&S.page!=='home';
   if(nav)nav.style.display=showChrome?'block':'none';
-  if(next)next.style.display=showChrome?'flex':'none';
+  if(next){next.style.display=showChrome?'flex':'none';if(showChrome)applyNextUpPanelState();}
   if(install&&!showChrome)install.classList.remove('show');
-  if(!showChrome)closeAccountMenu();
+  if(!showChrome){closeAccountMenu();closeNavMenu();}
 }
 function updateAuthButton(){
   const shell=document.getElementById('shell-top');
@@ -7482,6 +7542,7 @@ function go(pg,opts){
   const keepScroll=!!(opts&&opts.keepScroll)||pg===prevPage;
   speechSynthesis&&speechSynthesis.cancel();S.page=pg;
   closeAccountMenu();
+  closeNavMenu();
   clearHomeIntroTimers();homeRabbiStopIdle();
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   const navPage=pg==='review'?'reviewHub':pg==='course'?'learn':pg==='poses'?'developer':pg;
@@ -7502,7 +7563,7 @@ function go(pg,opts){
   }
 }
 function updateNextUp(){
-  const el=document.getElementById('next-up-txt');const icon=document.querySelector('#next-up .icon');
+  const el=document.getElementById('next-up-txt');const icon=document.getElementById('next-up-toggle');
   if(!el)return;
   const rec=getLibrarianRecommendation();
   el.textContent=rec.label;icon.textContent=rec.icon;S._nextUp=rec;
@@ -7632,7 +7693,7 @@ function openAskRabbi(ctx){
   const titleWord=lesson.wordHe?lesson.wordHe:'your lesson';
   const quickBubble=rabbiGuideLine('בּוֹא נִלְמַד זֹאת יַחַד.','Let us study this together.');
   openSubModal(`${ghdr('✡ Ask the Rabbi',`${escHtml(titleWord)} — guided notes and study help`,'#6a1828')}
-  <div class="mbody">
+  <div class="mbody rabbi-modal-body">
     ${ctxBlock}
     <div style="padding:10px 12px;border-radius:var(--rs);background:rgba(106,24,40,.06);border:1px solid rgba(106,24,40,.18);margin-bottom:10px;">
       <div style="font-family:var(--lbl);font-size:9px;letter-spacing:2px;color:var(--burg);margin-bottom:4px;">RABBI OVERVIEW</div>
@@ -7652,8 +7713,8 @@ function openAskRabbi(ctx){
     </div>
     <div style="margin-top:12px;">
       <label style="font-size:10px;font-family:var(--lbl);letter-spacing:1px;color:var(--ink3);">Ask in your own words</label>
-      <textarea id="rabbi-q" rows="3" placeholder="e.g. What is the root? Why is this form used? Give me another example." style="width:100%;padding:10px;margin-top:4px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:13px;resize:vertical;"></textarea>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+      <textarea id="rabbi-q" rows="3" placeholder="e.g. What is the root? Why is this form used? Give me another example." style="width:100%;padding:10px;margin-top:4px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:16px;resize:vertical;"></textarea>
+      <div class="rabbi-quick-asks" style="margin-top:8px;">
         <button onclick="document.getElementById('rabbi-q').value='What does this mean?';submitAskRabbi();" class="btn-o" style="padding:7px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">MEANING</button>
         <button onclick="document.getElementById('rabbi-q').value='What is the root?';submitAskRabbi();" class="btn-o" style="padding:7px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">ROOT</button>
         <button onclick="document.getElementById('rabbi-q').value='Explain the grammar.';submitAskRabbi();" class="btn-o" style="padding:7px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">GRAMMAR</button>
@@ -7662,10 +7723,8 @@ function openAskRabbi(ctx){
     </div>
     <button id="rabbi-btn" onclick="submitAskRabbi()" class="btn-p" style="width:100%;padding:12px;margin-top:10px;font-family:var(--lbl);letter-spacing:2px;">Guide me</button>
     <div id="rabbi-ans" style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);display:none;"></div>
-    <div style="margin-top:10px;font-size:11px;color:var(--ink3);line-height:1.5;">The Rabbi now teaches from your lesson data and progress first. Optional live AI answers can be added later without making normal study depend on an API key.</div>
   </div>`);
   rabbiLoadLiveSources(c);
-  document.getElementById('rabbi-q')?.focus();
 }
 async function submitAskRabbi(){
   const qEl=document.getElementById('rabbi-q'),btn=document.getElementById('rabbi-btn'),ansEl=document.getElementById('rabbi-ans');
@@ -7677,11 +7736,15 @@ async function submitAskRabbi(){
   const live=await rabbiFetchSourceMaterial(ctx);
   let body=answer.body||'';
   if(live&&intent==='example'&&live.sefaria&&(live.sefaria.exampleHe||live.sefaria.exampleEn)){
-    body+=`\n\nFrom Sefaria:\n${[live.sefaria.exampleHe,live.sefaria.exampleEn,live.sefaria.ref].filter(Boolean).join('\n')}`;
+    body+=`\n\nFrom Sefaria:\n${[
+      trimSnippet(stripHtmlToText(live.sefaria.exampleHe||''),220),
+      trimSnippet(stripHtmlToText(live.sefaria.exampleEn||''),180),
+      live.sefaria.ref
+    ].filter(Boolean).join('\n')}`;
   }else if(live&&intent==='meaning'&&live.wiktionary&&live.wiktionary.summary){
-    body+=`\n\nHebrew Wiktionary note:\n${live.wiktionary.summary}`;
+    body+=`\n\nHebrew Wiktionary note:\n${trimSnippet(stripHtmlToText(live.wiktionary.summary||''),360)}`;
   }else if(live&&intent==='root'&&live.sefaria&&live.sefaria.lexicon){
-    body+=`\n\nSefaria lexicon:\n${live.sefaria.lexicon}`;
+    body+=`\n\nSefaria lexicon:\n${trimSnippet(stripHtmlToText(live.sefaria.lexicon||''),320)}`;
   }
   ansEl.innerHTML=`<div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--burg);margin-bottom:6px;">${escHtml(answer.title)}</div><div style="font-size:13px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;">${escHtml(body).replace(/\n/g,'<br>')}</div>`;
   btn.disabled=false;btn.textContent='Guide me';
@@ -8301,6 +8364,103 @@ const LVS=[
 const LEVEL_THEMES={2:['Motion (Go/Come)','Eat & Drink','Write & Read','Say & Ask','Give & Take','Do & See','Know & Want','Love, Hear & Return','More Core Verbs','Household','Daily Life','Travel & Activity','Feelings & Thought','Work & Communication','More Verbs I','More Verbs II'],
   3:['Truth & Justice','Wisdom & Faith','Hope & Redemption','Abstract Concepts','People & Society','Nature & World','Actions & Change','Time & Place','Emotions & Mind','Culture & Art','Politics & Media','Advanced I','Advanced II'],
   4:['Formal & Official','Press & News','Politics & Law','Business & Economy','Culture & Society','Literature & Art','Advanced Formal I','Advanced Formal II']};
+const BLENDED_LEVEL_SECTIONS={
+  2:[
+    {id:'2-modern-1',label:'Modern Spoken — Israeli Colloquial',words:['חוּצְפָּה','דּוֹגְרִי','אַחְלָה','סַבַּבָּה','וַלַּה','מֶה פִּתְאוֹם']},
+    {id:'2-modern-2',label:'Modern Spoken — Belonging & Character',words:['אֹפִּי','נִינוֹחַ','לְהַרְגִּישׁ בַּיִת','לְמַצֵּא אֶת הַמָּקוֹם','בֶּן אָדָם']},
+    {id:'2-text-1',label:'Text & Tradition — Prayer, Blessing, Faith',words:['תְּפִלָּה','בְּרָכָה','אֱמוּנָה','דָּת','סִדּוּר']},
+    {id:'2-text-2',label:'Text & Tradition — Tradition, Ethics, Memory',words:['מוּסָר','מִנְהַג','מָסוֹרֶת','זִיכָּרוֹן','כְּתוּבָּה','קֶבֶר']},
+    {id:'2-bridge',label:'Bridge — Learning, Practice & Roots',words:['שׁוֹרֶשׁ','לְהַנְחוֹת','לְהַדְרִיךְ','לְהִתְאַמֵּן','לְתַרְגֵּל','לְחַנֵּךְ']},
+    {id:'2-roots',label:'שׁ Roots Across Time',type:'roots',unlockIds:['2-bridge']},
+    {id:'2-comp',label:'📚 Reading Comprehension — Home, Practice & Blessing',type:'comprehension',unlockIds:['2-modern-2','2-text-2','2-bridge'],unlockMastered:8,source:'Blended modern spoken + textual Hebrew',
+      h:'בַּשָּׁבוּעַ הָרִאשׁוֹן בַּכִּתָּה הַחֲדָשָׁה נֹעַם לֹא הִרְגִּישׁ בַּיִת. הַמּוֹרָה הָיְתָה דּוֹגְרִי, אֲבָל גַּם נְעִימָה, וְהִיא הִדְרִיכָה אֶת הַתַּלְמִידִים לְתַרְגֵּל בְּיַחַד. לְאַט לְאַט הוּא מָצָא אֶת הַמָּקוֹם שֶׁלּוֹ וְהִרְגִּישׁ נִינוֹחַ. בְּסוֹף הַשִּׁעוּר הֵם אָמְרוּ תְּפִלָּה קְצָרָה וּבְרָכָה לִפְנֵי הָאֹכֶל. הַמּוֹרָה הִסְבִּירָה שֶׁמָּסוֹרֶת וּתְּפִלָּה יְכוֹלוֹת לָתֵת לָאָדָם שֹׁרֶשׁ וְגַם אֹפִּי.',
+      e:'During his first week in the new class, Noam did not feel at home. The teacher was direct, but also pleasant, and she guided the students to practise together. Little by little he found his place and felt at ease. At the end of the lesson they said a short prayer and a blessing before eating. The teacher explained that tradition and prayer can give a person both roots and character.',
+      note:'This passage blends spoken Israeli classroom language with text-and-tradition vocabulary so the learner can feel both registers working together.',
+      questions:[
+        {q:'How did Noam feel at the very beginning?',opts:['Completely relaxed','Not at home yet','Angry at the teacher','Ready to leave immediately'],ans:1,note:'The first sentence says he did not yet feel at home.'},
+        {q:'What did the teacher ask the students to do together?',opts:['Argue with each other','Practise together','Go to the market','Read a newspaper'],ans:1,note:'She guided them to practise together.'},
+        {q:'What happened at the end of the lesson?',opts:['They went home silently','They read a news article','They said a short prayer and blessing','They wrote a long exam'],ans:2,note:'The passage says they said a short prayer and a blessing before eating.'},
+        {q:'According to the teacher, what can tradition and prayer give a person?',opts:['Money and status','Roots and character','Fame and power','Only quiet'],ans:1,note:'The final sentence connects tradition and prayer with roots and character.'}
+      ]},
+    {id:'2-comp-2',label:'📚 Reading Comprehension — Custom, Guidance, and Home',type:'comprehension',unlockMastered:10,source:'Level 2 follow-up reading with community and study language',
+      h:'בְּיוֹם שִׁשִּׁי הַכִּתָּה הִתְכּוֹנְנָה לְאֲרוּחָה מְשֻׁתֶּפֶת. לִפְנֵי הָאֹכֶל הַמּוֹרָה הוֹצִיאָה סִדּוּר קָטָן וְהִנְחָתָה אֶת הַתַּלְמִידִים לוֹמַר בְּרָכָה בְּיַחַד. אַחַר כָּךְ הִיא דִּבְּרָה עַל מִנְהָג וְעַל מָסוֹרֶת, וְאָמְרָה שֶׁהֵם יְכוֹלִים לְחַנֵּךְ אֶת הָאָדָם לְמוּסָר וְלֶאֱמוּנָה. נֹעַם חִיֵּךְ וְאָמַר שֶׁעַכְשָׁו הוּא בֶּאֱמֶת מַרְגִּישׁ בַּיִת.',
+      e:'On Friday the class prepared for a shared meal. Before eating, the teacher took out a small prayerbook and guided the students to say a blessing together. Afterwards she spoke about custom and tradition, and said that they can educate a person toward ethics and faith. Noam smiled and said that now he truly feels at home.',
+      note:'This second Level 2 passage reinforces belonging while expanding the learner’s feel for communal and ritual language.',
+      questions:[
+        {q:'What did the teacher take out before the meal?',opts:['A newspaper','A small prayerbook','A school test','A market list'],ans:1,note:'The passage says she took out a small siddur.'},
+        {q:'What did the students do together first?',opts:['Left the room','Argued about custom','Said a blessing','Read a story'],ans:2,note:'Before eating, they said a blessing together.'},
+        {q:'What did the teacher say tradition and custom can teach?',opts:['Only grammar','Ethics and faith','How to travel','How to buy food'],ans:1,note:'She says they can educate a person toward ethics and faith.'},
+        {q:'How did Noam describe himself at the end?',opts:['Still confused','Ready to leave','Truly feeling at home','Too tired to study'],ans:2,note:'He says that now he truly feels at home.'}
+      ]}
+  ],
+  3:[
+    {id:'3-ethics-1',label:'Textual Ideas — Truth, Justice, Wisdom',words:['אֱמֶת','צֶדֶק','חֶסֶד','רַחֲמִים','חָכְמָה','בִּינָה','דַּעַת']},
+    {id:'3-ethics-2',label:'Textual Ideas — Hope, Return, Redemption',words:['אֱמוּנָה','תִּקְוָה','גְּאֻלָּה','תְּשׁוּבָה','חֵרוּת','גָּלוּת','עוֹלָם הַבָּא']},
+    {id:'3-text-1',label:'Text & Tradition — Torah Study Language',words:['תּוֹרָה','מִצְוָה','הֲלָכָה','מִשְׁנָה','תַּלְמוּד','פֵּרוּשׁ','רַשִּׁי']},
+    {id:'3-text-2',label:'Text & Tradition — Ritual, Place, Memory',words:['שַׁבָּת','קִידּוּשׁ','הַבְדָּלָה','בֵּית מִקְדָּשׁ','כֹּתֶל','מָשִׁיחַ','תִּקּוּן עוֹלָם']},
+    {id:'3-bridge',label:'Bridge — Grammar, Roots, and Interpretation',words:['שֹׁרֶשׁ','בִּנְיָן','לְפָרֵשׁ','הוֹדִיעַ','נִרְאֶה','הִתְפַּתֵּחַ','נִכְתַּב']},
+    {id:'3-roots',label:'שׁ Roots and Patterns',type:'roots',unlockIds:['3-bridge']},
+    {id:'3-comp',label:'📚 Reading Comprehension — Text, Meaning, and Return',type:'comprehension',unlockIds:['3-ethics-2','3-text-2','3-bridge'],unlockMastered:10,source:'Blended Jewish-study Hebrew + interpretive language',
+      h:'בְּשִׁעוּר תּוֹרָה הָרַב קָרָא מִשְׁנָה קְצָרָה וְאַחַר כָּךְ הוּא הוֹדִיעַ שֶׁהַיּוֹם נִלְמַד גַּם פֵּרוּשׁ שֶׁל רַשִּׁי. הַתַּלְמִידִים דִּבְּרוּ עַל אֱמֶת, צֶדֶק וְרַחֲמִים, וְשָׁאֲלוּ אֵיךְ הָרַעְיוֹנוֹת הָאֵלֶּה מִתְפַּתְּחִים בַּתַּלְמוּד. בְּסוֹף הַשִּׁעוּר הָרַב אָמַר שֶׁתְּשׁוּבָה אֵינֶנָּה רַק תְּשׁוּבָה לִשְׁאֵלָה, אֶלָּא גַּם חֲזָרָה לַדֶּרֶךְ. הַכִּתָּה יָצְאָה מִן הַשִּׁעוּר בְּתִקְוָה וּבְהַרְגָּשָׁה שֶׁל חֵרוּת פְּנִימִית.',
+      e:'In Torah class, the rabbi read a short Mishnah and then announced that today they would also study a commentary of Rashi. The students discussed truth, justice, and compassion, and asked how these ideas develop in the Talmud. At the end of the lesson, the rabbi said that teshuvah is not only an answer to a question, but also a return to the right path. The class left with hope and a feeling of inner freedom.',
+      note:'This section moves the learner from isolated Jewish-study words into connected classroom and interpretation language.',
+      questions:[
+        {q:'What extra text did the class study after the Mishnah?',opts:['A newspaper article','A poem by Bialik','A commentary of Rashi','A legal contract'],ans:2,note:'The rabbi said they would also learn a commentary of Rashi.'},
+        {q:'Which ideas were discussed by the students?',opts:['Food and travel','Truth, justice, and compassion','Only grammar terms','Politics and budgets'],ans:1,note:'The passage explicitly lists truth, justice, and compassion.'},
+        {q:'How does the rabbi define teshuvah here?',opts:['Only a written reply','A ritual meal','Both an answer and a return','A political slogan'],ans:2,note:'He explains that teshuvah is both an answer and a return.'},
+        {q:'How did the class leave the lesson?',opts:['Confused and tired','With hope and inner freedom','In silence and fear','Ready for a test'],ans:1,note:'The final line says they left with hope and a feeling of inner freedom.'}
+      ]},
+    {id:'3-comp-2',label:'📚 Reading Comprehension — Halakhah, Commentary, and Repair',type:'comprehension',unlockMastered:12,source:'Level 3 follow-up reading with study hall and interpretive Hebrew',
+      h:'בְּבֵית הַמִּדְרָשׁ שְׁנֵי תַּלְמִידִים קָרְאוּ קָטָע מִן הַתַּלְמוּד. אֶחָד מֵהֶם אָמַר שֶׁהַפֵּרוּשׁ שֶׁל רַשִּׁי עוֹזֵר לוֹ לִרְאוֹת אֵיךְ הֲלָכָה וְאַגָּדָה נִפְגָּשׁוֹת בְּאוֹתוֹ מָקוֹם. הַשֵּׁנִי הוֹסִיף שֶׁכָל מִלָּה נִכְתַּבָה בְּכַוָּנָה, וְשֶׁכְּדֵי לְפָרֵשׁ אוֹתָהּ צָרִיךְ לְהָבִין גַּם אֶת הַשֹּׁרֶשׁ וְגַם אֶת הַבִּנְיָן. לִפְנֵי שֶׁיָּצְאוּ הֵם אָמְרוּ שֶׁלִּמּוּד כָּזֶה יָכוֹל לְהָבִיא לְתִקּוּן עוֹלָם קָטָן, אַף אִם הוּא מַתְחִיל רַק בַּכִּתָּה.',
+      e:'In the study hall, two students read a passage from the Talmud. One of them said that Rashi’s commentary helps him see how halakhah and aggadah meet in the same place. The second added that every word was written with intention, and that in order to interpret it one must understand both the root and the verb pattern. Before leaving they said that this kind of learning can lead to a small repairing of the world, even if it begins only in the classroom.',
+      note:'This second Level 3 reading strengthens the move from vocabulary knowledge into genuine interpretive habits.',
+      questions:[
+        {q:'What text were the students reading?',opts:['A government report','A Talmud passage','A travel diary','A newspaper editorial'],ans:1,note:'The first sentence says they read a passage from the Talmud.'},
+        {q:'What does Rashi help one see?',opts:['How to avoid study','How halakhah and aggadah meet','How to write headlines','How to run a market'],ans:1,note:'One student says Rashi helps him see how halakhah and aggadah meet.'},
+        {q:'What two language tools did the second student say are needed?',opts:['Budget and policy','Root and verb pattern','Hope and freedom','Blessing and custom'],ans:1,note:'He says interpretation needs both the root and the binyan.'},
+        {q:'What broader goal did they connect to study?',opts:['Winning an argument','Repairing the world in a small way','Finishing quickly','Leaving tradition'],ans:1,note:'They say that such learning can lead to a small tikkun olam.'}
+      ]}
+  ],
+  4:[
+    {id:'4-public-1',label:'Advanced Discourse — Press and Public Voice',words:['כְּתָבָה','כּוֹתֶרֶת','מַאֲמָר','עוֹרֵךְ','כַּתָּב','שַׁדְרָן']},
+    {id:'4-public-2',label:'Advanced Discourse — Law, Agreement, and State',words:['תַּקָּנָה','חֻקָּה','חֲקִיקָה','הֶסְכֵּם','פְּשָׁרָה','פִּיוּס']},
+    {id:'4-public-3',label:'Advanced Discourse — Economy and Policy',words:['צְמִיחָה','מִיתוּן','אִינְפְּלַצְיָה','יִצוּא','יְבוּא','מִדָּד']},
+    {id:'4-text-1',label:'Text & Tradition — History, Ideology, and Revival',words:['חֻרְבָּן','תְּחִיָּה','חֲסִידוּת','מִתְנַגֵּד','הַשְׂכָּלָה','צִיּוֹנוּת']},
+    {id:'4-bridge',label:'Bridge — Formulation, Depth, and Implementation',words:['לְהַקְצוֹת','לְיַשֵּׁם','לְתַעֵד','לְנַסֵּחַ','לְהַרְחִיב','לְהַעֲמִיק']},
+    {id:'4-nuance',label:'Nuance — Argument and Advanced Connectors',words:['דַּוְקָא','בְּדִיעֲבַד','לְכַתְּחִלָּה','קַל וָחֹמֶר','כִּבְיָכוֹל','מִשּׁוּם','כְּדַי','שָׁוֶה']},
+    {id:'4-roots',label:'שׁ Advanced Roots and Registers',type:'roots',unlockIds:['4-bridge']},
+    {id:'4-comp',label:'📚 Reading Comprehension — Editorial Debate and Nuance',type:'comprehension',unlockIds:['4-public-3','4-text-1','4-bridge','4-nuance'],unlockMastered:12,source:'Advanced public Hebrew + high-register nuance',
+      h:'בְּמַאֲמָר דֵּעָה חָדָשׁ הָעוֹרֵךְ נִסָּה לְנַסֵּחַ עֶמְדָה מְאֻזֶּנֶת בְּנֹגֵעַ לַחֲקִיקָה חֲדָשָׁה. הוּא טָעַן שֶׁלְּכַתְּחִלָּה יֵשׁ לְהַקְצוֹת מַשְׁאָבִים לְחִינּוּךְ וּלְתַעֵד אֶת תּוֹצְאוֹת הַמְּדִינִיּוּת, וְרַק אַחַר כָּךְ לְהַרְחִיב אֶת הַתּוֹכְנִית. כְּתָב אַחֵר עָנָה שֶׁבְּדִיעֲבַד, מִשּׁוּם שֶׁהָאִינְפְּלַצְיָה עוֹלָה וְהַצְּמִיחָה נֶחְלֶשֶׁת, לֹא כָּל הֶסְכֵּם חָדָשׁ שָׁוֶה אֶת הַמְּחִיר. הַשַּׁדְרָן סִכֵּם וְאָמַר שֶׁדַּוְקָא בִּזְמַן שֶׁל בָּלַגָן צִבּוּרִי צָרִיךְ לְהַעֲמִיק וְלֹא רַק לְהַגִּיב בְּכּוֹתֶרֶת.',
+      e:'In a new opinion essay, the editor tried to formulate a balanced position regarding new legislation. He argued that ideally resources should first be allocated to education and the policy results should be documented, and only afterwards should the program be expanded. Another writer responded that, after the fact, because inflation is rising and growth is weakening, not every new agreement is worth the price. The broadcaster concluded that דווקא in a time of public chaos, one must deepen the discussion and not merely react to the headline.',
+      note:'This passage trains the learner to move between media language, policy language, and harder connector words that carry argument and nuance.',
+      questions:[
+        {q:'What did the editor try to do in the essay?',opts:['Write a children’s story','Formulate a balanced position','Reject all media','Describe a holiday meal'],ans:1,note:'The first sentence says he tried to formulate a balanced position.'},
+        {q:'What did he say should happen first?',opts:['Expand the program immediately','Allocate resources and document results','Cancel the agreement','Reduce all education spending'],ans:1,note:'He says resources should be allocated and results documented first.'},
+        {q:'Why did the second writer hesitate about a new agreement?',opts:['Because there was no broadcaster','Because inflation was rising and growth weakening','Because the editor resigned','Because the headline was too short'],ans:1,note:'The response mentions rising inflation and weakening growth.'},
+        {q:'What was the broadcaster’s final point?',opts:['Only headlines matter','Chaos means discussion should stop','One should deepen the discussion, not just react','Every compromise is bad'],ans:2,note:'He says that in a time of public chaos, we need deeper discussion rather than headline reactions.'}
+      ]},
+    {id:'4-comp-2',label:'📚 Reading Comprehension — Law, History, and Argument',type:'comprehension',unlockMastered:14,source:'Level 4 follow-up reading with legal register and high-level connectors',
+      h:'בְּכֻנְסִיָּה אֲקָדֶמִית עַל חֶבְרָה וְהִיסְטוֹרְיָה דִּבְּרוּ חוֹקְרִים עַל הַקֶּשֶׁר בֵּין חֻרְבָּן, תְּחִיָּה וְצִיּוֹנוּת. מְרַצָּה אַחַת טָעֲנָה שֶׁקַל וָחֹמֶר שֶׁאִם יֵשׁ לְתַעֵד בְּדִקְדּוּק אֵירוּעַ קָטָן, צָרִיךְ לְתַעֵד גַּם תַּהֲלִיךְ לְאֻמִּי רָחָב. מְרַצֶּה אַחֵר בִּיקֵּשׁ לְהִסְתַּיֵּג וְאָמַר שֶׁכִּבְיָכוֹל אֵין לְנַסֵּחַ הֶסְכֵּם עַל כָּל פֵּרוּשׁ הִיסְטוֹרִי. לְבַסּוֹף הַיּוֹשֵׁב רֹאשׁ סִכֵּם שֶׁכְּדַי לְהַעֲמִיק בַּוִּכּוּחַ מִשּׁוּם שֶׁרַק כָּךְ הַצִּבּוּר יָכוֹל לְהָבִין מַה שָּׁוֶה לְשַׁמֵּר וּמַה צָרִיךְ לְתַקֵּן.',
+      e:'At an academic conference on society and history, researchers spoke about the connection between destruction, revival, and Zionism. One lecturer argued that all the more so, if one must carefully document a small event, one must also document a broad national process. Another lecturer asked to qualify that claim and said that, so to speak, it is impossible to formulate agreement on every historical interpretation. In the end, the chair concluded that it is worthwhile to deepen the debate, because only in that way can the public understand what is worth preserving and what needs repair.',
+      note:'This second Level 4 passage pushes the learner into argument structure, qualification, and abstract historical register.',
+      questions:[
+        {q:'What three themes were discussed at the conference?',opts:['Food, travel, and music','Destruction, revival, and Zionism','Weather, farming, and sport','Prayer, blessing, and custom'],ans:1,note:'The opening sentence names destruction, revival, and Zionism.'},
+        {q:'What was the first lecturer’s argument?',opts:['Small events should be ignored','Documentation is unnecessary','If we document a small event, all the more so a broad national process should be documented','All agreements are impossible'],ans:2,note:'She uses kal vachomer to argue for documenting a broad national process.'},
+        {q:'What caution did the second lecturer raise?',opts:['History should not be studied','Agreement on every historical interpretation cannot really be formulated','Only law matters','The conference should end early'],ans:1,note:'He says one cannot formulate agreement on every historical interpretation.'},
+        {q:'Why did the chair say the debate should deepen?',opts:['To entertain the audience','So the public can understand what is worth preserving and repairing','To avoid documentation','Because compromise is always wrong'],ans:1,note:'The closing sentence says deeper debate helps the public understand what to preserve and repair.'}
+      ]}
+  ]
+};
+function normalizeCourseSections(n,sections){
+  return (sections||[]).map(sec=>{
+    if(sec.type)return Object.assign({},sec);
+    const filtered=(sec.words||[]).filter(h=>D.some(d=>d.l===n&&d.h===h));
+    return Object.assign({},sec,{words:filtered});
+  }).filter(sec=>sec.type||((sec.words||[]).length));
+}
+function courseLevelMasteredCount(n){
+  return D.filter(w=>w.l===n&&S.learner.vocab[w.h]&&S.learner.vocab[w.h].lv>=2).length;
+}
 function getCourseSections(n){
   const explicit={1:[
     {id:'1-1',label:'Greetings',words:['שָׁלוֹם','תּוֹדָה','בְּבַקָּשָׁה','כֵּן','לֹא','תּוֹדָה רַבָּה']},
@@ -8321,6 +8481,7 @@ function getCourseSections(n){
     {id:'1-14',label:'Common Expressions',words:['יֵשׁ','אֵין','אֶפְשָׁר','רֶגַע','מַה נִּשְׁמַע','מְאוֹד','הַרְבֵּה','בֶּאֱמֶת','כְּמוֹבָן']},
   ]};
   if(explicit[n])return explicit[n];
+  if(BLENDED_LEVEL_SECTIONS[n])return normalizeCourseSections(n,BLENDED_LEVEL_SECTIONS[n]);
   const all=D.filter(w=>w.l===n);
   const chunk=n===2?12:n===3?10:n===4?8:6;
   const themes=LEVEL_THEMES[n]||[];
@@ -8337,6 +8498,13 @@ function getSectionPool(n,sectionId){
 function isSectionUnlocked(n,sectionId){
   const sections=getCourseSections(n);const idx=sections.findIndex(s=>s.id===sectionId);
   if(idx<0)return false;if(idx===0)return true;
+  const sec=sections[idx];
+  if(sec.unlockIds&&sec.unlockIds.length&&!sec.unlockIds.every(id=>!!S.learner.completedSections[id]))return false;
+  if(sec.unlockMastered!=null&&courseLevelMasteredCount(n)<sec.unlockMastered)return false;
+  if(sec.unlockAfter!=null){
+    const completedBefore=sections.slice(0,idx).filter(s=>S.learner.completedSections[s.id]).length;
+    return completedBefore>=sec.unlockAfter;
+  }
   return !!S.learner.completedSections[sections[idx-1].id];
 }
 function markSectionComplete(sectionId){S.learner.completedSections[sectionId]=true;saveL();}
@@ -8384,7 +8552,7 @@ function rCourse(){
         </select>
         <button onclick="(function(){const sel=document.getElementById('sec-dd-${cl.n}');if(sel&&sel.value){openSection(${cl.n},sel.value);}})()" class="btn-p" style="padding:10px 18px;font-size:10px;">Open</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;">${sections.slice(0,6).map(sec=>{const u=isSectionUnlocked(cl.n,sec.id);const d=!!S.learner.completedSections[sec.id];const pool=sec.type?[]:getSectionPool(cl.n,sec.id);const mastered=pool.filter(w=>S.learner.vocab[w.h]&&S.learner.vocab[w.h].lv>=3).length;const count=sec.type?'—':`${mastered}/${pool.length}`;return`<div style="font-size:11px;color:${u?(d?'var(--ok)':'var(--ink2)'):'var(--ink4)'};"><span style="width:16px;display:inline-block;">${d?'✓':u?'○':'🔒'}</span>${sec.label} <span style="font-size:9px;color:var(--ink4);">${count}</span></div>`}).join('')}${sections.length>6?`<div style="font-size:10px;color:var(--ink4);">… +${sections.length-6} more</div>`:''}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">${sections.slice(0,9).map(sec=>{const u=isSectionUnlocked(cl.n,sec.id);const d=!!S.learner.completedSections[sec.id];const pool=sec.type?[]:getSectionPool(cl.n,sec.id);const mastered=pool.filter(w=>S.learner.vocab[w.h]&&S.learner.vocab[w.h].lv>=3).length;const count=sec.type==='comprehension'?`guided reading · ${Math.min(courseLevelMasteredCount(cl.n),sec.unlockMastered||0)}/${sec.unlockMastered||0} mastered`:sec.type==='roots'?'root drill':sec.type==='read'?'story':`${mastered}/${pool.length}`;return`<div style="font-size:11px;color:${u?(d?'var(--ok)':'var(--ink2)'):'var(--ink4)'};"><span style="width:16px;display:inline-block;">${d?'✓':u?'○':'🔒'}</span>${sec.label} <span style="font-size:9px;color:var(--ink4);">${count}</span></div>`}).join('')}${sections.length>9?`<div style="font-size:10px;color:var(--ink4);">… +${sections.length-9} more</div>`:''}</div>
     </div>`:''}`;
   }).join('')}
   </div>`;
@@ -8411,6 +8579,7 @@ function openSection(n,sectionId){
   const sections=getCourseSections(n);const sec=sections.find(s=>s.id===sectionId);
   if(!sec){go('learn');return;}
   if(sec.type==='read'){openCourseRead(n,sectionId);return;}
+  if(sec.type==='comprehension'){openCourseComprehension(n,sectionId);return;}
   if(sec.type==='numbers'){openCourseNumbers(n,sectionId);return;}
   if(sec.type==='roots'){openCourseRoots(n,sectionId);return;}
   const pool=getSectionPool(n,sectionId);
@@ -8418,14 +8587,15 @@ function openSection(n,sectionId){
   S.courseWordIdx=0;showCourseWord(n,sectionId,0);
 }
 function openCourseRead(n,sectionId){
-  const cl=LVS.find(c=>c.n===n);if(!cl||!cl.story){closeModal();go('learn');return;}
+  const cl=LVS.find(c=>c.n===n);const sec=getCourseSections(n).find(s=>s.id===sectionId);const story=sec&&sec.h?{h:sec.h,e:sec.e||'',note:sec.note||'',source:sec.source||''}:(cl&&cl.story?cl.story:null);if(!cl||!story){closeModal();go('learn');return;}
   const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  openModal(`${ghdr('📖 '+cl.label,'Read the story for this level',cl.hex)}
+  openModal(`${ghdr('📖 '+(sec&&sec.label?sec.label:cl.label),(sec&&sec.source)||'Read the story for this level',cl.hex)}
   <div class="mbody">
     <div class="passage" style="margin-bottom:16px;">
-      <div style="font-family:var(--heb);font-size:22px;direction:rtl;text-align:right;line-height:2.0;">${cl.story.h}</div>
-      <div style="color:var(--ink2);font-size:clamp(16px,4vw,19px);line-height:1.6;font-style:italic;margin-top:12px;border-top:1px solid var(--bdr);padding-top:12px;">${esc(cl.story.e)}</div>
+      <div style="font-family:var(--heb);font-size:22px;direction:rtl;text-align:right;line-height:2.0;">${story.h}</div>
+      <div style="color:var(--ink2);font-size:clamp(16px,4vw,19px);line-height:1.6;font-style:italic;margin-top:12px;border-top:1px solid var(--bdr);padding-top:12px;">${esc(story.e)}</div>
     </div>
+    ${story.note?`<div style="padding:10px 12px;background:rgba(74,104,48,.08);border:1px solid rgba(74,104,48,.25);border-radius:var(--rs);font-size:12px;color:var(--ink2);margin-bottom:14px;">${esc(story.note)}</div>`:''}
     <button onclick="markSectionComplete('${sectionId}');S.courseDrill=false;S.courseSectionId=null;closeModal();go('learn')" class="btn-p btn-w" style="width:100%;padding:12px;border-radius:var(--rs);font-family:var(--lbl);letter-spacing:2px;">✓ I read it — Continue</button>
   </div>`);
 }
@@ -8454,6 +8624,91 @@ function ansCourseNum(j,val,sectionId){
 }
 function openCourseRoots(n,sectionId){
   markSectionComplete(sectionId);S.courseDrill=false;S.courseSectionId=null;closeModal();go('roots');
+}
+function openCourseComprehension(n,sectionId){
+  const cl=LVS.find(c=>c.n===n);const sec=getCourseSections(n).find(s=>s.id===sectionId);
+  if(!cl||!sec||!sec.questions||!sec.questions.length){closeModal();go('learn');return;}
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  S.courseComp={n,sectionId,qIdx:0,score:0,done:false};
+  S._rabbiCtx={sentenceHe:sec.h||'',sentenceEn:sec.e||''};
+  openModal(`${ghdr(sec.label,sec.source||'Read carefully, then answer the Rabbi.',cl.hex)}
+  <div class="mbody rabbi-safe">
+    <div class="passage" style="margin-bottom:16px;">
+      <div style="font-family:var(--heb);font-size:21px;direction:rtl;text-align:right;line-height:2.0;">${sec.h||''}</div>
+      <div style="color:var(--ink2);font-size:clamp(16px,4vw,19px);line-height:1.6;font-style:italic;margin-top:12px;border-top:1px solid var(--bdr);padding-top:12px;">${esc(sec.e||'')}</div>
+    </div>
+    ${sec.note?`<div style="padding:10px 12px;border-radius:var(--rs);background:rgba(74,104,48,.08);border:1px solid rgba(74,104,48,.28);font-size:12px;color:var(--ink2);margin-bottom:14px;">${esc(sec.note)}</div>`:''}
+    <button onclick="startCourseComprehension()" class="btn-p btn-w" style="width:100%;padding:12px;border-radius:var(--rs);font-family:var(--lbl);letter-spacing:2px;">Begin questions</button>
+    ${rabbiHTML()}
+  </div>`);
+}
+function startCourseComprehension(){
+  if(!S.courseComp)return;
+  S.courseComp.qIdx=0;S.courseComp.score=0;S.courseComp.done=false;
+  showCourseComprehensionQuestion();
+}
+function showCourseComprehensionQuestion(){
+  const st=S.courseComp;if(!st)return;
+  const cl=LVS.find(c=>c.n===st.n);const sec=getCourseSections(st.n).find(s=>s.id===st.sectionId);if(!cl||!sec||!sec.questions||!sec.questions[st.qIdx]){finishCourseComprehension();return;}
+  const q=sec.questions[st.qIdx];const total=sec.questions.length;
+  S._rabbiCtx={sentenceHe:sec.h||'',sentenceEn:sec.e||''};
+  openModal(`${ghdr(sec.label,`Question ${st.qIdx+1} of ${total}`,cl.hex)}
+  <div class="mbody rabbi-safe">
+    <div style="margin-bottom:12px;padding:10px 12px;border-radius:var(--rs);background:rgba(200,112,32,.08);border:1px solid rgba(200,112,32,.25);font-size:11px;color:var(--ink2);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+      <span>Score: ${st.score}/${total}</span>
+      <span>Unlock goal: guided reading + meaning</span>
+    </div>
+    <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);margin-bottom:14px;">
+      <div style="font-family:var(--heb);font-size:18px;direction:rtl;text-align:right;line-height:1.9;">${sec.h||''}</div>
+      <div style="font-size:13px;color:var(--ink3);font-style:italic;margin-top:9px;border-top:1px solid rgba(120,90,60,.18);padding-top:9px;">${sec.e||''}</div>
+    </div>
+    <div style="font-family:var(--lbl);font-size:11px;letter-spacing:1.5px;color:var(--burg);margin-bottom:8px;">RABBI CHECK-IN</div>
+    <div style="font-size:19px;color:var(--ink);line-height:1.5;margin-bottom:12px;">${q.q}</div>
+    <div id="cc-opts" style="display:flex;flex-direction:column;gap:9px;">${(q.opts||[]).map((opt,i)=>`<button class="ch" id="ccq${i}" onclick="ansCourseComprehension(${i})" style="min-height:48px;text-align:left;">${opt}</button>`).join('')}</div>
+    <div id="cc-r"></div>
+    ${rabbiHTML()}
+  </div>`);
+}
+function ansCourseComprehension(i){
+  const st=S.courseComp;if(!st||st.done)return;
+  const sec=getCourseSections(st.n).find(s=>s.id===st.sectionId);const q=sec&&sec.questions?sec.questions[st.qIdx]:null;
+  if(!sec||!q)return;
+  st.done=true;
+  const ok=i===q.ans;
+  if(ok)st.score++;
+  document.querySelectorAll('#cc-opts button').forEach((el,idx)=>{
+    if(idx===q.ans)el.classList.add('ok');
+    else if(idx===i&&!ok)el.classList.add('no');
+    el.disabled=true;
+  });
+  showRabbiFeedback(ok);
+  const nextBtn=st.qIdx+1<sec.questions.length
+    ? `<button onclick="courseComprehensionNext()" class="btn-p btn-w" style="margin-top:10px;">Next question →</button>`
+    : `<button onclick="finishCourseComprehension()" class="btn-p btn-w" style="margin-top:10px;">Finish section</button>`;
+  document.getElementById('cc-r').innerHTML=`<div style="margin-top:12px;padding:12px;border-radius:var(--rs);border:2px solid ${ok?'var(--ok2)':'var(--err2)'};background:${ok?'#f0fff0':'#fff0f0'};color:${ok?'var(--ok)':'var(--err)'};">
+    ${ok?'✓ Correct.':'✗ Not quite.'}${q.note?` <div style="margin-top:6px;color:var(--ink2);font-size:12px;line-height:1.5;">${q.note}</div>`:''}
+    ${nextBtn}
+  </div>`;
+}
+function courseComprehensionNext(){
+  if(!S.courseComp)return;
+  S.courseComp.qIdx++;S.courseComp.done=false;
+  showCourseComprehensionQuestion();
+}
+function finishCourseComprehension(){
+  const st=S.courseComp;if(!st){closeModal();go('learn');return;}
+  const sec=getCourseSections(st.n).find(s=>s.id===st.sectionId);const total=sec&&sec.questions?sec.questions.length:0;
+  const score=st.score;const pct=total?Math.round(score/total*100):0;
+  markSectionComplete(st.sectionId);
+  S.courseComp=null;S.courseDrill=false;S.courseSectionId=null;
+  openModal(`${ghdr('📚 Reading Complete',sec&&sec.label?sec.label:'Course comprehension')}
+  <div class="mbody" style="text-align:center;">
+    <div style="font-size:38px;margin-bottom:10px;">${pct>=75?'📖':'✍️'}</div>
+    <div style="font-family:var(--lbl);font-size:11px;letter-spacing:2px;color:var(--ink3);margin-bottom:8px;">SECTION SCORE</div>
+    <div style="font-size:28px;color:var(--burg);margin-bottom:6px;">${score}/${total}</div>
+    <div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:16px;">The blended reading section is now complete. This is the model I can reuse for later levels with mini-stories, source excerpts, and deeper Rabbi follow-up.</div>
+    <button onclick="closeModal();go('learn')" class="btn-p btn-w" style="width:100%;padding:12px;">Back to course</button>
+  </div>`);
 }
 function showCourseWord(n,sectionId,idx){
   const cl=LVS.find(c=>c.n===n);const pool=getSectionPool(n,sectionId);
@@ -8645,7 +8900,17 @@ function buildFill(w,pool){
     ${rabbiHTML()}
   </div>`;
 }
-function getFillSentenceEn(w){const m=w.e||'';if(/תּוֹדָה|thanks?/i.test(w.h+m))return 'I give thanks every day.';return `I ${m} every day.`;}
+function _fillMeaningCore(v){
+  return String(v||'').split('/')[0].replace(/\([^)]*\)/g,'').trim();
+}
+function getFillSentenceEn(w){
+  const m=_fillMeaningCore(w.e||'');
+  if(/תּוֹדָה|thanks?/i.test((w.h||'')+m))return 'I give thanks every day.';
+  if(/^to\s+/i.test(m))return `I ${m.replace(/^to\s+/i,'').trim()} every day.`;
+  if(/^(good|bad|happy|sad|ready|tired|calm|quiet|relaxed|at ease|at home|okay|fine|well|strong|weak|free)$/i.test(m))return `I am ${m} every day.`;
+  if(/^(kind|honest|direct|friendly)$/i.test(m))return `I try to be ${m} every day.`;
+  return `Every day, "${m}" is part of my life.`;
+}
 function ansFill(i,val){
   if(S.GM.done)return;S.GM.done=true;const ok=val===S.GM.w.h;
   track({word:S.GM.w.h,game:'fill',ok});
@@ -9717,8 +9982,14 @@ function libExtractWords(text){
   return results;
 }
 
+function toggleLibraryAddMaterial(ev){
+  if(ev){ev.preventDefault();ev.stopPropagation();}
+  S._libAddOpen=!S._libAddOpen;
+  go('library',{keepScroll:true});
+}
 function rLibrary(){
   const lib=S.library;
+  const addOpen=!!S._libAddOpen;
   return`<div style="margin-bottom:18px;">
     <div class="sec-hdr">MY LIBRARY</div>
     <div class="he-lg" style="margin-bottom:4px;">הַסִּפְרִיָּה שֶׁלִּי</div>
@@ -9726,7 +9997,11 @@ function rLibrary(){
   </div>
 
   <div class="card card-sm" style="margin-bottom:16px;">
-    <div class="sec-hdr" style="margin-bottom:12px;">ADD NEW MATERIAL</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:${addOpen?12:0}px;">
+      <div class="sec-hdr" style="margin-bottom:0;">ADD NEW MATERIAL</div>
+      <button onclick="toggleLibraryAddMaterial(event)" class="btn-o" style="padding:7px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">${addOpen?'HIDE':'ADD MATERIAL'}</button>
+    </div>
+    <div style="display:${addOpen?'block':'none'};">
 
     <!-- Title -->
     <div style="margin-bottom:8px;">
@@ -9801,6 +10076,7 @@ function rLibrary(){
       🔍 EXTRACT &amp; REVIEW
     </button>
     <div id="lib-msg" style="margin-top:8px;min-height:20px;"></div>
+    </div>
   </div>
 
   <!-- Wikipedia Hebrew Import -->
@@ -10628,7 +10904,10 @@ if(isIOS&&!window.matchMedia('(display-mode:standalone)').matches&&!navigator.st
 function installApp(){if(installPrompt){installPrompt.prompt();installPrompt.userChoice.then(()=>{document.getElementById('ibanner').classList.remove('show');installPrompt=null;});}else{document.getElementById('ibanner').classList.remove('show');}}
 function dismissInstall(){document.getElementById('ibanner').classList.remove('show');}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js?v=4').catch(()=>{});
-window.addEventListener('click',e=>{if(!(e.target&&e.target.closest&&e.target.closest('#shell-top')))closeAccountMenu();});
+window.addEventListener('click',e=>{
+  if(!(e.target&&e.target.closest&&e.target.closest('#shell-top')))closeAccountMenu();
+  if(!(e.target&&e.target.closest&&e.target.closest('#top-nav')))closeNavMenu();
+});
 
 // Boot
 function bootApp(){
