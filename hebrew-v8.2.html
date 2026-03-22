@@ -39,7 +39,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 button{cursor:pointer;font-family:inherit;border:none;background:none;}
 textarea,input{font-family:inherit;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:10px;}
-nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,#dfc8a0);border-bottom:2px solid var(--bdr);box-shadow:var(--sm);}
+nav{position:sticky;top:28px;z-index:100;background:linear-gradient(180deg,#e8d8b8,#dfc8a0);border-bottom:2px solid var(--bdr);box-shadow:var(--sm);}
 .nav-inner{display:flex;align-items:center;padding:0 12px;overflow-x:auto;scrollbar-width:none;max-width:1200px;margin:0 auto;}
 .nav-inner::-webkit-scrollbar{display:none;}
 .nlogo{color:var(--rust);font-size:17px;font-family:var(--lbl);letter-spacing:3px;margin-right:16px;padding:13px 0;flex-shrink:0;font-weight:700;}
@@ -48,7 +48,13 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 .nb.active{border-bottom-color:var(--rust);}
 .auth-btn{padding:7px 12px;border-radius:999px;border:1px solid var(--bdr);background:linear-gradient(145deg,#f8f0e0,#ede0c8);color:var(--rust);font-family:var(--lbl);font-size:9px;letter-spacing:1px;white-space:nowrap;display:none;}
 .auth-btn:hover{border-color:var(--amber);color:var(--amber);}
-.nav-auth{position:absolute;top:7px;right:10px;z-index:130;}
+.shell-top{position:fixed;top:8px;left:0;right:0;z-index:140;display:none;pointer-events:none;}
+.shell-top-inner{max-width:min(1400px,88vw);margin:0 auto;display:flex;justify-content:flex-end;padding:0 10px;position:relative;}
+.nav-auth{display:inline-flex;pointer-events:auto;position:relative;box-shadow:0 4px 14px rgba(30,18,8,.12);}
+.auth-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:220px;padding:12px;background:linear-gradient(160deg,#fff,#f8f0e0);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sl);display:none;color:var(--ink2);pointer-events:auto;}
+.auth-menu.open{display:block;}
+.auth-menu .sec-hdr{margin-bottom:6px;}
+.auth-menu .auth-stat{font-size:12px;color:var(--ink2);margin-bottom:4px;}
 .page{max-width:100%;margin:0 auto;padding:20px 24px 100px;position:relative;z-index:1;}
 .home-sections{display:flex;flex-direction:column;gap:20px;}
 .home-sec{margin-bottom:4px;}
@@ -125,7 +131,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 .carousel-card:hover,.carousel-card:active{border-color:var(--amber);transform:scale(1.02);box-shadow:var(--sm);}
 .carousel-card.fromLib{border-left:4px solid var(--sage);}
 .carousel-card .icon{font-size:28px;margin-bottom:6px;}
-.carousel-card .title{font-family:var(--lbl);font-size:9px;letter-spacing:1px;color:var(--ink2);line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.carousel-card .title{font-family:var(--lbl);font-size:9px;letter-spacing:1px;color:var(--ink2);line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;line-clamp:2;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .carousel-slider-wrap{display:flex;justify-content:center;padding:14px 24px 0;}
 .carousel-track{position:relative;width:100%;max-width:200px;height:10px;background:rgba(0,0,0,.35);border-radius:5px;cursor:pointer;border:1px solid rgba(255,255,255,.2);}
 .carousel-thumb{position:absolute;left:14px;top:50%;transform:translate(-50%,-50%);width:28px;height:28px;background:linear-gradient(145deg,var(--amber),var(--amber2));border-radius:50%;cursor:grab;box-shadow:var(--sm),inset 0 1px 0 rgba(255,255,255,.3);border:2px solid var(--bdr2);transition:box-shadow .2s;}
@@ -231,7 +237,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 /* NEXT UP banner */
 .next-up-bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:linear-gradient(145deg,#f8f0e0,#efe5cc);
   border-top:2px solid var(--bdr);padding:14px 20px;display:flex;align-items:center;gap:14px;
-  box-shadow:0 -4px 20px rgba(30,18,8,.15);}
+  box-shadow:0 -4px 20px rgba(30,18,8,.15);cursor:pointer;}
 .next-up-bar .icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;
   background:linear-gradient(135deg,var(--rust),var(--rust2));color:#fff;flex-shrink:0;}
 .next-up-bar .label{flex:1;}
@@ -270,9 +276,10 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 .home-login-card{max-width:320px;justify-self:center;align-self:center;text-align:left;padding:18px 16px;background:linear-gradient(145deg,rgba(255,255,255,.76),rgba(247,239,223,.94));border:1px solid rgba(168,136,88,.45);border-radius:18px;box-shadow:0 10px 28px rgba(30,18,8,.12);}
 .home-login-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
 .home-login-note{font-size:12px;color:var(--ink3);line-height:1.45;}
-.home-rabbi-wrap{grid-area:rabbi;position:relative;left:0;bottom:0;z-index:1;opacity:1;pointer-events:none;justify-self:end;align-self:end;width:min(100%,900px);display:flex;justify-content:flex-end;background:transparent;isolation:isolate;padding-right:clamp(8px,3vw,34px);}
+.home-rabbi-wrap{grid-area:rabbi;position:relative;left:0;bottom:0;z-index:1;opacity:1;pointer-events:none;justify-self:end;align-self:end;width:min(100%,980px);display:flex;justify-content:flex-end;background:transparent;isolation:isolate;padding-right:clamp(18px,7vw,92px);}
 .home-rabbi-wrap .rabbi-img{height:var(--home-rabbi-h);width:auto;animation:rabbiFloat 2.8s ease-in-out infinite;transition:transform .6s cubic-bezier(.22,.64,.2,1),filter .6s ease;filter:drop-shadow(0 8px 16px rgba(30,18,8,.18));background:transparent;mix-blend-mode:multiply;}
-.home-rabbi-wrap .rabbi-bubble{opacity:1;max-width:286px;font-size:21px;font-family:var(--heb);padding:12px 16px;left:-16px;right:auto;top:31%;bottom:auto;transform:translate(-100%,-50%);background:linear-gradient(160deg,#fbf3e4,#f1e1c5);border:2px solid rgba(168,136,88,.72);border-radius:22px;box-shadow:0 8px 22px rgba(30,18,8,.14),inset 0 1px 0 rgba(255,255,255,.88);color:var(--ink2);text-shadow:none;white-space:normal;line-height:1.48;}
+.home-rabbi-wrap .rabbi-video{height:var(--home-rabbi-h);width:auto;max-width:min(100%,56vw);object-fit:contain;display:none;filter:drop-shadow(0 8px 16px rgba(30,18,8,.18));background:transparent;}
+.home-rabbi-wrap .rabbi-bubble{opacity:1;max-width:304px;font-size:21px;font-family:var(--heb);padding:12px 16px;left:10px;right:auto;top:24%;bottom:auto;transform:translate(-100%,-50%);background:linear-gradient(160deg,#fbf3e4,#f1e1c5);border:2px solid rgba(168,136,88,.72);border-radius:22px;box-shadow:0 8px 22px rgba(30,18,8,.14),inset 0 1px 0 rgba(255,255,255,.88);color:var(--ink2);text-shadow:none;white-space:normal;line-height:1.48;}
 .home-rabbi-wrap .rabbi-bubble::before{content:'';position:absolute;inset:0;border-radius:22px;pointer-events:none;opacity:.18;background-image:radial-gradient(circle at 1px 1px,rgba(150,120,80,.22) 1px,transparent 1px);background-size:7px 7px;}
 .home-rabbi-wrap .rabbi-bubble::after{display:block;content:'';position:absolute;top:58%;left:100%;width:24px;height:24px;transform:translate(-42%, -50%) rotate(45deg);background:linear-gradient(160deg,#f8ecd6,#f1e1c5);border-right:2px solid rgba(168,136,88,.72);border-bottom:2px solid rgba(168,136,88,.72);border-radius:0 0 8px 0;box-shadow:3px 3px 8px rgba(30,18,8,.06);}
 .home-rabbi-wrap .rabbi-bubble .en{display:block;font-family:var(--body);font-size:15px;color:var(--ink3);margin-top:7px;direction:ltr;}
@@ -293,15 +300,19 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 @keyframes homeRabbiWalkIn{0%{transform:translateX(-74px) translateY(0) scale(.98)}70%{transform:translateX(6px) translateY(-1px) scale(1.01)}100%{transform:translateX(0) translateY(0) scale(1)}}
 @media (min-width:900px){
   .home-intro-layout{--home-rabbi-h:430px;--home-icon-size:124px;row-gap:26px;justify-items:center;}
-  .home-rabbi-wrap{left:0;bottom:0;padding-right:48px;}
-  .home-rabbi-wrap .rabbi-bubble{max-width:320px;font-size:22px;top:30%;}
+  .shell-top-inner{padding-right:18px;}
+  .home-rabbi-wrap{left:0;bottom:0;padding-right:88px;}
+  .home-rabbi-wrap .rabbi-bubble{max-width:336px;font-size:22px;top:22%;}
   .home-intro-icons{width:min(100%,760px);}
 }
 @media (max-width:767px){
+  nav{top:22px;}
+  .shell-top{top:6px;}
+  .shell-top-inner{padding:0 8px;}
   .home-intro-layout.auth-gate{grid-template-columns:1fr;justify-items:center;row-gap:16px;}
   .home-login-card{max-width:min(100%,340px);}
-  .home-rabbi-wrap{justify-self:center;width:100%;padding-right:0;}
-  .home-rabbi-wrap .rabbi-bubble{max-width:250px;font-size:19px;left:-8px;top:29%;}
+  .home-rabbi-wrap{justify-self:center;width:100%;padding-right:clamp(12px,6vw,34px);}
+  .home-rabbi-wrap .rabbi-bubble{max-width:246px;font-size:19px;left:8px;top:19%;}
   .home-rabbi-wrap .rabbi-bubble .en{font-size:14px;}
   .home-intro-icons{gap:14px;width:100%;flex-wrap:wrap;}
   .home-intro-item{min-width:82px;}
@@ -318,6 +329,12 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 <!-- PDF.js and Tesseract load on demand when Library upload is used — no block on initial load -->
 </head>
 <body>
+<div id="shell-top" class="shell-top" style="display:none;">
+  <div class="shell-top-inner">
+    <button id="auth-btn" class="auth-btn nav-auth" onclick="toggleAccountMenu(event)">Login</button>
+    <div id="auth-menu" class="auth-menu"></div>
+  </div>
+</div>
 <nav id="top-nav" style="display:none;">
   <div class="nav-inner">
     <span class="nlogo">עִבְרִית</span>
@@ -328,7 +345,6 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
     <button class="nb" onclick="go('dashboard')">Progress</button>
     <button class="nb" onclick="go('developer')">Developer</button>
   </div>
-  <button id="auth-btn" class="auth-btn nav-auth" onclick="openLoginModal()">Login</button>
 </nav>
 <div id="ibanner">
   <span>📜 Add עִבְרִית to Home Screen — works offline</span>
@@ -338,7 +354,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
   </div>
 </div>
 <div class="page au" id="app"></div>
-<div id="next-up" class="next-up-bar" style="display:none;">
+<div id="next-up" class="next-up-bar" style="display:none;" onclick="goNextUp(event)">
   <div class="icon">📚</div>
   <div class="label"><strong>NEXT UP</strong><span id="next-up-txt">Continue Course — Aleph</span></div>
   <button onclick="goNextUp()" style="background:none;border:none;font-size:24px;color:var(--rust);cursor:pointer;">→</button>
@@ -1042,6 +1058,11 @@ function rabbiWakeFromSleepy(){const fig=document.getElementById('rabbi-fig');if
 function rabbiStopExerciseIdle(){_rabbiExerciseActive=false;_rabbiSleepy=false;if(_rabbiExerciseIdleTimer){clearTimeout(_rabbiExerciseIdleTimer);_rabbiExerciseIdleTimer=null;}const fig=document.getElementById('rabbi-fig');if(fig)fig.classList.remove('sleepy');if(_rabbiActivityHandler){['pointerdown','touchstart','keydown','input','click','mousemove'].forEach(ev=>document.removeEventListener(ev,_rabbiActivityHandler,true));_rabbiActivityHandler=null;}}
 function rabbiEnableExerciseIdle(){rabbiStopExerciseIdle();_rabbiExerciseActive=true;_rabbiLastInteractiveTs=Date.now();_rabbiActivityHandler=()=>{if(!_rabbiExerciseActive)return;const now=Date.now();if(now-_rabbiLastInteractiveTs<180)return;_rabbiLastInteractiveTs=now;if(_rabbiSleepy)rabbiWakeFromSleepy();rabbiScheduleExerciseIdle();};['pointerdown','touchstart','keydown','input','click','mousemove'].forEach(ev=>document.addEventListener(ev,_rabbiActivityHandler,true));rabbiScheduleExerciseIdle();}
 function homeRabbiSetImg(src,fallbackSrc){
+  const vid=document.getElementById('home-rabbi-video');
+  if(vid){
+    try{vid.pause();}catch(_){}
+    vid.onended=null;vid.onerror=null;vid.style.display='none';
+  }
   const img=document.getElementById('home-rabbi-img');
   if(!img)return;
   img.style.display='';
@@ -1055,6 +1076,45 @@ function homeRabbiSetImg(src,fallbackSrc){
     img.onerror=function(){this.style.display='none';var fb=this.nextElementSibling;if(fb)fb.style.display='inline-block';};
   }
   img.src=src;
+}
+function homeMediaEntry(){
+  return Object.assign({},HOME_MEDIA_DEFAULT,ls(HOME_MEDIA_KEY,HOME_MEDIA_DEFAULT));
+}
+function homeMediaSet(v){
+  lsSet(HOME_MEDIA_KEY,Object.assign({},HOME_MEDIA_DEFAULT,v||{}));
+}
+function homeRabbiSetVideo(src,opts){
+  const vid=document.getElementById('home-rabbi-video');
+  const img=document.getElementById('home-rabbi-img');
+  if(!vid||!src)return false;
+  if(img)img.style.display='none';
+  const f=img?img.nextElementSibling:null;if(f)f.style.display='none';
+  vid.style.display='block';
+  vid.muted=true;
+  vid.defaultMuted=true;
+  vid.playsInline=true;
+  vid.setAttribute('muted','');
+  vid.setAttribute('playsinline','');
+  vid.loop=!!(opts&&opts.loop);
+  vid.autoplay=!(opts&&opts.atEnd);
+  vid.onended=(opts&&opts.onDone)||null;
+  vid.onerror=function(){this.style.display='none';if(img)img.style.display='';};
+  const applyPlayback=()=>{
+    if(opts&&opts.atEnd){
+      try{
+        vid.pause();
+        const dur=Number(vid.duration||0);
+        if(dur>0.08)vid.currentTime=Math.max(0,dur-0.05);
+      }catch(_){}
+      return;
+    }
+    const playPromise=vid.play();
+    if(playPromise&&playPromise.catch)playPromise.catch(()=>{});
+  };
+  if(vid.src!==src)vid.src=src;
+  if(vid.readyState>=1)applyPlayback();
+  else vid.onloadedmetadata=()=>applyPlayback();
+  return true;
 }
 function homeSavedAnimStop(){if(_homeSavedAnimTimer){clearInterval(_homeSavedAnimTimer);_homeSavedAnimTimer=null;}}
 function homeSavedAnimStart(tokens,fps,opts){
@@ -1106,7 +1166,7 @@ function homeRabbiSetPoseClass(pose,gesture){
 function homeRevealIcon(id){const el=document.getElementById(id);if(el)el.classList.add('revealed');}
 function homeRabbiStopIdle(){if(_homeRabbiIdleTimer){clearInterval(_homeRabbiIdleTimer);_homeRabbiIdleTimer=null;}}
 function homeRabbiStartIdle(){if(_homeRabbiIdleTimer)return;const arr=RABBI_IMGS.idle;_homeRabbiIdleTimer=setInterval(()=>{if(S.page!=='home'){homeRabbiStopIdle();return;}_homeRabbiIdleIdx=(_homeRabbiIdleIdx+1)%arr.length;homeRabbiSetImg(arr[_homeRabbiIdleIdx]);},2600);}
-function clearHomeIntroTimers(){while(_homeIntroTimers.length)clearTimeout(_homeIntroTimers.pop());if(_homeBubbleSwapTimer){clearTimeout(_homeBubbleSwapTimer);_homeBubbleSwapTimer=null;}homeSavedAnimStop();}
+function clearHomeIntroTimers(){while(_homeIntroTimers.length)clearTimeout(_homeIntroTimers.pop());if(_homeBubbleSwapTimer){clearTimeout(_homeBubbleSwapTimer);_homeBubbleSwapTimer=null;}homeSavedAnimStop();const vid=document.getElementById('home-rabbi-video');if(vid){try{vid.pause();}catch(_){};vid.onended=null;}}
 function homeRabbiStartIntro(){
   if(S.page!=='home')return;
   const stage=document.getElementById('home-intro-stage');
@@ -1123,6 +1183,30 @@ function homeRabbiStartIntro(){
     homeRabbiSetBubble(instr.h,instr.e);
     if(greeting)greeting.classList.add('show');
     return;
+  }
+  const media=homeMediaEntry();
+  if(media.kind==='video'&&media.src){
+    const videoSig=`video:${media.label||media.src.slice(0,48)}:${media.mode||'once_hold'}`;
+    const rt=homeAnimRuntime();
+    homeRabbiSetPoseClass('teach');
+    if(media.mode==='once_hold'&&rt.playedSig===videoSig){
+      if(homeRabbiSetVideo(media.src,{atEnd:true})){
+        homeRabbiSetBubble(instr.h,instr.e);
+        ['intro-learn','intro-review','intro-library'].forEach(homeRevealIcon);
+        if(greeting)greeting.classList.add('show');
+        return;
+      }
+    }else if(homeRabbiSetVideo(media.src,{
+      loop:media.mode==='loop',
+      onDone:()=>{
+        if(media.mode==='once_hold')homeAnimRuntimeSet({playedSig:videoSig});
+      }
+    })){
+      homeRabbiSetBubble(instr.h,instr.e);
+      ['intro-learn','intro-review','intro-library'].forEach(homeRevealIcon);
+      if(greeting)greeting.classList.add('show');
+      return;
+    }
   }
   if((savedHome.tokens||[]).length){
     homeRabbiSetPoseClass('teach');
@@ -1231,7 +1315,11 @@ function loadTesseract(){if(_tessPromise)return _tessPromise;_tessPromise=new Pr
 // ═══════════════════════════════════════════════════════════
 const AUTH_USERS_KEY='ivrit_users_v1';
 const AUTH_SESSION_KEY='ivrit_session_v1';
-const USER_SCOPED_KEYS=new Set(['ivrit_lr','ivrit_lv','ivrit_lib','ivrit_uv','ivrit_saved','ivrit_openai_key']);
+const LIB_SOURCE_PREFS_KEY='ivrit_source_prefs';
+const RABBI_SOURCE_CACHE_KEY='ivrit_rabbi_source_cache';
+const HOME_MEDIA_KEY='ivrit_home_media_v1';
+const HOME_MEDIA_DEFAULT={kind:'video',src:'assets/rabbiwalkin.mp4',label:'rabbiwalkin.mp4',mode:'once_hold'};
+const USER_SCOPED_KEYS=new Set(['ivrit_lr','ivrit_lv','ivrit_lib','ivrit_uv','ivrit_saved','ivrit_openai_key',LIB_SOURCE_PREFS_KEY,RABBI_SOURCE_CACHE_KEY]);
 function authCurrentUser(){try{return localStorage.getItem(AUTH_SESSION_KEY)||'';}catch(e){return'';}}
 function scopedStorageKey(k,raw){
   if(raw)return k;
@@ -1353,6 +1441,51 @@ function rabbiLessonData(ctx){
     :((wordStats&&wordStats.lv>=3)?'You are ready to meet this word in more sentences.':'See it once, say it once, then answer one more question with it.');
   return {title:`✡ Ask the Rabbi${titleWord}`,subtitle:'Meaning, grammar, roots, and study guidance',wordHe,wordPron,wordEn,meaning:meaningParts.join(' '),grammar:grammarParts.join(' '),rootText,usageNote,exampleHe,exampleEn,studyTip,nextStep};
 }
+async function rabbiFetchSourceMaterial(ctx){
+  const c=ctx||S._rabbiCtx||{};
+  const bare=stripNikud(c.wordHe||'').replace(/[^\u05D0-\u05EA]/g,'').trim();
+  if(!bare)return null;
+  const cache=ls(RABBI_SOURCE_CACHE_KEY,{});
+  const hit=cache[bare];
+  if(hit&&hit.ts&&(Date.now()-hit.ts)<86400000)return hit.data||null;
+  const [sefaria,wiktionary]=await Promise.all([
+    fetchSefariaWordInfo(c.wordHe||bare),
+    fetchWiktionaryEntry(c.wordHe||bare)
+  ]);
+  const data={
+    sefaria:sefaria||null,
+    wiktionary:wiktionary||null
+  };
+  cache[bare]={ts:Date.now(),data};
+  lsSet(RABBI_SOURCE_CACHE_KEY,cache);
+  return data;
+}
+async function rabbiLoadLiveSources(ctx){
+  const box=document.getElementById('rabbi-live-sources');
+  if(!box)return;
+  box.style.display='block';
+  box.innerHTML='<div style="color:var(--ink3);font-size:12px;">Gathering Sefaria and Hebrew Wiktionary notes…</div>';
+  const data=await rabbiFetchSourceMaterial(ctx);
+  const sameBox=document.getElementById('rabbi-live-sources');
+  if(!sameBox)return;
+  const sections=[];
+  if(data&&data.sefaria&&(data.sefaria.lexicon||data.sefaria.exampleHe||data.sefaria.exampleEn)){
+    sections.push(`<div style="margin-top:8px;padding:10px 12px;border-radius:var(--rs);background:rgba(106,24,40,.06);border:1px solid rgba(106,24,40,.18);">
+      <div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--burg);margin-bottom:5px;">SEFARIA</div>
+      ${data.sefaria.lexicon?`<div style="font-size:13px;line-height:1.55;color:var(--ink2);margin-bottom:${data.sefaria.exampleHe||data.sefaria.exampleEn?'8px':'0'};">${escHtml(data.sefaria.lexicon)}</div>`:''}
+      ${data.sefaria.exampleHe?`<div style="font-family:var(--heb);direction:rtl;text-align:right;font-size:15px;line-height:1.7;">${escHtml(data.sefaria.exampleHe)}</div>`:''}
+      ${data.sefaria.exampleEn?`<div style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:4px;">${escHtml(data.sefaria.exampleEn)}</div>`:''}
+      ${data.sefaria.ref?`<div style="font-size:10px;color:var(--burg);margin-top:5px;">${escHtml(data.sefaria.ref)}</div>`:''}
+    </div>`);
+  }
+  if(data&&data.wiktionary&&data.wiktionary.summary){
+    sections.push(`<div style="margin-top:8px;padding:10px 12px;border-radius:var(--rs);background:rgba(74,104,48,.06);border:1px solid rgba(74,104,48,.24);">
+      <div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--sage);margin-bottom:5px;">HEBREW WIKTIONARY</div>
+      <div style="font-size:13px;line-height:1.55;color:var(--ink2);">${escHtml(data.wiktionary.summary)}</div>
+    </div>`);
+  }
+  sameBox.innerHTML=sections.length?sections.join(''):'<div style="color:var(--ink3);font-size:12px;">No live source notes were found for this word yet.</div>';
+}
 function rabbiQuestionIntent(q){
   const s=String(q||'').trim().toLowerCase();
   if(!s)return 'overview';
@@ -1400,6 +1533,27 @@ function authGreetingInstruction(){
   if(authIsLoggedIn())return {h:`שָׁלוֹם, ${authDisplayName()}! מוּכָן לְהַמְשִׁיךְ?`,e:`Shalom, ${authDisplayName()}! Ready to continue your journey?`};
   return {h:'שָׁלוֹם! כְּדַאי לְהִתְחַבֵּר לִפְנֵי שֶׁמַּתְחִילִים.',e:'Shalom! Please log in to begin your learning path.'};
 }
+function closeAccountMenu(){
+  const menu=document.getElementById('auth-menu');
+  if(menu){menu.classList.remove('open');menu.innerHTML='';}
+}
+function toggleAccountMenu(ev){
+  if(ev){ev.preventDefault();ev.stopPropagation();}
+  if(!authIsLoggedIn()){openLoginModal('login');return;}
+  const menu=document.getElementById('auth-menu');
+  if(!menu)return;
+  if(menu.classList.contains('open')){closeAccountMenu();return;}
+  const l=S.learner||mkL();
+  const mastered=Object.values(l.vocab||{}).filter(v=>v.lv>=3).length;
+  menu.innerHTML=`<div class="sec-hdr">ACCOUNT</div>
+    <div style="font-size:14px;font-weight:600;color:var(--rust);margin-bottom:8px;">${escHtml(authDisplayName())}</div>
+    <div class="auth-stat">Lessons answered: <strong>${l.total||0}</strong></div>
+    <div class="auth-stat">Words mastered: <strong>${mastered}</strong></div>
+    <div class="auth-stat">Study queue: <strong>${(l.rq||[]).length}</strong></div>
+    <div class="auth-stat" style="margin-bottom:10px;">Streak: <strong>${(l.streak&&l.streak.current)||0}</strong> day(s)</div>
+    <button onclick="authLogout()" class="btn-o btn-w" style="padding:9px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:10px;letter-spacing:2px;">LOG OUT</button>`;
+  menu.classList.add('open');
+}
 function updateShellChrome(){
   const nav=document.getElementById('top-nav');
   const next=document.getElementById('next-up');
@@ -1408,10 +1562,14 @@ function updateShellChrome(){
   if(nav)nav.style.display=showChrome?'block':'none';
   if(next)next.style.display=showChrome?'flex':'none';
   if(install&&!showChrome)install.classList.remove('show');
+  if(!showChrome)closeAccountMenu();
 }
 function updateAuthButton(){
+  const shell=document.getElementById('shell-top');
   const b=document.getElementById('auth-btn');if(!b)return;
-  b.style.display=(authIsLoggedIn()&&S&&S.page!=='home')?'inline-flex':'none';
+  const show=(authIsLoggedIn()&&S&&S.page!=='home');
+  if(shell)shell.style.display=show?'block':'none';
+  b.style.display=show?'inline-flex':'none';
   b.textContent=authIsLoggedIn()?`👤 ${authDisplayName()}`:'Login';
   updateShellChrome();
 }
@@ -1468,7 +1626,7 @@ async function authSubmit(mode){
   homeAnimRuntimeSet({playedSig:''});
   closeSubModal();location.reload();
 }
-function authLogout(){authSetSession('');closeSubModal();location.reload();}
+function authLogout(){closeAccountMenu();authSetSession('');closeSubModal();location.reload();}
 
 // ═══════════════════════════════════════════════════════════
 //  STATE
@@ -6216,14 +6374,14 @@ const D=[
 {h:"צָבָא",p:"tzava",e:"army / IDF",l:2,col:"הַצָּבָא = the army — central to Israeli identity"},
 {h:"מִשְׁמֶרֶת",p:"mishmeret",e:"guard duty / shift",l:2,col:"Common in army/work context"},
 {h:"שׂוֹמֵר",p:"shomer",e:"guard / keeper",l:2,col:"Shomer Shabbat = Shabbat observer"},
-{h:"פְּטוּר מִשֵּׁרוּת",p:"patur misherut",e:"exempt from service",l:2,col:""},
+{h:"פְּטוּר מִשֵּׁרוּת",p:"patur misherut",e:"exempt from service",l:2,col:"הוּא קִבֵּל פְּטוּר מִשֵּׁרוּת."},
 {h:"קֶרֶב",p:"kerev",e:"combat",l:2,col:"קְרָבִי = combat soldier"},
 {h:"חֶיל",p:"cheil",e:"corps / unit",l:2,col:"חֵיל הָאֲוִיר = Air Force"},
-{h:"אֹפִּי",p:"ofi",e:"character / personality",l:2,col:""},
-{h:"נִינוֹחַ",p:"nino'ach",e:"relaxed / at ease",l:2,col:""},
-{h:"לְהַרְגִּישׁ בַּיִת",p:"lehargish bayit",e:"to feel at home",l:2,col:""},
-{h:"לְמַצֵּא אֶת הַמָּקוֹם",p:"lematzeh et hamakom",e:"to find one's place",l:2,col:""},
-{h:"שׁוֹרֶשׁ",p:"shoresh",e:"root / verb root",l:2,col:""},
+{h:"אֹפִּי",p:"ofi",e:"character / personality",l:2,col:"יֵשׁ לָהּ אֹפִּי שָׁקֵט וְנָעִים."},
+{h:"נִינוֹחַ",p:"nino'ach",e:"relaxed / at ease",l:2,col:"אַחֲרֵי כַּמָּה יָמִים הוּא הִרְגִּישׁ נִינוֹחַ."},
+{h:"לְהַרְגִּישׁ בַּיִת",p:"lehargish bayit",e:"to feel at home",l:2,col:"בַּכִּתָּה הַחֲדָשָׁה הִיא הִתְחִילָה לְהַרְגִּישׁ בַּיִת."},
+{h:"לְמַצֵּא אֶת הַמָּקוֹם",p:"lematzeh et hamakom",e:"to find one's place",l:2,col:"לֹא תָּמִיד קַל לְמַצֵּא אֶת הַמָּקוֹם בְּקְבוּצָה חֲדָשָׁה."},
+{h:"שׁוֹרֶשׁ",p:"shoresh",e:"root / verb root",l:2,col:"לַמִּלָּה שָׁלוֹם יֵשׁ שׁוֹרֶשׁ מְשֻׁתָּף עִם שָׁלֵם."},
 {h:"לְהַנְחוֹת",p:"lehanchot",e:"to guide / direct",l:2},
 {h:"לְהַדְרִיךְ",p:"lehadrich",e:"to guide / train",l:2},
 {h:"לְאַמֵּן",p:"le'amen",e:"to train / coach",l:2},
@@ -7323,6 +7481,7 @@ function go(pg,opts){
   const prevScrollY=window.scrollY||window.pageYOffset||0;
   const keepScroll=!!(opts&&opts.keepScroll)||pg===prevPage;
   speechSynthesis&&speechSynthesis.cancel();S.page=pg;
+  closeAccountMenu();
   clearHomeIntroTimers();homeRabbiStopIdle();
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   const navPage=pg==='review'?'reviewHub':pg==='course'?'learn':pg==='poses'?'developer':pg;
@@ -7346,7 +7505,7 @@ function updateNextUp(){
   const el=document.getElementById('next-up-txt');const icon=document.querySelector('#next-up .icon');
   if(!el)return;
   const rec=getLibrarianRecommendation();
-  el.textContent=rec.label;icon.textContent=rec.icon;S._nextUp=rec.action;
+  el.textContent=rec.label;icon.textContent=rec.icon;S._nextUp=rec;
 }
 function getLibrarianRecommendation(){
   const l=S.learner,rq=l.rq.length;const names={1:'א Aleph',2:'ב Bet',3:'ג Gimel',4:'ד Dalet'};
@@ -7356,15 +7515,20 @@ function getLibrarianRecommendation(){
   if(weak.length){const w=weak[0];const labels={mc:'multiple choice',fill:'fill in blank',tap:'tap the word',match:'match pairs',trans:'translate',img:'word & image'};return{action:'reviewHub',label:'Practice '+(labels[w]||w),icon:'⚡'};}
   const secs=getCourseSections(S.level);const nextSec=secs.find(s=>!S.learner.completedSections[s.id]);
   if(nextSec){
-    if(nextSec.type==='read')return{action:'learn',label:'Read the story — '+nextSec.label,icon:'📖'};
-    if(nextSec.type==='numbers')return{action:'learn',label:'Numbers practice — '+nextSec.label,icon:'🔢'};
+    if(nextSec.type==='read')return{action:'openSection',level:S.level,sectionId:nextSec.id,label:'Read the story — '+nextSec.label,icon:'📖'};
+    if(nextSec.type==='numbers')return{action:'openSection',level:S.level,sectionId:nextSec.id,label:'Numbers practice — '+nextSec.label,icon:'🔢'};
     if(nextSec.type==='roots')return{action:'roots',label:'Explore word roots',icon:'שׁ'};
-    return{action:'learn',label:'Continue — '+nextSec.label,icon:'📚'};
+    return{action:'openSection',level:S.level,sectionId:nextSec.id,label:'Continue — '+nextSec.label,icon:'📚'};
   }
   if(S.level<4){const completed=secs.filter(s=>S.learner.completedSections[s.id]).length;return{action:'learn',label:'Level complete! Unlock '+(names[S.level+1]||'next'),icon:'🎯'};}
   return{action:'learn',label:'Keep practicing — '+names[S.level],icon:'📚'};
 }
-function goNextUp(){go(S._nextUp||'learn');}
+function goNextUp(ev){
+  if(ev&&ev.target&&ev.target.closest('button'))ev.stopPropagation();
+  const rec=S._nextUp||{action:'learn'};
+  if(rec.action==='openSection'&&rec.sectionId){openSection(rec.level||S.level,rec.sectionId);return;}
+  go(rec.action||'learn');
+}
 function openModal(html){document.getElementById('modal-root').innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="mbox ai"><button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>${html}</div></div>`;}
 function closeModal(){rabbiStopIdleLoop();rabbiStopExerciseIdle();document.getElementById('modal-root').innerHTML='';}
 function openSubModal(html){const r=document.getElementById('modal-root');r.insertAdjacentHTML('beforeend',`<div class="overlay sub-overlay" onclick="if(event.target===this)closeSubModal()"><div class="mbox ai"><button class="modal-close" onclick="closeSubModal()" aria-label="Close">×</button>${html}</div></div>`);}
@@ -7482,6 +7646,10 @@ function openAskRabbi(ctx){
     ${lesson.exampleHe||lesson.exampleEn?`<div style="margin-top:10px;padding:10px 12px;border-radius:var(--rs);background:rgba(74,104,48,.06);border:1px solid rgba(74,104,48,.24);"><div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--sage);margin-bottom:5px;">EXAMPLE</div>${lesson.exampleHe?`<div style="font-family:var(--heb);direction:rtl;text-align:right;font-size:16px;line-height:1.7;">${escHtml(lesson.exampleHe)}</div>`:''}${lesson.exampleEn?`<div style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:6px;">${escHtml(lesson.exampleEn)}</div>`:''}</div>`:''}
     ${rabbiInfoSection('USAGE NOTE',lesson.usageNote,'rust')}
     ${rabbiInfoSection('STUDY TIP',`${lesson.studyTip} ${lesson.nextStep}`,'sage')}
+    <div style="margin-top:10px;">
+      <div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--ink3);margin-bottom:5px;">LIVE SOURCE THREADS</div>
+      <div id="rabbi-live-sources" style="padding:10px 12px;border-radius:var(--rs);background:var(--bg);border:1px solid var(--bdr);"></div>
+    </div>
     <div style="margin-top:12px;">
       <label style="font-size:10px;font-family:var(--lbl);letter-spacing:1px;color:var(--ink3);">Ask in your own words</label>
       <textarea id="rabbi-q" rows="3" placeholder="e.g. What is the root? Why is this form used? Give me another example." style="width:100%;padding:10px;margin-top:4px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:13px;resize:vertical;"></textarea>
@@ -7496,14 +7664,26 @@ function openAskRabbi(ctx){
     <div id="rabbi-ans" style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);display:none;"></div>
     <div style="margin-top:10px;font-size:11px;color:var(--ink3);line-height:1.5;">The Rabbi now teaches from your lesson data and progress first. Optional live AI answers can be added later without making normal study depend on an API key.</div>
   </div>`);
+  rabbiLoadLiveSources(c);
   document.getElementById('rabbi-q')?.focus();
 }
 async function submitAskRabbi(){
   const qEl=document.getElementById('rabbi-q'),btn=document.getElementById('rabbi-btn'),ansEl=document.getElementById('rabbi-ans');
   const q=(qEl?.value||'').trim();if(!q){qEl?.focus();return;}
   btn.disabled=true;btn.textContent='Teaching…';ansEl.style.display='block';ansEl.innerHTML='<div style="color:var(--ink3);">The Rabbi is gathering the lesson threads…</div>';
-  const answer=rabbiBuildQuestionAnswer(q,S._rabbiCtx||{});
-  ansEl.innerHTML=`<div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--burg);margin-bottom:6px;">${escHtml(answer.title)}</div><div style="font-size:13px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;">${escHtml(answer.body).replace(/\n/g,'<br>')}</div>`;
+  const ctx=S._rabbiCtx||{};
+  const intent=rabbiQuestionIntent(q);
+  const answer=rabbiBuildQuestionAnswer(q,ctx);
+  const live=await rabbiFetchSourceMaterial(ctx);
+  let body=answer.body||'';
+  if(live&&intent==='example'&&live.sefaria&&(live.sefaria.exampleHe||live.sefaria.exampleEn)){
+    body+=`\n\nFrom Sefaria:\n${[live.sefaria.exampleHe,live.sefaria.exampleEn,live.sefaria.ref].filter(Boolean).join('\n')}`;
+  }else if(live&&intent==='meaning'&&live.wiktionary&&live.wiktionary.summary){
+    body+=`\n\nHebrew Wiktionary note:\n${live.wiktionary.summary}`;
+  }else if(live&&intent==='root'&&live.sefaria&&live.sefaria.lexicon){
+    body+=`\n\nSefaria lexicon:\n${live.sefaria.lexicon}`;
+  }
+  ansEl.innerHTML=`<div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--burg);margin-bottom:6px;">${escHtml(answer.title)}</div><div style="font-size:13px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;">${escHtml(body).replace(/\n/g,'<br>')}</div>`;
   btn.disabled=false;btn.textContent='Guide me';
 }
 function ghdr(title,sub,col){
@@ -7524,6 +7704,7 @@ function rHome(){
   <div class="card home-intro home-intro-stage" id="home-intro-stage">
     <div class="home-intro-layout auth-gate">
       <div class="rabbi-wrap home-rabbi-wrap" id="home-rabbi-fig">
+        <video id="home-rabbi-video" class="rabbi-video" muted playsinline preload="metadata"></video>
         <img id="home-rabbi-img" src="${RABBI_IMGS.idle[0]}" alt="Rabbi" class="rabbi-img" onerror="this.style.display=\\'none\\';if(this.nextElementSibling)this.nextElementSibling.style.display=\\'inline-block\\'"/>
         <span class="rabbi-fallback" style="display:none;font-size:74px;line-height:1;">✡</span>
         <span class="rabbi-bubble show" id="home-rabbi-bubble">שָׁלוֹם!</span>
@@ -7553,6 +7734,7 @@ function rHome(){
   <div class="card home-intro home-intro-stage" id="home-intro-stage">
     <div class="home-intro-layout">
       <div class="rabbi-wrap home-rabbi-wrap" id="home-rabbi-fig">
+        <video id="home-rabbi-video" class="rabbi-video" muted playsinline preload="metadata"></video>
         <img id="home-rabbi-img" src="${RABBI_IMGS.idle[0]}" alt="Rabbi" class="rabbi-img" onerror="this.style.display=\\'none\\';if(this.nextElementSibling)this.nextElementSibling.style.display=\\'inline-block\\'"/>
         <span class="rabbi-fallback" style="display:none;font-size:74px;line-height:1;">✡</span>
         <span class="rabbi-bubble show" id="home-rabbi-bubble">שָׁלוֹם!</span>
@@ -7770,13 +7952,111 @@ function devApplySearch(){
   go('developer');
 }
 function devClearSearch(){S.devSearch='';S.devType='all';go('developer');}
+function devRowIssues(r){
+  const issues=[];
+  if(r.type==='word'){
+    if(!r.he)issues.push({k:'missing-he',label:'No Hebrew'});
+    if(!r.en)issues.push({k:'missing-en',label:'No English'});
+    if(!r.pr)issues.push({k:'missing-pr',label:'No pronunciation'});
+    if(!r.root)issues.push({k:'missing-root',label:'No root'});
+    if(!r.col)issues.push({k:'missing-example',label:'No example'});
+    if(!r.gram)issues.push({k:'missing-gram',label:'No grammar note'});
+  }else if(r.type==='sentence'){
+    if(!r.he)issues.push({k:'missing-he',label:'No Hebrew'});
+    if(!r.en)issues.push({k:'missing-en',label:'No English'});
+    else if((r.he||'').length>24&&(r.en||'').length<Math.max(18,Math.round((r.he||'').length*.18)))issues.push({k:'thin-en',label:'Thin English'});
+  }else if(r.type==='grammar'){
+    if(!r.he)issues.push({k:'missing-topic',label:'No topic'});
+    if(!r.en)issues.push({k:'missing-prompt',label:'No prompt'});
+  }
+  return issues;
+}
+function devAuditSummary(rows){
+  return rows.reduce((acc,row)=>{
+    devRowIssues(row).forEach(issue=>{acc[issue.k]=(acc[issue.k]||0)+1;});
+    return acc;
+  },{});
+}
 function devMasterRows(){
   const rows=[];
-  D.forEach((w,i)=>rows.push({id:'W:'+i,type:'word',he:w.h||'',en:w.e||'',pr:w.p||'',src:'D',meta:`L${w.l||''} ${w.shoresh?`• root ${w.shoresh}`:''}`.trim()}));
-  RD.forEach((r,i)=>rows.push({id:'RD:'+i,type:'sentence',he:r.h||'',en:r.e||'',pr:'',src:`Reading: ${r.label||r.id||i}`,meta:r.src||''}));
-  JT.forEach((r,i)=>rows.push({id:'JT:'+i,type:'sentence',he:r.h||'',en:r.e||'',pr:'',src:`Text: ${r.src||i}`,meta:r.cat||''}));
+  D.forEach((w,i)=>rows.push({id:'W:'+i,type:'word',he:w.h||'',en:w.e||'',pr:w.p||'',root:w.shoresh||'',gram:w.gram||'',col:w.col||'',src:'D',meta:`L${w.l||''} ${w.shoresh?`• root ${w.shoresh}`:''}`.trim()}));
+  RD.forEach((r,i)=>rows.push({id:'RD:'+i,type:'sentence',he:r.h||'',en:r.e||'',pr:'',root:'',gram:'',col:'',src:`Reading: ${r.label||r.id||i}`,meta:r.src||''}));
+  JT.forEach((r,i)=>rows.push({id:'JT:'+i,type:'sentence',he:r.h||'',en:r.e||'',pr:'',root:'',gram:'',col:'',src:`Text: ${r.src||i}`,meta:r.cat||''}));
   GRAM.forEach((g,i)=>rows.push({id:'G:'+i,type:'grammar',he:g.topic||'',en:g.prompt||'',pr:'',src:'Grammar drill',meta:(g.items&&g.items[0]&&g.items[0].h)||''}));
   return rows;
+}
+async function devOpenSourceAudit(id){
+  if(!id.startsWith('W:'))return;
+  const i=parseInt(id.slice(2),10),w=D[i];if(!w)return;
+  openSubModal(`${ghdr('Source Audit',`Checking ${escHtml(w.h||'word')} against live sources`,'#6a1828')}<div class="mbody"><div id="dev-source-audit-box" style="font-size:12px;color:var(--ink3);">Gathering Sefaria and Hebrew Wiktionary notes…</div></div>`);
+  const box=document.getElementById('dev-source-audit-box');
+  const [sefaria,wiktionary]=await Promise.all([fetchSefariaWordInfo(w.h||''),fetchWiktionaryEntry(w.h||'')]);
+  if(!box)return;
+  box.innerHTML=`<div style="margin-bottom:10px;padding:10px 12px;background:rgba(139,58,26,.06);border:1px solid rgba(139,58,26,.18);border-radius:var(--rs);">
+    <div style="font-family:var(--heb);font-size:24px;color:var(--ink2);">${escHtml(w.h||'')}</div>
+    <div style="font-size:12px;color:var(--ink3);margin-top:3px;">Current: ${escHtml([w.p||'',w.e||''].filter(Boolean).join(' — ')||'No pronunciation/English yet')}</div>
+    <div style="font-size:11px;color:var(--ink4);margin-top:3px;">${escHtml([w.shoresh?`root ${w.shoresh}`:'',w.gram?'has grammar note':'no grammar note',w.col?'has example':'no example'].filter(Boolean).join(' • '))}</div>
+  </div>
+  ${sefaria&&(sefaria.lexicon||sefaria.exampleHe||sefaria.exampleEn)?`<div style="padding:10px 12px;background:rgba(106,24,40,.06);border:1px solid rgba(106,24,40,.18);border-radius:var(--rs);margin-bottom:10px;">
+    <div class="sec-hdr" style="color:var(--burg);margin-bottom:6px;">SEFARIA</div>
+    ${sefaria.lexicon?`<div style="font-size:12px;line-height:1.55;color:var(--ink2);margin-bottom:${sefaria.exampleHe||sefaria.exampleEn?'8px':'0'};">${escHtml(sefaria.lexicon)}</div>`:''}
+    ${sefaria.exampleHe?`<div style="font-family:var(--heb);font-size:15px;direction:rtl;text-align:right;line-height:1.7;">${escHtml(sefaria.exampleHe)}</div>`:''}
+    ${sefaria.exampleEn?`<div style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:5px;">${escHtml(sefaria.exampleEn)}</div>`:''}
+    ${sefaria.ref?`<div style="font-size:10px;color:var(--burg);margin-top:5px;">${escHtml(sefaria.ref)}</div>`:''}
+  </div>`:''}
+  ${wiktionary&&wiktionary.summary?`<div style="padding:10px 12px;background:rgba(74,104,48,.06);border:1px solid rgba(74,104,48,.2);border-radius:var(--rs);">
+    <div class="sec-hdr" style="color:var(--sage);margin-bottom:6px;">HEBREW WIKTIONARY</div>
+    <div style="font-size:12px;line-height:1.55;color:var(--ink2);">${escHtml(wiktionary.summary)}</div>
+  </div>`:'<div style="font-size:12px;color:var(--ink3);">No live source notes found for this word yet.</div>'}`;
+}
+function devHomeMediaCard(){
+  const cfg=homeMediaEntry();
+  const src=cfg.src||'';
+  return `<div class="card card-sm" style="margin-bottom:12px;">
+    <div class="sec-hdr">HOME SCREEN MEDIA</div>
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:10px;">Use a local MP4 upload or a project asset path for the home Rabbi intro. Uploaded video stays in this browser; a project asset path is what you want for GitHub/phone.</div>
+    <div style="display:grid;gap:8px;">
+      <label style="font-size:11px;color:var(--ink3);">Project asset path
+        <input id="dev-home-media-path" value="${escAttr(cfg.kind==='video'&&src&&!src.startsWith('data:')?src:'')}" placeholder="assets/rabbi-home.mp4" style="width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg);" />
+      </label>
+      <label style="font-size:11px;color:var(--ink3);">Play mode
+        <select id="dev-home-media-mode" style="width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg);">
+          <option value="once_hold" ${cfg.mode==='once_hold'?'selected':''}>Play once and hold final frame</option>
+          <option value="loop" ${cfg.mode==='loop'?'selected':''}>Loop continuously</option>
+        </select>
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="devSaveHomeMediaPath()" class="btn-p" style="padding:8px 12px;font-size:10px;">Save asset path</button>
+        <label class="btn-o" style="padding:8px 12px;font-size:10px;cursor:pointer;">Upload local MP4<input id="dev-home-media-upload" type="file" accept="video/mp4" style="display:none" onchange="devUploadHomeMedia(this)" /></label>
+        <button onclick="devClearHomeMedia()" class="btn-o" style="padding:8px 12px;font-size:10px;">Clear home media</button>
+      </div>
+      <div style="font-size:11px;color:var(--ink4);">${cfg.kind==='video'?(src.startsWith('data:')?`Current source: uploaded video (${escHtml(cfg.label||'local mp4')})`:`Current source: ${escHtml(src)}`):'Current source: frame/image animation'}</div>
+      ${cfg.kind==='video'&&src?`<video controls muted playsinline preload="metadata" src="${escAttr(src)}" style="width:min(100%,340px);border:1px solid var(--bdr);border-radius:12px;background:#000;"></video>`:''}
+    </div>
+  </div>`;
+}
+async function devUploadHomeMedia(el){
+  const f=el&&el.files&&el.files[0];if(!f)return;
+  if((f.size||0)>4500000){alert('This MP4 is a bit too large for browser storage. Use a smaller file or add it as a project asset path.');if(el)el.value='';return;}
+  const mode=(document.getElementById('dev-home-media-mode')?.value||'once_hold');
+  const dataUrl=await poseBlobToDataUrl(f);
+  homeMediaSet({kind:'video',src:dataUrl,label:f.name||'home-video.mp4',mode});
+  homeAnimRuntimeSet({playedSig:''});
+  if(el)el.value='';
+  go('developer');
+}
+function devSaveHomeMediaPath(){
+  const src=(document.getElementById('dev-home-media-path')?.value||'').trim();
+  const mode=(document.getElementById('dev-home-media-mode')?.value||'once_hold');
+  if(!src){alert('Add a project asset path first, like assets/rabbi-home.mp4');return;}
+  homeMediaSet({kind:'video',src,label:src.split('/').pop(),mode});
+  homeAnimRuntimeSet({playedSig:''});
+  go('developer');
+}
+function devClearHomeMedia(){
+  homeMediaSet({kind:'',src:'',label:'',mode:'once_hold'});
+  homeAnimRuntimeSet({playedSig:''});
+  go('developer');
 }
 function devOpenMasterEdit(id){
   const esc=escHtml;
@@ -7879,10 +8159,12 @@ function rDeveloperLexicon(){
   const query=(S.devSearch||'').toLowerCase();
   const typ=S.devType||'all';
   const rows=devMasterRows().filter(r=>{
-    if(typ!=='all'&&r.type!==typ)return false;
+    if(typ==='needs-review'&&devRowIssues(r).length===0)return false;
+    else if(typ!=='all'&&typ!=='needs-review'&&r.type!==typ)return false;
     if(!query)return true;
     return [r.he,r.en,r.pr,r.src,r.meta].join(' ').toLowerCase().includes(query);
   });
+  const audit=devAuditSummary(devMasterRows());
   const shown=rows.slice(0,350);
   return `<div>
     <div class="card card-sm" style="margin-bottom:12px;">
@@ -7897,6 +8179,7 @@ function rDeveloperLexicon(){
             <option value="word" ${typ==='word'?'selected':''}>Words</option>
             <option value="sentence" ${typ==='sentence'?'selected':''}>Sentences</option>
             <option value="grammar" ${typ==='grammar'?'selected':''}>Grammar</option>
+            <option value="needs-review" ${typ==='needs-review'?'selected':''}>Needs review</option>
           </select>
         </label>
         <button onclick="devApplySearch()" class="btn-p" style="padding:8px 12px;font-size:10px;">Search</button>
@@ -7906,20 +8189,33 @@ function rDeveloperLexicon(){
         <button onclick="devImportMasterPrompt()" class="btn-o" style="padding:8px 12px;font-size:10px;">Import edits</button>
         <button onclick="devResetMasterEdits()" class="btn-o" style="padding:8px 12px;font-size:10px;">Reset edits</button>
       </div>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+        ${[
+          ['missing-pr',`No pronunciation: ${audit['missing-pr']||0}`,'var(--amber)'],
+          ['missing-root',`No root: ${audit['missing-root']||0}`,'var(--amber2)'],
+          ['missing-example',`No example: ${audit['missing-example']||0}`,'var(--burg)'],
+          ['missing-gram',`No grammar note: ${audit['missing-gram']||0}`,'var(--rust)'],
+          ['thin-en',`Thin English: ${audit['thin-en']||0}`,'var(--sage)']
+        ].map(([k,label,col])=>`<span style="padding:4px 8px;border-radius:999px;border:1px solid ${col};color:${col};font-size:10px;background:color-mix(in srgb, ${col} 10%, white);">${label}</span>`).join('')}
+      </div>
       <div style="margin-top:8px;font-size:11px;color:var(--ink4);">Results: ${rows.length}${rows.length>shown.length?` (showing first ${shown.length})`:''}</div>
     </div>
     <div class="card card-sm">
-      ${shown.map(r=>`<div style="padding:10px 0;border-bottom:1px dashed var(--bdr);">
+      ${shown.map(r=>{const issues=devRowIssues(r);return `<div style="padding:10px 0;border-bottom:1px dashed var(--bdr);">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;">
           <div style="flex:1;min-width:0;">
             <div style="font-size:10px;font-family:var(--lbl);letter-spacing:1px;color:var(--ink4);text-transform:uppercase;">${r.type} • ${escHtml(r.src)}</div>
             <div style="font-family:${r.type==='word'?'var(--heb)':'var(--body)'};font-size:${r.type==='word'?'24px':'15px'};color:var(--ink2);margin-top:2px;word-break:break-word;">${escHtml(r.he||'—')}</div>
             <div style="font-size:12px;color:var(--ink3);margin-top:2px;word-break:break-word;">${escHtml(r.en||'')}</div>
             <div style="font-size:11px;color:var(--ink4);margin-top:2px;">${escHtml([r.pr,r.meta].filter(Boolean).join(' • '))}</div>
+            ${issues.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${issues.map(issue=>`<span style="padding:3px 7px;border-radius:999px;background:rgba(200,112,32,.1);border:1px solid rgba(200,112,32,.35);font-size:9px;color:var(--amber);">${escHtml(issue.label)}</span>`).join('')}</div>`:''}
           </div>
-          <button onclick="devOpenMasterEdit('${escJs(r.id)}')" class="btn-o" style="padding:7px 10px;font-size:10px;">Edit</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+            ${r.type==='word'?`<button onclick="devOpenSourceAudit('${escJs(r.id)}')" class="btn-o" style="padding:7px 10px;font-size:10px;">Sources</button>`:''}
+            <button onclick="devOpenMasterEdit('${escJs(r.id)}')" class="btn-o" style="padding:7px 10px;font-size:10px;">Edit</button>
+          </div>
         </div>
-      </div>`).join('')}
+      </div>`;}).join('')}
     </div>
   </div>`;
 }
@@ -7927,6 +8223,7 @@ function rDeveloperDesign(){
   const pages=[['home','Home'],['learn','Learn'],['reviewHub','Study Hub'],['library','Library'],['dashboard','Progress'],['saved','Saved']];
   const current=S.devDesignPage||'home';
   return `<div>
+    ${current==='home'?devHomeMediaCard():''}
     <div class="card card-sm" style="margin-bottom:12px;">
       <div class="sec-hdr">WINDOW DESIGN BOARD</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;">
@@ -9316,6 +9613,79 @@ function ansRevHandle(ev){
 
 // PDF.js worker configured in loadPdfJs() when loaded
 
+function libSourcePrefs(){return ls(LIB_SOURCE_PREFS_KEY,{nliKey:'',nliProxy:''});}
+function libSetSourcePrefs(v){lsSet(LIB_SOURCE_PREFS_KEY,Object.assign({nliKey:'',nliProxy:''},v||{}));}
+function flattenTextBlock(v){
+  if(Array.isArray(v))return v.map(flattenTextBlock).filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+  return String(v||'').replace(/\s+/g,' ').trim();
+}
+function stripHtmlToText(html){
+  const div=document.createElement('div');
+  div.innerHTML=String(html||'');
+  div.querySelectorAll('style,script,table,.toc,.mw-editsection,.reference,.navbox,.metadata,.mw-empty-elt,.gallery,.thumb').forEach(el=>el.remove());
+  const lines=[...div.querySelectorAll('ol li, ul li, p, dd')].map(el=>el.textContent.replace(/\s+/g,' ').trim()).filter(Boolean);
+  return (lines.length?lines.join(' '):div.textContent||'').replace(/\s+/g,' ').trim();
+}
+function trimSnippet(s,max){
+  const txt=String(s||'').replace(/\s+/g,' ').trim();
+  if(!txt)return '';
+  if(txt.length<=(max||260))return txt;
+  return txt.slice(0,Math.max(40,(max||260)-1)).trim()+'…';
+}
+async function loadSefariaRefData(ref){
+  try{
+    const r=await fetch(`https://www.sefaria.org/api/texts/${encodeURIComponent(ref)}?context=0&commentary=0`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    return{
+      ref:d.ref||ref,
+      he:flattenTextBlock(d.he),
+      en:flattenTextBlock(d.text),
+      src:`Sefaria — ${d.ref||ref}`
+    };
+  }catch(_){return null;}
+}
+async function fetchSefariaWordInfo(word){
+  const bare=stripNikud(word||'').replace(/[^\u05D0-\u05EA]/g,'').trim();
+  if(!bare)return null;
+  const out={lexicon:'',exampleHe:'',exampleEn:'',ref:'',src:''};
+  try{
+    const lr=await fetch(`https://www.sefaria.org/api/words/${encodeURIComponent(bare)}`);
+    if(!lr.ok)return out;
+    const ld=await lr.json();
+    const entry=Array.isArray(ld)&&ld.length?ld[0]:null;
+    if(entry&&entry.content)out.lexicon=trimSnippet(stripHtmlToText(entry.content),320);
+    const ref=entry&&entry.refs&&entry.refs[0];
+    if(ref){
+      const textData=await loadSefariaRefData(ref);
+      if(textData){
+        out.ref=textData.ref||ref;
+        out.src=textData.src||'Sefaria';
+        out.exampleHe=trimSnippet(textData.he,220);
+        out.exampleEn=trimSnippet(textData.en,180);
+      }
+    }
+  }catch(_){}
+  return out;
+}
+async function fetchWiktionaryEntry(word){
+  const bare=stripNikud(word||'').replace(/[^\u05D0-\u05EA]/g,'').trim();
+  if(!bare)return null;
+  try{
+    const r=await fetch(`https://he.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(bare)}&prop=text&format=json&origin=*`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    const html=d&&d.parse&&d.parse.text&&d.parse.text['*'];
+    const summary=trimSnippet(stripHtmlToText(html),360);
+    if(!summary)return null;
+    return{
+      title:(d&&d.parse&&d.parse.title)||bare,
+      summary,
+      url:`https://he.wiktionary.org/wiki/${encodeURIComponent((d&&d.parse&&d.parse.title)||bare)}`
+    };
+  }catch(_){return null;}
+}
+
 // Strip nikud (vowel marks) and cantillation for bare-consonant comparison
 function stripNikud(s){return s.replace(/[\u0591-\u05C7\u05F3\u05F4]/g,'').trim();}
 
@@ -9446,6 +9816,48 @@ function rLibrary(){
         🔎 SEARCH</button>
     </div>
     <div id="lib-wiki-results"></div>
+  </div>
+
+  <div class="card card-sm" style="margin-bottom:16px;">
+    <div class="sec-hdr" style="margin-bottom:4px;">IMPORT FROM SEFARIA</div>
+    <div style="color:var(--ink3);font-size:11px;font-style:italic;margin-bottom:10px;">Look up a text reference or title and load Hebrew/English text into the Library form.</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <input id="lib-sefaria-q" type="text" placeholder="Genesis 1:1 / Berakhot 2a / בראשית"
+        style="flex:1;padding:9px 12px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:var(--rs);font-size:14px;color:var(--ink);outline:none;"
+        onkeydown="if(event.key==='Enter')libSefariaImportSearch()">
+      <button onclick="libSefariaImportSearch()" class="btn-o"
+        style="border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;white-space:nowrap;">🔎 SEARCH</button>
+    </div>
+    <div id="lib-sefaria-results"></div>
+  </div>
+
+  <div class="card card-sm" style="margin-bottom:16px;">
+    <div class="sec-hdr" style="margin-bottom:4px;">IMPORT FROM HEBREW WIKTIONARY</div>
+    <div style="color:var(--ink3);font-size:11px;font-style:italic;margin-bottom:10px;">Pull in Hebrew dictionary-style material for word study, roots, and usage notes.</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <input id="lib-wikt-q" type="text" placeholder="שָׁלוֹם / לֶחֶם / הלך"
+        style="flex:1;padding:9px 12px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:var(--rs);font-size:14px;font-family:var(--heb);direction:rtl;text-align:right;color:var(--ink);outline:none;"
+        onkeydown="if(event.key==='Enter')libWiktSearch()">
+      <button onclick="libWiktSearch()" class="btn-o"
+        style="border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;white-space:nowrap;">🔎 SEARCH</button>
+    </div>
+    <div id="lib-wikt-results"></div>
+  </div>
+
+  <div class="card card-sm" style="margin-bottom:16px;">
+    <div class="sec-hdr" style="margin-bottom:4px;">NATIONAL LIBRARY OF ISRAEL</div>
+    <div style="color:var(--ink3);font-size:11px;font-style:italic;margin-bottom:10px;">The free NLI API is valuable for books and archive metadata, but their API blocks direct browser CORS. This app is ready for it once you add a small proxy endpoint.</div>
+    <div style="display:grid;gap:8px;">
+      <input id="lib-nli-key" value="${escAttr(libSourcePrefs().nliKey||'')}" placeholder="Free NLI API key"
+        style="width:100%;padding:9px 12px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:var(--rs);font-size:13px;color:var(--ink);outline:none;"/>
+      <input id="lib-nli-proxy" value="${escAttr(libSourcePrefs().nliProxy||'')}" placeholder="Proxy URL for browser requests (optional for now)"
+        style="width:100%;padding:9px 12px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:var(--rs);font-size:13px;color:var(--ink);outline:none;"/>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="libSaveNliSettings()" class="btn-o" style="border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">SAVE NLI SETTINGS</button>
+        <a href="https://www.nli.org.il/en/research-and-teach/open-library/search-api" target="_blank" rel="noopener noreferrer" class="btn-o" style="text-decoration:none;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">OPEN NLI DOCS</a>
+      </div>
+      <div id="lib-nli-msg" style="font-size:11px;color:var(--ink3);">${libSourcePrefs().nliProxy?'NLI proxy saved — browser integration can be wired through that endpoint.':'Save your NLI key now; live browser search will need a proxy step.'}</div>
+    </div>
   </div>
 
   <!-- Saved passages -->
@@ -9678,7 +10090,16 @@ async function libSefariaSearch(rowIdx){
     }
   }catch(_){}
 
-  box.innerHTML=html||'<div style="color:var(--ink3);font-size:11px;padding:4px 0;font-style:italic;">No passages found — try serving the file via a local server for full Sefaria access.</div>';
+  try{
+    const wk=await fetchWiktionaryEntry(word);
+    if(wk&&wk.summary){
+      if(html)html+='<div style="height:6px;"></div>';
+      html+=`<div style="font-size:9px;color:var(--amber);font-family:var(--lbl);letter-spacing:1px;margin-bottom:3px;">HEBREW WIKTIONARY</div>
+        <div style="font-size:12px;color:var(--ink2);line-height:1.5;">${escHtml(wk.summary)}</div>`;
+    }
+  }catch(_){}
+
+  box.innerHTML=html||'<div style="color:var(--ink3);font-size:11px;padding:4px 0;font-style:italic;">No source notes found for this word yet.</div>';
   box.style.display='block';
   btn.textContent='📖';btn.disabled=false;
 }
@@ -9802,6 +10223,92 @@ async function libWikiLoad(title,encoded){
     if(res)res.innerHTML=`<div style="color:var(--err2);font-size:12px;">Failed to load article.</div>`;
   }
 }
+function libFillFormFromSource(payload){
+  const p=payload||{};
+  const taHeb=document.getElementById('lib-heb');
+  const taEng=document.getElementById('lib-eng');
+  const taTitle=document.getElementById('lib-title');
+  const taSrc=document.getElementById('lib-src');
+  if(taHeb)taHeb.value=p.heb||'';
+  if(taEng&&p.eng!==undefined)taEng.value=p.eng||'';
+  if(taTitle&&(!taTitle.value||p.forceTitle))taTitle.value=p.title||taTitle.value;
+  if(taSrc)taSrc.value=p.src||taSrc.value;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function libSefariaImportSearch(){
+  const q=document.getElementById('lib-sefaria-q');
+  const res=document.getElementById('lib-sefaria-results');
+  if(!q||!res||!q.value.trim())return;
+  res.innerHTML='<div style="color:var(--ink3);font-size:12px;">⏳ Searching Sefaria…</div>';
+  try{
+    const r=await fetch(`https://www.sefaria.org/api/name/${encodeURIComponent(q.value.trim())}`);
+    const d=await r.json();
+    const objs=(d&&d.completion_objects)||[];
+    const items=objs.filter(x=>x&&x.type==='ref').slice(0,6);
+    if(!items.length){res.innerHTML='<div style="color:var(--ink3);font-size:12px;">No Sefaria references found. Try a ref like <em>Genesis 1:1</em> or <em>Berakhot 2a</em>.</div>';return;}
+    res.innerHTML=items.map(it=>`<div onclick="libSefariaLoadRef('${escJs(it.key||it.title||'')}')"
+      style="padding:8px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--bg2);margin-bottom:6px;cursor:pointer;transition:background .15s;"
+      onmouseover="this.style.background='rgba(106,24,40,.08)'" onmouseout="this.style.background='var(--bg2)'">
+      <div style="font-family:var(--lbl);font-size:10px;letter-spacing:1px;color:var(--burg);">${escHtml(it.title||it.key||'Sefaria')}</div>
+      <div style="font-size:12px;color:var(--ink2);margin-top:2px;">${escHtml(it.key||it.title||'')}</div>
+    </div>`).join('');
+  }catch(_){
+    res.innerHTML='<div style="color:var(--err2);font-size:12px;">Sefaria search failed. Check your connection.</div>';
+  }
+}
+async function libSefariaLoadRef(ref){
+  const res=document.getElementById('lib-sefaria-results');
+  if(res)res.innerHTML=`<div style="color:var(--ink3);font-size:12px;">⏳ Loading ${escHtml(ref)}…</div>`;
+  try{
+    const data=await loadSefariaRefData(ref);
+    if(!data||!data.he)throw new Error('no text');
+    libFillFormFromSource({title:data.ref||ref,src:data.src||'Sefaria',heb:data.he,eng:data.en||'',forceTitle:true});
+    if(res)res.innerHTML='<div style="color:var(--ok2);font-size:12px;">✓ Loaded from Sefaria. Scroll up to review and extract vocabulary.</div>';
+  }catch(_){
+    if(res)res.innerHTML='<div style="color:var(--err2);font-size:12px;">Failed to load that Sefaria text.</div>';
+  }
+}
+async function libWiktSearch(){
+  const q=document.getElementById('lib-wikt-q');
+  const res=document.getElementById('lib-wikt-results');
+  if(!q||!res||!q.value.trim())return;
+  res.innerHTML='<div style="color:var(--ink3);font-size:12px;">⏳ Searching Hebrew Wiktionary…</div>';
+  try{
+    const r=await fetch(`https://he.wiktionary.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q.value.trim())}&format=json&origin=*&srlimit=5`);
+    const d=await r.json();
+    const items=(d&&d.query&&d.query.search)||[];
+    if(!items.length){res.innerHTML='<div style="color:var(--ink3);font-size:12px;">No Hebrew Wiktionary entries found.</div>';return;}
+    res.innerHTML=items.map(it=>`<div onclick="libWiktLoad('${escJs(it.title)}')"
+      style="padding:8px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--bg2);margin-bottom:6px;cursor:pointer;transition:background .15s;"
+      onmouseover="this.style.background='rgba(74,104,48,.1)'" onmouseout="this.style.background='var(--bg2)'">
+      <div style="font-family:var(--heb);font-size:15px;direction:rtl;text-align:right;">${escHtml(it.title)}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:3px;">${escHtml(it.snippet.replace(/<[^>]+>/g,'').slice(0,90))}…</div>
+    </div>`).join('');
+  }catch(_){
+    res.innerHTML='<div style="color:var(--err2);font-size:12px;">Hebrew Wiktionary search failed.</div>';
+  }
+}
+async function libWiktLoad(title){
+  const res=document.getElementById('lib-wikt-results');
+  if(res)res.innerHTML=`<div style="color:var(--ink3);font-size:12px;">⏳ Loading "${escHtml(title)}"…</div>`;
+  try{
+    const entry=await fetchWiktionaryEntry(title);
+    if(!entry||!entry.summary)throw new Error('no entry');
+    libFillFormFromSource({title:entry.title||title,src:`ויקימילון — ${entry.title||title}`,heb:entry.summary,eng:'Dictionary-style source material for word study.',forceTitle:true});
+    if(res)res.innerHTML='<div style="color:var(--ok2);font-size:12px;">✓ Loaded from Hebrew Wiktionary. Scroll up to review and extract vocabulary.</div>';
+  }catch(_){
+    if(res)res.innerHTML='<div style="color:var(--err2);font-size:12px;">Failed to load that Hebrew Wiktionary entry.</div>';
+  }
+}
+function libSaveNliSettings(){
+  const key=(document.getElementById('lib-nli-key')?.value||'').trim();
+  const proxy=(document.getElementById('lib-nli-proxy')?.value||'').trim();
+  libSetSourcePrefs({nliKey:key,nliProxy:proxy});
+  const msg=document.getElementById('lib-nli-msg');
+  if(msg)msg.innerHTML=proxy
+    ?'✓ NLI settings saved. Once you provide a proxy endpoint, this Library can query NLI from the browser.'
+    :'✓ NLI key saved. The next step is adding a small proxy because the NLI API blocks direct browser CORS.';
+}
 
 async function libLookupRow(i){
   if(!_libConfirmData)return;
@@ -9872,7 +10379,7 @@ function libPrepareConfirm(){
         style="padding:4px 12px;border-radius:20px;font-family:var(--lbl);font-size:9px;letter-spacing:1px;border:1px solid var(--bdr);background:var(--bg2);color:var(--ink3);cursor:pointer;transition:all .2s;"
         title="Find example sentences for all new words">✨ Fill examples</button>`:''}
     </div>
-    ${newW>0?`<div style="font-size:11px;color:var(--ink3);font-style:italic;margin-bottom:10px;">🔍 meaning · ✨ example sentences (passage, library, Wikipedia, Sefaria) · 📖 more passages — review before saving.</div>`:''}
+    ${newW>0?`<div style="font-size:11px;color:var(--ink3);font-style:italic;margin-bottom:10px;">🔍 meaning · ✨ example sentences (passage, library, Wikipedia, Sefaria) · 📖 source notes (Sefaria, Hebrew Wiktionary) — review before saving.</div>`:''}
 
     <div style="max-height:52vh;overflow-y:auto;border:1px solid var(--bdr);border-radius:var(--rs);">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
@@ -10121,6 +10628,7 @@ if(isIOS&&!window.matchMedia('(display-mode:standalone)').matches&&!navigator.st
 function installApp(){if(installPrompt){installPrompt.prompt();installPrompt.userChoice.then(()=>{document.getElementById('ibanner').classList.remove('show');installPrompt=null;});}else{document.getElementById('ibanner').classList.remove('show');}}
 function dismissInstall(){document.getElementById('ibanner').classList.remove('show');}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js?v=4').catch(()=>{});
+window.addEventListener('click',e=>{if(!(e.target&&e.target.closest&&e.target.closest('#shell-top')))closeAccountMenu();});
 
 // Boot
 function bootApp(){
