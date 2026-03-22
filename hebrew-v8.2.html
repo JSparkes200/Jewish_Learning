@@ -321,6 +321,7 @@ function speak(t,btn){
 function spk(t,id){const b=document.getElementById(id);speak(t,b);}
 const RABBI_PHRASES_OK=[{h:'כָּל הַכָּבוֹד!',e:'Kol hakavod!'},{h:'יָפֶה מְאוֹד!',e:'Yafe me\'od!'},{h:'מְצוּיָן!',e:'Metzuyan!'},{h:'מְעוּלֶה!',e:'Me\'ule!'},{h:'נָכוֹן!',e:'Nakhon!'}];
 const RABBI_PHRASES_WRONG=[{h:'לֹא בְּדִיּוּק — בּוֹא נְנַסֶּה שׁוּב!',e:'Lo b\'diyuk — bo n\'naseh shuv!'},{h:'כִּמְעַט! אַתָּה בַּדֶּרֶךְ הַנְּכוֹנָה.',e:'Kim\'at! Ata b\'derech han\'khonah.'},{h:'כָּל הַכָּבוֹד! בּוֹא נִסְתַּכֵּל יַחַד.',e:'Kol hakavod! Bo nistakel yachad.'},{h:'תַּלְמִיד חָכָם לוֹמֵד מִטָּעוּיוֹת.',e:'Talmid chacham lomed mi-ta\'uyot.'},{h:'אוֹי! זוֹ שְׁאֵלָה קָשָׁה — תֵּן לִי לְהַסְבִּיר.',e:'Oy! Zo she\'elah kasha — ten li lehasbir.'},{h:'אַל תִּדְאַג — גַּם הַחֲכָמִים טָעוּ לְפָעֲמִים.',e:'Al tid\'ag — gam hachamim ta\'u lif\'amim.'}];
+function pickOne(arr){return arr&&arr.length?arr[Math.floor(Math.random()*arr.length)]:null;}
 const POSE_DEV_STORAGE_KEYS={overrides:'ivrit_pose_overrides_v1',labels:'ivrit_pose_labels_v1',seq:'ivrit_pose_seq_v1',candidates:'ivrit_pose_candidates_v1'};
 const POSE_DEFAULTS={
   walk:'assets/rabbi-sheet-1-walk.png',
@@ -1134,11 +1135,11 @@ function homeRabbiStartIntro(){
     homeRabbiSetBubble('בּוֹאוּ נַתְחִיל!','Let us begin.');
   },7000));
 }
-function rabbiHTML(){const _arr=rabbiExerciseIdleFrames();setTimeout(()=>{rabbiStartIdleLoop();rabbiEnableExerciseIdle();},100);return `<div id="rabbi-float" class="rabbi-float" onclick="rabbiWakeFromSleepy();openAskRabbi()" title="Ask the Rabbi">
+function rabbiHTML(){const _arr=rabbiExerciseIdleFrames();const prompt=rabbiGuidePrompt();const bubble=rabbiGuideLine(prompt.he,prompt.en);setTimeout(()=>{rabbiStartIdleLoop();rabbiEnableExerciseIdle();rabbiGuideApplyBubble();},100);return `<div id="rabbi-float" class="rabbi-float" onclick="rabbiWakeFromSleepy();openAskRabbi()" title="Rabbi Guide">
   <div class="rabbi-wrap idle" id="rabbi-fig">
     <img id="rabbi-img" src="${_arr[0]||RABBI_IMGS.idle[0]}" alt="Rabbi" class="rabbi-img" onerror="this.style.display=\\'none\\';if(this.nextElementSibling)this.nextElementSibling.style.display=\\'inline-block\\'"/>
     <span class="rabbi-fallback" style="display:none;font-size:64px;line-height:1;">✡</span>
-    <span class="rabbi-bubble" id="rabbi-bubble"></span>
+    <span class="rabbi-bubble${bubble?' show':''}" id="rabbi-bubble">${escHtml(bubble)}</span>
   </div>
 </div>`;}
 function showRabbiFeedback(ok){
@@ -1148,9 +1149,9 @@ function showRabbiFeedback(ok){
   rabbiStopIdleLoop();
   fig.classList.remove('idle','celebrate','encourage');bub.classList.remove('show');
   rabbiSetImg(ok?RABBI_IMGS.celebrate:RABBI_IMGS.encourage);
-  const arr=ok?RABBI_PHRASES_OK:RABBI_PHRASES_WRONG;const p=pick(arr);
+  const arr=ok?RABBI_PHRASES_OK:RABBI_PHRASES_WRONG;const p=pickOne(arr)||arr[0];
   bub.textContent=p.h;bub.classList.add('show');fig.classList.add(ok?'celebrate':'encourage');
-  speak(p.h);setTimeout(()=>{fig.classList.remove('celebrate','encourage');fig.classList.add('idle');bub.classList.remove('show');const _arr=rabbiExerciseIdleFrames();rabbiSetImg(_arr[_rabbiIdleIdx%_arr.length]);rabbiStartIdleLoop();rabbiScheduleExerciseIdle();},ok?2500:3500);
+  speak(p.h);setTimeout(()=>{fig.classList.remove('celebrate','encourage');fig.classList.add('idle');const _arr=rabbiExerciseIdleFrames();rabbiSetImg(_arr[_rabbiIdleIdx%_arr.length]);rabbiStartIdleLoop();rabbiScheduleExerciseIdle();rabbiGuideApplyBubble();},ok?2500:3500);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1177,6 +1178,146 @@ function lsSet(k,v,raw){try{localStorage.setItem(scopedStorageKey(k,!!raw),JSON.
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function escAttr(s){return escHtml(s);}
 function escJs(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,' ').replace(/\n/g,' ');}
+function rabbiGuideStage(){
+  const total=(S&&S.learner&&S.learner.total)||0;
+  if((S&&S.level>=4)||total>=160)return 2;
+  if((S&&S.level>=2)||total>=30)return 1;
+  return 0;
+}
+function rabbiGuideLine(he,en){
+  const stage=rabbiGuideStage();
+  if(stage>=2)return he||en||'';
+  if(stage===1&&he&&en)return `${he} — ${en}`;
+  return en||he||'';
+}
+function rabbiGuideWeakGameLabel(){
+  const weak=Object.entries((S&&S.learner&&S.learner.gt)||{}).filter(([,v])=>v&&v.w>v.c+1).map(([t])=>t)[0];
+  const labels={mc:'multiple choice',fill:'fill in the blank',tap:'tap the word',match:'matching',trans:'translation',img:'word and image',gram:'grammar'};
+  return labels[weak]||'';
+}
+function rabbiFindWordEntry(wordHe){
+  const bare=stripNikud(String(wordHe||''));
+  if(!bare)return null;
+  return D.find(w=>stripNikud(w.h||'')===bare)||null;
+}
+function rabbiFindRootEntry(rootKey,wordHe){
+  if(rootKey){
+    const byRoot=ROOTS.find(r=>r.root===rootKey);
+    if(byRoot)return byRoot;
+  }
+  const bare=stripNikud(String(wordHe||''));
+  if(!bare)return null;
+  return ROOTS.find(r=>(r.words||[]).some(x=>stripNikud(x.h||'')===bare))||null;
+}
+function rabbiGuidePrompt(){
+  const last=S&&S._rabbiGuideLastResult;
+  const age=last&&last.ts?(Date.now()-last.ts):Infinity;
+  if(last&&age<45000){
+    if(last.ok===false)return {he:'בּוֹא נִסְתַּכֵּל יַחַד בַּמִּלָּה הַזֹּאת.',en:'Let us look at that word together.'};
+    if(last.ok===true)return {he:'יָפֶה. נַמְשִׁיךְ קָדִימָה.',en:'Good. Let us keep moving.'};
+  }
+  const l=(S&&S.learner)||mkL();
+  const rq=(l.rq||[]).length;
+  if(S&&S.page==='review'){
+    if(rq>=3)return {he:'יֵשׁ לָנוּ מִלִּים לְחַזֵּק הַיּוֹם.',en:`You have ${rq} study words waiting.`};
+    return {he:'נַחֲזֹר עַל הַחֹמֶר בְּנַחַת.',en:'Let us study what you know, one step at a time.'};
+  }
+  if(S&&S.page==='reviewHub'){
+    const weak=rabbiGuideWeakGameLabel();
+    if(weak)return {he:'נִתְאַמֵּן לְאַט לְאַט.',en:`Let us practice ${weak}.`};
+    return {he:'מָה נִתְרַגֵּל הַיּוֹם?',en:'Which study exercise shall we begin with today?'};
+  }
+  if(S&&['learn','course','practice','reading','texts','numbers','roots','library'].includes(S.page)){
+    return {he:'קַח אֶת זְמַנְךָ. אֲנִי אִתְּךָ.',en:'Take your time. I am right here with you.'};
+  }
+  const rec=(typeof getLibrarianRecommendation==='function')?getLibrarianRecommendation():null;
+  if(rec&&rec.action==='review')return {he:'זְמַן לַחֲזָרָה קְצָרָה.',en:rec.label};
+  return {he:'שְׁאַל אוֹתִי עַל מִלָּה אוֹ מִשְׁפָּט.',en:'Tap me when you want help with a word or sentence.'};
+}
+function rabbiGuideApplyBubble(forcedText){
+  const bub=document.getElementById('rabbi-bubble');
+  if(!bub)return;
+  const prompt=rabbiGuidePrompt();
+  const msg=forcedText||rabbiGuideLine(prompt.he,prompt.en);
+  if(!msg){bub.textContent='';bub.classList.remove('show');return;}
+  bub.textContent=msg;
+  bub.classList.add('show');
+}
+function rabbiContextData(ctx){
+  const c=ctx||S._rabbiCtx||{};
+  const word=rabbiFindWordEntry(c.wordHe);
+  const root=rabbiFindRootEntry(word&&word.shoresh,c.wordHe);
+  return {ctx:c,word,root};
+}
+function rabbiStudyTip(data){
+  const word=data.word;
+  const v=word&&S&&S.learner&&S.learner.vocab?S.learner.vocab[word.h]:null;
+  if(v&&v.w>=2)return 'This word has missed a few times. Say it aloud, then use it in one short sentence before moving on.';
+  if(v&&v.lv>=3)return 'You already know this fairly well. Try recalling it without looking at the English first.';
+  if(S&&S.learner&&S.learner.rq&&S.learner.rq.length>=3)return 'Your review queue is growing. A short Study session now will make the next lesson easier.';
+  if(rabbiGuideStage()>=1)return 'Read the Hebrew first, then check the English. That small pause builds fluency.';
+  return 'Take one piece at a time: hear it, say it, and notice where it appears in the sentence.';
+}
+function rabbiLessonData(ctx){
+  const data=rabbiContextData(ctx),c=data.ctx,w=data.word,root=data.root;
+  const wordHe=c.wordHe||w&&w.h||'';
+  const wordPron=c.wordPron||w&&w.p||'';
+  const wordEn=c.wordEn||w&&w.e||'';
+  const wordStats=wordHe&&S&&S.learner&&S.learner.vocab?S.learner.vocab[wordHe]:null;
+  const titleWord=wordHe?` on ${wordHe}`:'';
+  const meaningParts=[];
+  if(wordHe&&wordEn)meaningParts.push(`${wordHe} means "${wordEn}".`);
+  else if(wordEn)meaningParts.push(`This focus word means "${wordEn}".`);
+  else meaningParts.push('Bring me a word or sentence from a lesson and I will explain it piece by piece.');
+  if(wordPron)meaningParts.push(`You can say it as "${wordPron}".`);
+  const grammarParts=[];
+  if(w&&w.gram)grammarParts.push(w.gram);
+  const gloss=(w&&w.e)||wordEn||'';
+  if(/\(f\.\)/.test(gloss))grammarParts.push('This form is feminine.');
+  if(/\(m\.\)/.test(gloss))grammarParts.push('This form is masculine.');
+  if(!grammarParts.length&&root)grammarParts.push(`Words from this family usually carry the idea of ${root.meaning}.`);
+  if(!grammarParts.length)grammarParts.push('Watch how the word sits in the sentence: whether it names a thing, describes it, or acts like a connector.');
+  const rootWords=root&&root.words&&root.words.length?root.words.slice(0,4).map(x=>`${x.h} (${x.e})`).join(', '):'';
+  const rootText=root?`${root.root} points to ${root.meaning}.${rootWords?` Related forms: ${rootWords}.`:''}`:'This word family is not mapped yet, so for now focus on its meaning and how it behaves in context.';
+  const usageNote=(w&&w.col)||'Use the sentence around the word as your guide. Hebrew meaning becomes clearer when you notice the whole phrase.';
+  const exampleHe=c.sentenceHe||root&&root.sentence||'';
+  const exampleEn=c.sentenceEn||root&&root.trans||'';
+  const studyTip=rabbiStudyTip(data);
+  const nextStep=(S&&S.learner&&S.learner.rq&&S.learner.rq.length>=3)
+    ?'A short Study round would help lock this in.'
+    :((wordStats&&wordStats.lv>=3)?'You are ready to meet this word in more sentences.':'See it once, say it once, then answer one more question with it.');
+  return {title:`✡ Ask the Rabbi${titleWord}`,subtitle:'Meaning, grammar, roots, and study guidance',wordHe,wordPron,wordEn,meaning:meaningParts.join(' '),grammar:grammarParts.join(' '),rootText,usageNote,exampleHe,exampleEn,studyTip,nextStep};
+}
+function rabbiQuestionIntent(q){
+  const s=String(q||'').trim().toLowerCase();
+  if(!s)return 'overview';
+  if(/שורש|root|family|origin|etym/.test(s))return 'root';
+  if(/grammar|gramm|why|form|prefix|suffix|gender|masculine|feminine|tense|pattern|בינין|זכר|נקבה/.test(s))return 'grammar';
+  if(/example|sentence|context|use|used|when|how do i use|איך|דוגמ/.test(s))return 'example';
+  if(/tip|study|remember|memor|practice|learn/.test(s))return 'tip';
+  if(/mean|translation|translate|what does|what is|meaning|פירוש|מה זה/.test(s))return 'meaning';
+  return 'overview';
+}
+function rabbiBuildQuestionAnswer(q,ctx){
+  const lesson=rabbiLessonData(ctx);
+  const intent=rabbiQuestionIntent(q);
+  if(intent==='root')return {title:'Root / Pattern',body:lesson.rootText};
+  if(intent==='grammar')return {title:'Grammar',body:lesson.grammar};
+  if(intent==='example')return {title:'Examples',body:[lesson.exampleHe,lesson.exampleEn,lesson.usageNote].filter(Boolean).join('\n')};
+  if(intent==='tip')return {title:'Study Tip',body:`${lesson.studyTip} ${lesson.nextStep}`};
+  if(intent==='meaning')return {title:'Meaning',body:`${lesson.meaning} ${lesson.usageNote}`};
+  return {title:'Rabbi Guidance',body:[lesson.meaning,lesson.grammar,lesson.rootText,lesson.studyTip].filter(Boolean).join('\n\n')};
+}
+function rabbiInfoSection(label,body,tone){
+  if(!body)return '';
+  const tones={
+    sage:{bg:'rgba(74,104,48,.06)',border:'rgba(74,104,48,.24)',accent:'var(--sage)'},
+    burg:{bg:'rgba(106,24,40,.06)',border:'rgba(106,24,40,.18)',accent:'var(--burg)'},
+    rust:{bg:'rgba(139,58,26,.06)',border:'rgba(139,58,26,.18)',accent:'var(--rust)'}
+  };
+  const style=tones[tone]||tones.sage;
+  return `<div style="margin-top:10px;padding:10px 12px;border-radius:var(--rs);background:${style.bg};border:1px solid ${style.border};"><div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;margin-bottom:5px;color:${style.accent};">${escHtml(label)}</div><div style="font-size:13px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;">${escHtml(body)}</div></div>`;
+}
 async function authHashPassword(pw){
   if(window.crypto&&window.crypto.subtle&&window.TextEncoder){
     const data=new TextEncoder().encode(String(pw||''));
@@ -1299,6 +1440,7 @@ function updateDailyStreak(l){
 
 function track(o){
   const{word,game,cat,ok}=o;const l=S.learner;l.total++;
+  S._rabbiGuideLastResult={word:word||'',game:game||'',cat:cat||'',ok:!!ok,ts:Date.now()};
   if(word){
     if(!l.vocab[word])l.vocab[word]={c:0,w:0,lv:0};
     const v=l.vocab[word];
@@ -7114,6 +7256,7 @@ function go(pg,opts){
   app.innerHTML=(fns[pg]||rHome)();
   if(pg==='read')carouselDragInit();
   updateNextUp();closeModal();updateAuthButton();
+  setTimeout(()=>{if(S.page===pg)rabbiGuideApplyBubble();},80);
   if(keepScroll){
     requestAnimationFrame(()=>window.scrollTo(0,prevScrollY));
   }else{
@@ -7231,55 +7374,58 @@ async function openWordDetails(){
   const audioBtn=heEx?`<button onclick="var d=this.closest('[data-he-ex]');if(d)speak(d.getAttribute('data-he-ex')||'',this);" class="aud ex-audio-btn" title="Hear in context" style="margin-left:6px;padding:4px 8px;font-size:12px;vertical-align:middle;">🔊</button>`:'';
   const exBlock=heEx||enEx?`<div class="modal-example-block" style="margin-top:10px;padding:8px 10px;background:rgba(74,104,48,.06);border:1px solid rgba(74,104,48,.2);border-radius:var(--rs);" ${heEx?`data-he-ex="${esc(heEx)}"`:''}><div class="modal-ex-label" style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--sage);margin-bottom:4px;">EXAMPLE / NOTE${audioBtn}</div>${heEx?`<div class="modal-ex-he" style="font-family:var(--heb);font-size:14px;direction:rtl;text-align:right;line-height:1.6;">${heExHtml}</div>`:''}${enEx?`<div class="modal-ex-en" style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:6px;">${esc(enEx)}</div>`:''}</div>`:'';
   S._rabbiCtx={wordHe:w.h||'',wordEn:w.e||'',wordPron:w.p||'',sentenceHe:heEx||'',sentenceEn:enEx||''};
-  const rabbiBtn=`<button onclick="openAskRabbi()" style="margin-top:12px;padding:8px 14px;border-radius:var(--rs);border:1px solid var(--rust);background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;cursor:pointer;font-size:12px;font-family:var(--lbl);letter-spacing:1px;">✡ Ask the Rabbi</button>`;
+  const rabbiBtn=`<button onclick="openAskRabbi()" style="margin-top:12px;padding:8px 14px;border-radius:var(--rs);border:1px solid var(--rust);background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;cursor:pointer;font-size:12px;font-family:var(--lbl);letter-spacing:1px;">✡ Study with the Rabbi</button>`;
   openSubModal(`${ghdr('📖 '+w.h,'Definition, examples & grammar','#4a6830')}<div class="mbody word-details"><div class="modal-def" style="font-size:14px;color:var(--ink2);"><strong>${esc(w.e)||'(definition)'}</strong> ${w.p?`<span style="font-style:italic;color:var(--ink3);">— ${esc(w.p)}</span>`:''}</div>${exBlock}${gram}${rabbiBtn}</div></div>`);
 }
 function openAskRabbi(ctx){
-  const c=ctx||S._rabbiCtx||{};
-  const esc=x=>String(x||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const key=localStorage.getItem('ivrit_openai_key')||'';
-  const keyHtml=key?`<div style="font-size:9px;color:var(--ok2);margin-bottom:6px;">✓ API key set</div>`:`<div style="margin-bottom:10px;"><label style="font-size:10px;font-family:var(--lbl);letter-spacing:1px;color:var(--ink3);">OpenAI API key (required for AI answers)</label><input id="rabbi-key" type="password" placeholder="sk-..." style="width:100%;padding:8px 10px;margin-top:4px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:12px;" /></div>`;
+  if(_rabbiSleepy)rabbiWakeFromSleepy();
+  const lesson=rabbiLessonData(ctx);
+  const c=(ctx||S._rabbiCtx||{});
   const ctxBlock=c.sentenceHe||c.wordHe?`<div style="padding:10px 12px;background:rgba(74,104,48,.08);border:1px solid rgba(74,104,48,.25);border-radius:var(--rs);margin-bottom:14px;font-size:12px;">
-    ${c.sentenceHe?`<div style="font-family:var(--heb);direction:rtl;text-align:right;margin-bottom:4px;">${esc(c.sentenceHe)}</div>`:''}
-    ${c.sentenceEn?`<div style="color:var(--ink3);font-style:italic;margin-bottom:6px;">${esc(c.sentenceEn)}</div>`:''}
-    ${c.wordHe?`<div style="margin-top:6px;">Word: <strong>${esc(c.wordHe)}</strong> ${c.wordPron?`(${esc(c.wordPron)})`:''} — ${esc(c.wordEn)}</div>`:''}
+    ${c.sentenceHe?`<div style="font-family:var(--heb);direction:rtl;text-align:right;margin-bottom:4px;">${escHtml(c.sentenceHe)}</div>`:''}
+    ${c.sentenceEn?`<div style="color:var(--ink3);font-style:italic;margin-bottom:6px;">${escHtml(c.sentenceEn)}</div>`:''}
+    ${c.wordHe?`<div style="margin-top:6px;">Word: <strong>${escHtml(c.wordHe)}</strong> ${c.wordPron?`(${escHtml(c.wordPron)})`:''} ${c.wordEn?`— ${escHtml(c.wordEn)}`:''}</div>`:''}
   </div>`:'';
-  openSubModal(`${ghdr('✡ Ask the Rabbi','Ask about the sentence, words, or grammar','#6a1828')}
+  const titleWord=lesson.wordHe?lesson.wordHe:'your lesson';
+  const quickBubble=rabbiGuideLine('בּוֹא נִלְמַד זֹאת יַחַד.','Let us study this together.');
+  openSubModal(`${ghdr('✡ Ask the Rabbi',`${escHtml(titleWord)} — guided notes and study help`,'#6a1828')}
   <div class="mbody">
     ${ctxBlock}
-    ${keyHtml}
-    <div style="margin-bottom:10px;">
-      <label style="font-size:10px;font-family:var(--lbl);letter-spacing:1px;color:var(--ink3);">Your question</label>
-      <textarea id="rabbi-q" rows="3" placeholder="e.g. Why is תּוֹדָה used here? What's the root? Give more examples." style="width:100%;padding:10px;margin-top:4px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:13px;resize:vertical;" /></textarea>
+    <div style="padding:10px 12px;border-radius:var(--rs);background:rgba(106,24,40,.06);border:1px solid rgba(106,24,40,.18);margin-bottom:10px;">
+      <div style="font-family:var(--lbl);font-size:9px;letter-spacing:2px;color:var(--burg);margin-bottom:4px;">RABBI OVERVIEW</div>
+      <div style="font-size:14px;color:var(--ink2);font-weight:600;">${lesson.wordHe?escHtml(lesson.wordHe):'Ask from a word or sentence'}</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:4px;">${escHtml([lesson.wordPron,lesson.wordEn].filter(Boolean).join(' — '))}</div>
+      <div style="font-size:12px;color:var(--ink2);margin-top:8px;">${escHtml(quickBubble)}</div>
     </div>
-    <button id="rabbi-btn" onclick="submitAskRabbi()" class="btn-p" style="width:100%;padding:12px;font-family:var(--lbl);letter-spacing:2px;">Ask the Rabbi</button>
+    ${rabbiInfoSection('MEANING',lesson.meaning,'sage')}
+    ${rabbiInfoSection('GRAMMAR',lesson.grammar,'rust')}
+    ${rabbiInfoSection('ROOT / PATTERN',lesson.rootText,'burg')}
+    ${lesson.exampleHe||lesson.exampleEn?`<div style="margin-top:10px;padding:10px 12px;border-radius:var(--rs);background:rgba(74,104,48,.06);border:1px solid rgba(74,104,48,.24);"><div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--sage);margin-bottom:5px;">EXAMPLE</div>${lesson.exampleHe?`<div style="font-family:var(--heb);direction:rtl;text-align:right;font-size:16px;line-height:1.7;">${escHtml(lesson.exampleHe)}</div>`:''}${lesson.exampleEn?`<div style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:6px;">${escHtml(lesson.exampleEn)}</div>`:''}</div>`:''}
+    ${rabbiInfoSection('USAGE NOTE',lesson.usageNote,'rust')}
+    ${rabbiInfoSection('STUDY TIP',`${lesson.studyTip} ${lesson.nextStep}`,'sage')}
+    <div style="margin-top:12px;">
+      <label style="font-size:10px;font-family:var(--lbl);letter-spacing:1px;color:var(--ink3);">Ask in your own words</label>
+      <textarea id="rabbi-q" rows="3" placeholder="e.g. What is the root? Why is this form used? Give me another example." style="width:100%;padding:10px;margin-top:4px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:13px;resize:vertical;"></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button onclick="document.getElementById('rabbi-q').value='What does this mean?';submitAskRabbi();" class="btn-o" style="padding:7px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">MEANING</button>
+        <button onclick="document.getElementById('rabbi-q').value='What is the root?';submitAskRabbi();" class="btn-o" style="padding:7px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">ROOT</button>
+        <button onclick="document.getElementById('rabbi-q').value='Explain the grammar.';submitAskRabbi();" class="btn-o" style="padding:7px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">GRAMMAR</button>
+        <button onclick="document.getElementById('rabbi-q').value='Give me an example.';submitAskRabbi();" class="btn-o" style="padding:7px 10px;border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;">EXAMPLE</button>
+      </div>
+    </div>
+    <button id="rabbi-btn" onclick="submitAskRabbi()" class="btn-p" style="width:100%;padding:12px;margin-top:10px;font-family:var(--lbl);letter-spacing:2px;">Guide me</button>
     <div id="rabbi-ans" style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);display:none;"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--ink3);line-height:1.5;">The Rabbi now teaches from your lesson data and progress first. Optional live AI answers can be added later without making normal study depend on an API key.</div>
   </div>`);
-  if(!key)document.getElementById('rabbi-key')?.focus();
+  document.getElementById('rabbi-q')?.focus();
 }
 async function submitAskRabbi(){
   const qEl=document.getElementById('rabbi-q'),btn=document.getElementById('rabbi-btn'),ansEl=document.getElementById('rabbi-ans');
   const q=(qEl?.value||'').trim();if(!q){qEl?.focus();return;}
-  let key=localStorage.getItem('ivrit_openai_key')||'';
-  const keyInput=document.getElementById('rabbi-key');if(keyInput?.value){key=keyInput.value.trim();localStorage.setItem('ivrit_openai_key',key);}
-  if(!key){ansEl.style.display='block';ansEl.innerHTML='<div style="color:var(--err);font-size:13px;">Please add your OpenAI API key above. Get one at platform.openai.com</div>';return;}
-  btn.disabled=true;btn.textContent='Thinking…';ansEl.style.display='block';ansEl.innerHTML='<div style="color:var(--ink3);">⏳ Asking the Rabbi…</div>';
-  const c=S._rabbiCtx||{};
-  const sys='You are a patient Hebrew teacher ("the Rabbi") helping a learner. Answer in clear English. Include Hebrew in brackets when relevant. Give examples from the sentence, explain grammar or roots, and suggest related words when helpful. Be warm and concise.';
-  const user=`Context: Hebrew sentence: ${c.sentenceHe||'—'}. Translation: ${c.sentenceEn||'—'}. Focus word: ${c.wordHe||'—'} (${c.wordPron||''}) — ${c.wordEn||'—'}.\n\nQuestion: ${q}`;
-  try{
-    const r=await fetch('https://api.openai.com/v1/chat/completions',{
-      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'system',content:sys},{role:'user',content:user}],max_tokens:800})
-    });
-    const d=await r.json();
-    if(d.error){ansEl.innerHTML=`<div style="color:var(--err);">${(d.error.message||'API error').replace(/</g,'&lt;')}</div>`;}
-    else if(d.choices&&d.choices[0]&&d.choices[0].message){ansEl.innerHTML=`<div style="font-size:13px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;">${String(d.choices[0].message.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>`;}
-    else{ansEl.innerHTML='<div style="color:var(--err);">Unexpected response.</div>';}
-  }catch(e){
-    ansEl.innerHTML=`<div style="color:var(--err);">Network or CORS error. Try running from a server (not file://). If using OpenAI, ensure your key is valid.</div>`;
-  }
-  btn.disabled=false;btn.textContent='Ask the Rabbi';
+  btn.disabled=true;btn.textContent='Teaching…';ansEl.style.display='block';ansEl.innerHTML='<div style="color:var(--ink3);">The Rabbi is gathering the lesson threads…</div>';
+  const answer=rabbiBuildQuestionAnswer(q,S._rabbiCtx||{});
+  ansEl.innerHTML=`<div style="font-size:9px;font-family:var(--lbl);letter-spacing:2px;color:var(--burg);margin-bottom:6px;">${escHtml(answer.title)}</div><div style="font-size:13px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;">${escHtml(answer.body).replace(/\n/g,'<br>')}</div>`;
+  btn.disabled=false;btn.textContent='Guide me';
 }
 function ghdr(title,sub,col){
   const bg=col?`background:linear-gradient(135deg,${col},${col}cc)`:'background:linear-gradient(135deg,var(--rust),var(--rust2))';
@@ -7961,7 +8107,7 @@ function showCourseWord(n,sectionId,idx){
       ${progBar}
       <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
         <button id="cw-aud" class="aud" onclick="spk('${w.h.replace(/'/g,"\\'")}','cw-aud')">🔊 Listen</button>
-        <button onclick="S._rabbiCtx={wordHe:'${(w.h||'').replace(/'/g,"\\'")}',wordEn:'${(w.e||'').replace(/'/g,"\\'")}',wordPron:'${(w.p||'').replace(/'/g,"\\'")}',sentenceHe:'${(ex||'').replace(/'/g,"\\'")}'};openAskRabbi()" class="aud" style="background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;border:none;">✡ Ask the Rabbi</button>
+        <button onclick="S._rabbiCtx={wordHe:'${(w.h||'').replace(/'/g,"\\'")}',wordEn:'${(w.e||'').replace(/'/g,"\\'")}',wordPron:'${(w.p||'').replace(/'/g,"\\'")}',sentenceHe:'${(ex||'').replace(/'/g,"\\'")}'};openAskRabbi()" class="aud" style="background:linear-gradient(145deg,var(--rust),var(--rust2));color:#fff;border:none;">✡ Study with the Rabbi</button>
       </div>
       <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center;">
         ${backBtn}
