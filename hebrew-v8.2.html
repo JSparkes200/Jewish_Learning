@@ -133,12 +133,27 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#e8d8b8,
 .carousel-thumb.dragging{cursor:grabbing;}
 .mhdr{background:linear-gradient(135deg,var(--rust),var(--rust2));border-radius:20px 20px 0 0;padding:18px 22px;color:#fff;}
 .mbody{padding:22px;}
+.mbody.rabbi-safe,.rabbi-safe-card{position:relative;}
 @media (min-width:768px){
   .mbox{max-width:1000px;}
   .mbody.word-details .modal-def{font-size:18px;}
   .mbody.word-details .modal-ex-he{font-size:18px !important;}
   .mbody.word-details .modal-ex-en{font-size:16px !important;}
   .mbody.word-details .modal-ex-label{font-size:11px !important;}
+}
+@media (max-width:767px){
+  .mbody.rabbi-safe{
+    padding-right:clamp(150px,40vw,190px);
+    padding-bottom:clamp(180px,30vh,250px);
+  }
+  .rabbi-safe-card{
+    padding-right:clamp(150px,40vw,190px) !important;
+    padding-bottom:clamp(180px,30vh,250px) !important;
+  }
+  .mbody.rabbi-safe .g2,
+  .rabbi-safe-card .g2{
+    grid-template-columns:1fr;
+  }
 }
 .mfoot{padding:0 22px 22px;}
 .ch{width:100%;padding:13px 15px;
@@ -8213,7 +8228,7 @@ function buildMC(w,pool){
   S._rabbiCtx={wordHe:w.h||'',wordEn:w.e||'',wordPron:w.p||''};
   const opts=shuf([w.e,...dist(w,pool,3)]);S.GM.opts=opts;S.GM.ci=opts.indexOf(w.e);
   return`${ghdr('MULTIPLE CHOICE','What does this word mean?')}
-  <div class="mbody">
+  <div class="mbody rabbi-safe">
     <div style="text-align:center;padding:16px 0 20px;">
       <div style="font-family:var(--heb);font-size:50px;line-height:1.6;">${w.h}</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;">
@@ -8259,7 +8274,7 @@ function buildFill(w,pool){
   const sentHe=`אֲנִי ${w.h} כָּל יוֹם.`;
   const sentEn=getFillSentenceEn(w);
   return`${ghdr('FILL IN THE BLANK','Complete the sentence')}
-  <div class="mbody">
+  <div class="mbody rabbi-safe">
     <div style="text-align:center;padding:12px 0 18px;">
       <div style="font-family:var(--heb);font-size:30px;direction:rtl;line-height:2.0;">אֲנִי <span id="fbl" style="border-bottom:3px solid var(--amber);padding:0 12px;color:var(--amber);display:inline-block;min-width:50px;">　</span> כָּל יוֹם.</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -8287,7 +8302,7 @@ function buildTap(w,pool){
   S._rabbiCtx={wordHe:w.h||'',wordEn:w.e||'',wordPron:w.p||''};
   const ot=shuf(pool.filter(x=>x.h!==w.h)).slice(0,4);const words=shuf([w,...ot]);S.GM.twords=words;
   return`${ghdr('TAP THE WORD',`Tap: "${w.e}"`)}
-  <div class="mbody">
+  <div class="mbody rabbi-safe">
     <div style="text-align:center;margin-bottom:18px;">
       <div style="font-size:20px;color:var(--rust);font-family:var(--lbl);">"${w.e}"</div>
       <div style="font-size:11px;color:var(--ink3);margin-top:2px;">${w.p}</div>
@@ -8312,7 +8327,7 @@ function buildMatch(pool){
   const words=shuf(pool).slice(0,4);const shE=shuf([...words]);
   S.GM.mwords=words;S.GM.mshuf=shE;S.GM.mmatched=[];S.GM.mselH=null;
   return`${ghdr('MATCH PAIRS','Tap Hebrew → then its English')}
-  <div class="mbody">
+  <div class="mbody rabbi-safe">
     <div class="g2" style="gap:8px;">
       <div>${words.map((w,i)=>`<button class="ch" id="mh${i}" onclick="mPickH(${i})" style="display:block;width:100%;margin-bottom:7px;font-family:var(--heb);font-size:24px;">${w.h}</button>`).join('')}</div>
       <div>${shE.map((w,i)=>`<button class="ch" id="me${i}" onclick="mPickE(${i})" style="display:block;width:100%;margin-bottom:7px;font-size:13px;">${w.e}</button>`).join('')}</div>
@@ -9196,7 +9211,7 @@ function rReview(){
     </div>
     <div style="color:var(--ink3);font-size:13px;font-style:italic;">Random quiz from all sections — vocab, grammar, numbers, roots, readings.</div>
     ${l.rq.length?`<div style="margin-top:8px;padding:7px 11px;background:rgba(168,48,48,.08);border:1px solid rgba(168,48,48,.3);border-radius:var(--rs);font-family:var(--lbl);font-size:9px;letter-spacing:1px;color:var(--err2);">${l.rq.length} ITEMS IN QUEUE</div>`:''}</div>
-  <div class="card card-top" style="text-align:center;padding:28px 22px 22px;">
+  <div class="card card-top rabbi-safe-card" style="text-align:center;padding:28px 22px 22px;">
     <div style="font-family:var(--heb);font-size:50px;margin-bottom:8px;">${w.h}</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px;">
       <span style="font-size:13px;color:var(--ink3);font-style:italic;">${w.p}</span>
