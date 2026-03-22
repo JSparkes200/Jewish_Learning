@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/><title>Generate Icons</title></head>
+<body style="font-family:sans-serif;padding:24px;">
+<h1>Generate PWA Icons</h1>
+<p>Click to download icon-192.png and icon-512.png for the install banner.</p>
+<button onclick="gen(192)">Download icon-192.png</button>
+<button onclick="gen(512)">Download icon-512.png</button>
+<script>
+function gen(size){
+  const c=document.createElement('canvas'); c.width=c.height=size;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#8B3A1A'; ctx.fillRect(0,0,size,size);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=size*0.023; ctx.strokeStyle='#fff';
+  ctx.beginPath(); ctx.ellipse(size*0.25,size/2,size*0.09,size*0.31,0,0,7); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(size*0.75,size/2,size*0.09,size*0.31,0,0,7); ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.fillRect(size*0.34,size*0.19,size*0.32,size*0.125);
+  ctx.fillRect(size*0.34,size*0.69,size*0.32,size*0.125);
+  ctx.fillStyle='rgba(255,255,255,.95)'; ctx.fillRect(size*0.34,size*0.31,size*0.32,size*0.38);
+  const a=document.createElement('a'); a.download='icon-'+size+'.png'; a.href=c.toDataURL('image/png'); a.click();
+}
+</script>
+</body>
+</html>

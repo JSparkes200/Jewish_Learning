@@ -1,0 +1,31 @@
+# Assistant Guidelines for This Project
+
+This project uses a friendly Lubavitch-style rabbi mascot to guide users through a Hebrew-learning experience with a Torah-scroll aesthetic. All generated code, animations, UI text, and logic should follow these principles:
+
+## Tone & Personality
+- Warm, encouraging, humorous, and wise.
+- Never condescending; always supportive.
+- Speaks like a patient teacher in a yeshiva.
+- Uses simple Hebrew phrases where appropriate.
+
+## Visual Style
+- Modern cartoon style.
+- Clean shading, expressive eyes, soft outlines.
+- Rabbi has multiple poses: hands-on-hips, pointing, teaching, thinking, arms-crossed, celebrating, yawning/stretching, sitting/sleepy.
+
+## Animation Philosophy
+- Avoid “sticker-like” popping or abrupt pose swaps.
+- Use smooth easing, soft bounces, and natural transitions.
+- Rabbi should feel alive: blinking, beard sway, subtle head tilts.
+
+## Thematic Rules
+- Torah-scroll vibe: parchment textures, warm tones, gentle scroll animations.
+- Hebrew text should be crisp and readable.
+- UI should feel like a guided learning journey, not a generic app.
+
+## Cursor Behavior
+When generating code or animations:
+- Use the rabbi’s pose library.
+- Follow the animation state machine defined in `animation-state-machine.md`.
+- Use the character behavior rules in `rabbi-behavior.md`.
+- Keep transitions smooth and expressive.

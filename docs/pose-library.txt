@@ -1,0 +1,41 @@
+# Rabbi Pose Library
+
+This file defines all available poses for the rabbi character. Cursor should reference these poses when generating animations, UI logic, or transitions.
+
+## Standing Poses
+### 1. Hands-on-hips
+Confident, friendly, default stance. Used for greetings and neutral states.
+
+### 2. Pointing Up
+Used when greeting text appears or when highlighting something above the character.
+
+### 3. Teaching Pose (Pointing Right)
+Used when introducing Learn / Review / Library or explaining UI elements.
+
+### 4. Thinking Pose
+Hand on beard, eyes looking up. Used for hints, incorrect answers, or idle loops.
+
+### 5. Arms Crossed
+Playful “hmm” pose. Used for incorrect answers or skeptical reactions.
+
+### 6. Celebrating Pose
+Arms raised, big smile. Used for correct answers or achievements.
+
+## Idle Poses
+### 7. Hands Behind Back
+Calm idle stance with blinking and subtle beard sway.
+
+### 8. Yawning / Stretching
+Arms raised, mouth open mid-yawn. Used during long idle periods.
+
+### 9. Chair-Sitting Sleepy Pose (Exercises Screen Only)
+Rabbi sits in a wooden chair behind him:
+- Head resting on hand
+- Elbow on armrest or knee
+- Eyes drooping or half-closed
+- Occasional micro-nods as if falling asleep
+
+## Notes
+- All poses should transition smoothly.
+- Avoid abrupt swaps; use easing and natural motion.
+- Cursor should reference this library when generating animation code.

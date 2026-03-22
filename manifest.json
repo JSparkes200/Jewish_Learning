@@ -1,0 +1,32 @@
+{
+  "name": "עִבְרִית — Real Hebrew",
+  "short_name": "עברית",
+  "description": "Learn to speak and read Hebrew — vocabulary, grammar, and practice",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#8B3A1A",
+  "background_color": "#f5ede0",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "lifestyle"]
+}

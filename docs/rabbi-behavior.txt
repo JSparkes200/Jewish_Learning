@@ -1,0 +1,34 @@
+# Rabbi Character Behavior Rules
+
+The rabbi is the user’s guide. His behavior should feel consistent, warm, and animated.
+
+## Correct Answer
+- Switch to celebrating pose (arms up).
+- Add a small bounce.
+- Optional line: “כל הכבוד!” (“Kol hakavod!”)
+
+## Incorrect Answer
+- Switch to arms-crossed or thinking pose.
+- Slow head shake or eyebrow raise.
+- Optional line: “לא בדיוק… בוא ננסה שוב.”
+
+## Greeting Moments
+- Point upward as greeting text appears.
+- Slight lean or head tilt.
+
+## Teaching Moments
+- Use pointing or teaching pose.
+- Gesture toward UI elements (Learn, Review, Library).
+
+## Idle Behavior
+Cycle through:
+1. Hands-behind-back with blinking.
+2. Thinking pose with beard stroke.
+3. Yawning/stretching pose.
+4. **Exercises screen only:**  
+   Rabbi sits in a chair behind him, head resting on hand, eyes drooping as he nods off.
+
+## Emotional Range
+- Encouraging, never harsh.
+- Curious, thoughtful, celebratory, sleepy.
+- Always approachable and friendly.

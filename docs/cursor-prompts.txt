@@ -1,0 +1,27 @@
+# Cursor Prompt Library
+
+Use these prompts when asking Cursor to generate animations, transitions, or UI logic.
+
+## Greeting Animation
+“Animate the rabbi starting in hands-on-hips pose, then transitioning to pointing upward as the greeting text fades in. Add a subtle head tilt and blink.”
+
+## Subject Introduction
+“Animate the rabbi in teaching pose pointing right. Fade in Learn → Review → Library with soft bounce easing. Rabbi gestures toward each icon as it appears.”
+
+## Idle Loop
+“Cycle through idle poses every 5–8 seconds: hands-behind-back, thinking pose, yawning/stretching. Use smooth transitions and subtle micro-animations.”
+
+## Exercises Screen Idle
+“Use the chair-sitting sleepy pose. Rabbi sits with head resting on hand, eyes drooping, occasional micro-nods. Trigger after 10 seconds of inactivity.”
+
+## Correct Answer
+“Switch to celebrating pose with a small bounce. Hold for 1.5 seconds, then return to idle.”
+
+## Incorrect Answer
+“Switch to arms-crossed or thinking pose. Add a slow head shake and eyebrow raise.”
+
+## Teaching Moment
+“Use pointing pose. Animate a gentle lean toward the highlighted UI element.”
+
+## Icon Hover
+“When user hovers over an icon, animate the rabbi pointing at it with a smile. Add a soft glow to the icon.”

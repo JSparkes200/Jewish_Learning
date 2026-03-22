@@ -1,0 +1,33 @@
+# UI Tone & Writing Style Guide
+
+This project uses a warm, Torah-inspired tone that blends clarity with personality.
+
+## Core Tone
+- Friendly, encouraging, and wise.
+- Feels like a patient rabbi guiding a student.
+- Never condescending or overly formal.
+- Light humor is welcome.
+
+## Hebrew Usage
+Use simple Hebrew phrases sparingly:
+- “שלום!”
+- “כל הכבוד!”
+- “בוא ננסה שוב.”
+- “ברוכים הבאים!”
+
+## Writing Style
+- Short, clear sentences.
+- Avoid jargon.
+- Use warm, human phrasing.
+- Keep instructions simple and direct.
+
+## Examples
+- “Tap a lesson to begin.”
+- “Ready to learn something new?”
+- “Let’s review what you’ve mastered.”
+- “Take your time — I’m right here with you.”
+
+## Avoid
+- Corporate or robotic tone.
+- Overly long explanations.
+- Harsh or discouraging language.

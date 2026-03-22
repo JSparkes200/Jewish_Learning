@@ -1,0 +1,45 @@
+# Animation State Machine for Rabbi Character
+
+This defines how the rabbi transitions between poses and animations.
+
+## States
+
+### idle_default
+- Poses: hands-behind-back, thinking, yawning/stretching.
+- Randomized transitions every 5–8 seconds.
+- Smooth easing.
+
+### idle_exercises
+- Rabbi sits in chair behind him.
+- Head resting on hand.
+- Eyes drooping.
+- Occasional micro-nods as if falling asleep.
+
+### greeting
+- Start: hands-on-hips.
+- Transition: pointing upward.
+- Trigger: greeting text appears.
+
+### introduce_subjects
+- Teaching pose.
+- Gestures toward Learn → Review → Library as they fade in.
+- Icons animate with soft bounce.
+
+### correct_answer
+- Celebrating pose.
+- Small bounce.
+- Confetti optional.
+
+### incorrect_answer
+- Arms-crossed or thinking pose.
+- Slow head shake.
+
+### teaching
+- Pointing pose.
+- Used when explaining or highlighting UI elements.
+
+## Transition Rules
+- All transitions use soft easing (easeInOut, spring, or cubic-bezier).
+- No abrupt pose swaps.
+- Idle loops must feel organic, not mechanical.
+- Return to idle_default after any temporary state unless on exercises screen.
