@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply min-h-dvh bg-parchment text-ink antialiased;
+}
+
+/* Subtle parchment grain (CSS-only, no asset) */
+.bg-parchment-grain {
+  background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(120, 90, 60, 0.07) 1px,
+      transparent 0
+    ),
+    linear-gradient(180deg, #faf3e6 0%, #f0e4cc 100%);
+  background-size: 8px 8px, 100% 100%;
+}

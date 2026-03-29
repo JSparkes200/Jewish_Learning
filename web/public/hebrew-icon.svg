@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Hebrew">
+  <rect width="512" height="512" rx="96" fill="#f5ecd8"/>
+  <rect x="32" y="32" width="448" height="448" rx="72" fill="none" stroke="#4a6830" stroke-width="8"/>
+  <text x="256" y="330" text-anchor="middle" font-family="Georgia,serif" font-size="220" fill="#4a6830">�</text>
+</svg>

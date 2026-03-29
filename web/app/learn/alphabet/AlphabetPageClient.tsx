@@ -1,0 +1,342 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { Hebrew } from "@/components/Hebrew";
+import { AlphabetTracePad } from "@/components/AlphabetTracePad";
+import {
+  ALPHABET_LETTERS,
+  ALPHABET_LETTER_IDS,
+  getLetterById,
+  type AlphabetLetterMeta,
+} from "@/data/alphabet-letters";
+import { ALPHABET_TRACK_BLURB, ALPHABET_TRACK_TITLE } from "@/data/course-post-foundation";
+import {
+  areAllAlphabetLettersTraced,
+  completeAlphabetTrack,
+  resolveAlphabetGateStatus,
+  saveLearnProgress,
+  setAlphabetGate,
+  setAlphabetLetterTraced,
+  type LearnProgressState,
+} from "@/lib/learn-progress";
+import { useLearnProgressSync } from "@/lib/use-learn-progress-sync";
+import { AlphabetFinalExam } from "./AlphabetFinalExam";
+
+function LetterPickerBlock({
+  title,
+  hint,
+  letters,
+  traced,
+  activeLetterId,
+  onPick,
+}: {
+  title: string;
+  hint?: string;
+  letters: readonly AlphabetLetterMeta[];
+  traced: LearnProgressState["alphabetLettersTraced"];
+  activeLetterId: string;
+  onPick: (id: string) => void;
+}) {
+  return (
+    <div>
+      <h2 className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
+        {title}
+      </h2>
+      {hint ? (
+        <p className="mt-1 max-w-prose text-[11px] leading-snug text-ink-muted">
+          {hint}
+        </p>
+      ) : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {letters.map((L) => (
+          <button
+            key={L.id}
+            type="button"
+            onClick={() => onPick(L.id)}
+            className={`rounded-lg border px-3 py-2 font-hebrew text-lg ${
+              activeLetterId === L.id
+                ? "border-sage bg-sage/15 text-ink"
+                : "border-ink/15 bg-parchment-card text-ink-muted"
+            }`}
+          >
+            {traced?.[L.id] ? "✓ " : ""}
+            {L.char}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AlphabetPageClient() {
+  const [progress, setProgress] = useLearnProgressSync({});
+  const [activeLetterId, setActiveLetterId] = useState(ALPHABET_LETTERS[0].id);
+  const [showFinal, setShowFinal] = useState(false);
+
+  const effective = resolveAlphabetGateStatus(progress);
+  const traced = progress.alphabetLettersTraced;
+  const nTraced = useMemo(
+    () => ALPHABET_LETTER_IDS.filter((id) => traced?.[id]).length,
+    [traced],
+  );
+  const allLessonsDone = areAllAlphabetLettersTraced(progress);
+  const trackDone =
+    progress.alphabetFinalExamPassed === true || effective === "passed";
+
+  const beginPractice = () => {
+    setProgress((p) => {
+      const next = setAlphabetGate(p, "in_progress");
+      saveLearnProgress(next);
+      return next;
+    });
+  };
+
+  const markLetterPracticed = (id: string) => {
+    setProgress((p) => {
+      const next = setAlphabetLetterTraced(p, id, true);
+      saveLearnProgress(next);
+      return next;
+    });
+  };
+
+  const applySkip = () => {
+    setProgress((p) => {
+      const next = setAlphabetGate(p, "skipped");
+      saveLearnProgress(next);
+      return next;
+    });
+  };
+
+  const applySimulate = () => {
+    setProgress((p) => {
+      const next = completeAlphabetTrack(p);
+      saveLearnProgress(next);
+      return next;
+    });
+  };
+
+  const activeLetter = getLetterById(activeLetterId);
+
+  const printLetters = useMemo(
+    () => ALPHABET_LETTERS.filter((l) => l.section === "print"),
+    [],
+  );
+  const finalLetters = useMemo(
+    () => ALPHABET_LETTERS.filter((l) => l.section === "final"),
+    [],
+  );
+
+  const onFinalComplete = (next: LearnProgressState) => {
+    setProgress(next);
+    setShowFinal(false);
+  };
+
+  if (effective === "skipped") {
+    return (
+      <div>
+        <nav className="mb-6">
+          <Link
+            href="/learn"
+            className="font-label text-[10px] uppercase tracking-[0.2em] text-sage hover:underline"
+          >
+            ← Learn
+          </Link>
+        </nav>
+        <p className="text-sm text-ink-muted">
+          You chose to skip the alphabet track. You can still open it anytime from
+          Learn.
+        </p>
+        <Link
+          href="/learn"
+          className="mt-4 inline-block text-sage underline"
+        >
+          Learn home →
+        </Link>
+      </div>
+    );
+  }
+
+  if (trackDone) {
+    return (
+      <div>
+        <nav className="mb-6">
+          <Link
+            href="/learn"
+            className="font-label text-[10px] uppercase tracking-[0.2em] text-sage hover:underline"
+          >
+            ← Learn
+          </Link>
+        </nav>
+        <header className="mb-6">
+          <p className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
+            Pre-foundation
+          </p>
+          <h1 className="font-hebrew text-2xl text-ink">{ALPHABET_TRACK_TITLE}</h1>
+        </header>
+        <div className="rounded-2xl border border-sage/35 bg-sage/10 p-4">
+          <p className="font-label text-[10px] uppercase tracking-[0.18em] text-sage">
+            Completed
+          </p>
+          <p className="mt-2 text-sm text-ink-muted">
+            Alphabet track marked complete. Continue to Alef–Dalet when you are
+            ready.
+          </p>
+          <Link
+            href="/learn"
+            className="mt-3 inline-block rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+          >
+            Open Learn →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const showLessonUi = effective === "in_progress";
+
+  return (
+    <div>
+      <nav className="mb-6">
+        <Link
+          href="/learn"
+          className="font-label text-[10px] uppercase tracking-[0.2em] text-sage hover:underline"
+        >
+          ← Learn
+        </Link>
+      </nav>
+
+      <header className="mb-6">
+        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
+          Pre-foundation
+        </p>
+        <h1 className="font-hebrew text-2xl text-ink">{ALPHABET_TRACK_TITLE}</h1>
+        <p className="mt-2 text-sm text-ink-muted">{ALPHABET_TRACK_BLURB}</p>
+      </header>
+
+      <div className="mb-6 rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
+        <p className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-muted">
+          Status
+        </p>
+        <p className="mt-2 text-sm text-ink">
+          Gate: <strong className="text-sage">{effective}</strong> · Letters
+          practiced:{" "}
+          <strong className="text-ink">
+            {nTraced}/{ALPHABET_LETTERS.length}
+          </strong>
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={applySkip}
+            className="rounded-lg bg-sage px-4 py-2 font-label text-[9px] uppercase tracking-wide text-white hover:brightness-110"
+          >
+            I already read Hebrew — skip
+          </button>
+          <button
+            type="button"
+            onClick={applySimulate}
+            className="rounded-lg border border-amber/30 px-4 py-2 font-label text-[9px] uppercase tracking-wide text-amber hover:bg-amber/10"
+          >
+            Simulate full completion (dev)
+          </button>
+        </div>
+      </div>
+
+      {effective === "unseen" ? (
+        <div className="mb-8 rounded-2xl border border-sage/30 bg-sage/5 p-6 text-center">
+          <p className="text-sm text-ink-muted">
+            Trace every print letter and each sofit form on the pad (touch or
+            mouse), check your trace, or mark as practiced if drawing is difficult.
+            Then take the final: six traces + twelve sound questions.
+          </p>
+          <button
+            type="button"
+            onClick={beginPractice}
+            className="mt-4 rounded-xl bg-sage px-6 py-3 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+          >
+            Begin alphabet practice
+          </button>
+        </div>
+      ) : null}
+
+      {showLessonUi && !showFinal ? (
+        <section className="mb-8 space-y-8">
+          <LetterPickerBlock
+            title="Print letters (22)"
+            letters={printLetters}
+            traced={traced}
+            activeLetterId={activeLetterId}
+            onPick={setActiveLetterId}
+          />
+          <LetterPickerBlock
+            title="Final forms — sofit (5)"
+            hint="Used at the end of a word; same sounds as כ מ נ פ צ."
+            letters={finalLetters}
+            traced={traced}
+            activeLetterId={activeLetterId}
+            onPick={setActiveLetterId}
+          />
+
+          {activeLetter ? (
+            <div className="mt-6 rounded-2xl border border-ink/10 bg-parchment-card/90 p-4">
+              <p className="text-sm text-ink">
+                <strong className="font-hebrew text-2xl">{activeLetter.char}</strong>{" "}
+                — {activeLetter.name}
+              </p>
+              <p className="mt-1 text-xs text-ink-muted">
+                Sound: {activeLetter.sound}
+              </p>
+              <div className="mt-4">
+                <AlphabetTracePad
+                  key={activeLetterId}
+                  letter={activeLetter.char}
+                  onPass={() => markLetterPracticed(activeLetter.id)}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => markLetterPracticed(activeLetter.id)}
+                className="mt-4 rounded-lg border border-ink/15 px-4 py-2 font-label text-[9px] uppercase tracking-wide text-ink-muted hover:bg-parchment-deep/40"
+              >
+                Mark as practiced (no drawing)
+              </button>
+            </div>
+          ) : null}
+
+          {allLessonsDone ? (
+            <div className="mt-8 rounded-2xl border border-sage/30 bg-sage/5 p-4 text-center">
+              <p className="text-sm font-medium text-ink">
+                All letters practiced — ready for the final exam.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowFinal(true)}
+                className="mt-3 rounded-xl bg-sage px-6 py-3 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+              >
+                Start final exam
+              </button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {showLessonUi && showFinal && allLessonsDone ? (
+        <div className="mb-8">
+          <button
+            type="button"
+            onClick={() => setShowFinal(false)}
+            className="mb-4 font-label text-[10px] uppercase tracking-wide text-sage hover:underline"
+          >
+            ← Back to letters
+          </button>
+          <AlphabetFinalExam onComplete={onFinalComplete} />
+        </div>
+      ) : null}
+
+      <Hebrew as="p" className="mt-8 text-center text-sm text-ink-faint">
+        אָלֶף־בֵּית
+      </Hebrew>
+    </div>
+  );
+}

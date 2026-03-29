@@ -1,0 +1,2 @@
+# Hebrew passage tooling (optional; run in a venv).
+stanza>=1.7.0

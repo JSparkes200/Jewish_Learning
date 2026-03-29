@@ -1,5 +1,5 @@
 // Service worker for עִבְרִית — Real Hebrew
-const CACHE = 'ivrit-v4';
+const CACHE = 'ivrit-v7';
 const base = self.location.pathname.replace(/sw\.js$/, '') || '/';
 
 self.addEventListener('install', e => {

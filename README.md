@@ -41,3 +41,7 @@ npx serve .
 ```
 
 Do not open `file://` directly — the service worker and some features won't work.
+
+## Next.js app (`web/`) on Vercel
+
+The **`web/`** folder is the Next.js migration target. Deploy with **Root Directory = `web`**. Environment variables and API data (corpus, auth allowlist template) are documented in **`docs/vercel-environment.md`**. Local template: **`web/.env.example`**.
