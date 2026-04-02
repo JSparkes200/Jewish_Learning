@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { RootDrillExplorer } from "@/components/RootDrillExplorer";
 import {
+  type GradedPracticeContext,
   LEARN_PROGRESS_EVENT,
   createEmptyLearnProgressState,
   loadLearnProgress,
@@ -31,13 +32,10 @@ export function RootsPageClient() {
   }, [sync]);
 
   const onGradedPick = useCallback(
-    (
-      correct: boolean,
-      ctx?: { promptHe?: string; rootKey?: string },
-    ) => {
+    (correct: boolean, ctx?: GradedPracticeContext) => {
       setProgress((p) => {
         let n = touchDailyStreak(p);
-        n = recordGradedAnswer(n, correct);
+        n = recordGradedAnswer(n, correct, ctx);
         n = recordVocabPracticeForPrompt(n, ctx?.promptHe, correct);
         if (correct && ctx?.rootKey && ctx?.promptHe) {
           n = recordRootDrillCorrect(n, ctx.rootKey, ctx.promptHe);

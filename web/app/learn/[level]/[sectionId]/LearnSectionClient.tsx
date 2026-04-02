@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ComprehensionDrill } from "@/components/ComprehensionDrill";
-import { Hebrew } from "@/components/Hebrew";
+import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
+import { DrillPrepGate } from "@/components/DrillPrepGate";
+import { HebrewTapText } from "@/components/HebrewTapText";
 import { McqDrill } from "@/components/McqDrill";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { NumbersListenDrill } from "@/components/NumbersListenDrill";
@@ -17,6 +19,7 @@ import {
 import { getMcqPackForSection } from "@/data/section-drills";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
 import {
+  type GradedPracticeContext,
   recordGradedAnswer,
   recordRootDrillCorrect,
   recordVocabPracticeForPrompt,
@@ -27,6 +30,19 @@ import {
   type LearnProgressState,
 } from "@/lib/learn-progress";
 import { useLearnProgressSync } from "@/lib/use-learn-progress-sync";
+import {
+  buildStudyPracticePool,
+  pickMcqItemsFromPool,
+} from "@/lib/study-practice-pool";
+import {
+  buildCorrectSentencePackFromMcq,
+  buildCorrectSentencePackFromPool,
+} from "@/lib/sentence-correctness";
+import {
+  buildPrepCardsFromComprehension,
+  buildPrepCardsFromMcqPack,
+  sectionGrammarHint,
+} from "@/lib/drill-prep";
 
 type Props = { level: number; sectionId: string };
 
@@ -61,13 +77,10 @@ export function LearnSectionClient({ level, sectionId }: Props) {
     : null;
 
   const onPracticeAnswer = useCallback(
-    (
-      correct: boolean,
-      ctx?: { promptHe?: string; rootKey?: string },
-    ) => {
+    (correct: boolean, ctx?: GradedPracticeContext) => {
       setProgress((p) => {
         let n = touchDailyStreak(p);
-        n = recordGradedAnswer(n, correct);
+        n = recordGradedAnswer(n, correct, ctx);
         n = recordVocabPracticeForPrompt(n, ctx?.promptHe, correct);
         if (correct && ctx?.rootKey && ctx?.promptHe) {
           n = recordRootDrillCorrect(n, ctx.rootKey, ctx.promptHe);
@@ -123,6 +136,35 @@ export function LearnSectionClient({ level, sectionId }: Props) {
   const isRead = sec.type === "read" && level === 1 && sectionId === "1-read";
   const comprehension = getComprehensionForSection(sectionId);
   const mcqPack = getMcqPackForSection(sectionId);
+  const generatedPack =
+    !mcqPack && !comprehension
+      ? (() => {
+          const pool = buildStudyPracticePool(level);
+          const items = pickMcqItemsFromPool(pool, 10, level);
+          if (!items.length) return null;
+          return {
+            kind: "mcq" as const,
+            title: `${sec.label} - generated practice`,
+            intro:
+              "Section-specific pack is still being curated. This generated drill keeps your course path and mastery tracking moving.",
+            items,
+          };
+        })()
+      : null;
+  const sentencePack = (() => {
+    const sourcePack = mcqPack ?? generatedPack;
+    if (sourcePack) return buildCorrectSentencePackFromMcq(sourcePack, level, 5);
+    const pool = buildStudyPracticePool(level);
+    return buildCorrectSentencePackFromPool(pool, level, 5);
+  })();
+  const prepCards =
+    buildPrepCardsFromMcqPack(mcqPack ?? generatedPack, 6).length > 0
+      ? buildPrepCardsFromMcqPack(mcqPack ?? generatedPack, 6)
+      : buildPrepCardsFromComprehension(comprehension, 4);
+  const prepSubtitle = sectionGrammarHint(level, sec.type);
+  const storyGloss = Object.fromEntries(
+    (mcqPack?.items ?? []).map((it) => [it.promptHe, it.correctEn]),
+  );
 
   return (
     <div>
@@ -142,71 +184,117 @@ export function LearnSectionClient({ level, sectionId }: Props) {
 
       {comprehension ? (
         <div className="mb-6">
-          <ComprehensionDrill
-            passage={comprehension}
-            defaultShowNikkud={nikkudDefault}
-            onPracticeAnswer={onPracticeAnswer}
-          />
+          <DrillPrepGate
+            title={sec.label}
+            subtitle={prepSubtitle}
+            cards={prepCards}
+            ctaLabel="Start reading drills"
+          >
+            <ComprehensionDrill
+              passage={comprehension}
+              defaultShowNikkud={nikkudDefault}
+              skillTags={["comprehension", "grammar", "recognition", "definition"]}
+              onPracticeAnswer={onPracticeAnswer}
+            />
+            {sentencePack ? (
+              <CorrectSentenceDrill
+                pack={sentencePack}
+                className="mt-4"
+                onPracticeAnswer={onPracticeAnswer}
+              />
+            ) : null}
+          </DrillPrepGate>
         </div>
       ) : isRead ? (
         <div className="mb-6 space-y-6">
-          <div className="rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
-            <div className="mb-3 flex justify-end">
-              <NikkudExerciseToggle
-                showNikkud={storyShowNikkud}
-                onToggle={() => setStoryShowNikkud((v) => !v)}
+          <DrillPrepGate
+            title={sec.label}
+            subtitle={prepSubtitle}
+            cards={prepCards}
+            ctaLabel="Start story drills"
+          >
+            <div className="rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
+              <div className="mb-3 flex justify-end">
+                <NikkudExerciseToggle
+                  showNikkud={storyShowNikkud}
+                  onToggle={() => setStoryShowNikkud((v) => !v)}
+                />
+              </div>
+              <HebrewTapText
+                text={storyShowNikkud ? LEVEL_1_STORY.he : stripNikkud(LEVEL_1_STORY.he)}
+                className="text-lg text-ink"
+                glossByWord={storyGloss}
               />
+              <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
+                {LEVEL_1_STORY.en}
+              </p>
             </div>
-            <Hebrew
-              as="p"
-              className="mb-4 text-right text-lg leading-relaxed text-ink"
-            >
-              {storyShowNikkud ? LEVEL_1_STORY.he : stripNikkud(LEVEL_1_STORY.he)}
-            </Hebrew>
-            <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
-              {LEVEL_1_STORY.en}
-            </p>
-          </div>
-          {mcqPack ? (
+            {mcqPack ? (
+              <>
+                <McqDrill
+                  pack={mcqPack}
+                  corpusMaxLevel={level}
+                  defaultShowNikkud={nikkudDefault}
+                  skillTags={["recognition", "definition"]}
+                  onPracticeAnswer={onPracticeAnswer}
+                />
+                {sentencePack ? (
+                  <CorrectSentenceDrill
+                    pack={sentencePack}
+                    onPracticeAnswer={onPracticeAnswer}
+                  />
+                ) : null}
+              </>
+            ) : null}
+          </DrillPrepGate>
+        </div>
+      ) : mcqPack || generatedPack ? (
+        <div className="mb-6 space-y-6">
+          <DrillPrepGate
+            title={sec.label}
+            subtitle={prepSubtitle}
+            cards={prepCards}
+            ctaLabel="Start lesson drills"
+          >
+            {sec.type === "roots" ? (
+              <RootDrillExplorer
+                rootDrill={progress.rootDrill}
+                vocabLevels={progress.vocabLevels}
+                onGradedPick={onPracticeAnswer}
+              />
+            ) : null}
+            {sec.type === "numbers" && sectionId === "1-nums" ? (
+              <NumbersListenDrill onPracticeAnswer={onPracticeAnswer} />
+            ) : null}
             <McqDrill
-              pack={mcqPack}
+              pack={mcqPack ?? generatedPack!}
               corpusMaxLevel={level}
               defaultShowNikkud={nikkudDefault}
+              skillTags={
+                sec.type === "roots"
+                  ? ["grammar", "production", "definition"]
+                  : sec.type === "numbers"
+                    ? ["recognition", "definition", "listening"]
+                    : ["recognition", "definition"]
+              }
               onPracticeAnswer={onPracticeAnswer}
             />
-          ) : null}
-        </div>
-      ) : mcqPack ? (
-        <div className="mb-6 space-y-6">
-          {sec.type === "roots" ? (
-            <RootDrillExplorer
-              rootDrill={progress.rootDrill}
-              vocabLevels={progress.vocabLevels}
-              onGradedPick={onPracticeAnswer}
-            />
-          ) : null}
-          {sec.type === "numbers" && sectionId === "1-nums" ? (
-            <NumbersListenDrill onPracticeAnswer={onPracticeAnswer} />
-          ) : null}
-          <McqDrill
-            pack={mcqPack}
-            corpusMaxLevel={level}
-            defaultShowNikkud={nikkudDefault}
-            onPracticeAnswer={onPracticeAnswer}
-          />
+            {sentencePack ? (
+              <CorrectSentenceDrill
+                pack={sentencePack}
+                onPracticeAnswer={onPracticeAnswer}
+              />
+            ) : null}
+          </DrillPrepGate>
         </div>
       ) : (
         <div className="mb-6 rounded-xl border border-amber/25 bg-amber/5 p-4 text-sm text-ink-muted">
-          <p className="mb-2 font-medium text-ink">Exercise UI not ported yet</p>
+          <p className="mb-2 font-medium text-ink">More exercises coming</p>
           <p>
-            This section has no Next.js drill pack yet. Some special drills
-            (e.g. numbers) may still live in{" "}
-            <code className="rounded bg-parchment-deep/50 px-1 text-xs">
-              hebrew-v8.2.html
-            </code>
-            . You can still{" "}
-            <strong className="text-ink">mark complete</strong> to advance the
-            course path here.
+            This section does not have interactive drills in the app yet. You
+            can still{" "}
+            <strong className="text-ink">mark complete</strong> when you are
+            ready to move on in the course path.
           </p>
         </div>
       )}

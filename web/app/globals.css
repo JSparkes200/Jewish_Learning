@@ -4,10 +4,115 @@
 
 :root {
   color-scheme: light;
+  /* Soft “lift” on parchment — neumorphic-adjacent without dark shell */
+  /* Warm lift only — avoid a white “bloom” along the top edge */
+  --elev-raised:
+    6px 8px 22px rgba(44, 36, 22, 0.12),
+    -2px -2px 10px rgba(245, 236, 216, 0.45);
+  --elev-raised-hover:
+    8px 10px 28px rgba(44, 36, 22, 0.14),
+    -2px -2px 12px rgba(245, 236, 216, 0.55);
+  --elev-pressed:
+    inset 3px 3px 8px rgba(44, 36, 22, 0.1),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.45);
+  --elev-glass-border: rgb(44 36 22 / 0.06);
 }
 
 body {
-  @apply min-h-dvh bg-parchment text-ink antialiased;
+  @apply min-h-dvh text-ink antialiased;
+}
+
+@layer components {
+  .surface-elevated {
+    border-radius: 1rem;
+    border: 1px solid rgb(44 36 22 / 0.08);
+    background: linear-gradient(
+      155deg,
+      rgb(248 242 228 / 0.97) 0%,
+      rgb(236 226 204 / 0.96) 100%
+    );
+    box-shadow: var(--elev-raised);
+  }
+
+  .surface-elevated:hover {
+    box-shadow: var(--elev-raised-hover);
+  }
+
+  .btn-elevated-primary {
+    @apply rounded-xl bg-sage px-4 py-2.5 font-label text-[10px] uppercase tracking-wide text-white;
+    box-shadow:
+      4px 6px 16px rgba(74, 104, 48, 0.45),
+      -2px -2px 8px rgba(255, 255, 255, 0.35);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      filter 0.15s ease;
+  }
+
+  .btn-elevated-primary:hover {
+    filter: brightness(1.06);
+    box-shadow:
+      5px 8px 22px rgba(74, 104, 48, 0.5),
+      -2px -2px 10px rgba(255, 255, 255, 0.4);
+  }
+
+  .btn-elevated-primary:active {
+    transform: translateY(1px);
+    box-shadow:
+      2px 3px 10px rgba(74, 104, 48, 0.35),
+      inset 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+
+  .btn-elevated-rust {
+    @apply rounded-xl bg-rust px-4 py-2.5 font-label text-[10px] uppercase tracking-wide text-white;
+    box-shadow:
+      4px 6px 16px rgba(139, 58, 26, 0.45),
+      -2px -2px 8px rgba(255, 255, 255, 0.35);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      filter 0.15s ease;
+  }
+
+  .btn-elevated-rust:hover {
+    filter: brightness(1.06);
+    box-shadow:
+      5px 8px 22px rgba(139, 58, 26, 0.52),
+      -2px -2px 10px rgba(255, 255, 255, 0.4);
+  }
+
+  .btn-elevated-rust:active {
+    transform: translateY(1px);
+    box-shadow:
+      2px 3px 10px rgba(139, 58, 26, 0.35),
+      inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-elevated-secondary {
+    @apply rounded-xl border bg-parchment-card/90 px-4 py-2.5 font-label text-[10px] uppercase tracking-wide text-ink-muted;
+    border-color: rgb(44 36 22 / 0.12);
+    box-shadow: var(--elev-raised);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .btn-elevated-secondary:hover {
+    @apply border-sage/30 bg-parchment-deep/50 text-ink;
+    box-shadow: var(--elev-raised-hover);
+  }
+
+  .btn-elevated-secondary:active {
+    transform: translateY(1px);
+    box-shadow: var(--elev-pressed);
+  }
+
+  .input-inset {
+    @apply rounded-xl border bg-parchment-deep/40 text-ink placeholder:text-ink-faint;
+    border-color: rgb(44 36 22 / 0.12);
+    box-shadow: var(--elev-pressed);
+  }
 }
 
 /* Subtle parchment grain (CSS-only, no asset) */
@@ -17,6 +122,7 @@ body {
       rgba(120, 90, 60, 0.07) 1px,
       transparent 0
     ),
-    linear-gradient(180deg, #faf3e6 0%, #f0e4cc 100%);
+    /* Slightly deeper at the top so the shell header + first fold aren’t washed out */
+    linear-gradient(180deg, #f3e9d4 0%, #e8dcc4 48%, #e2d4b8 100%);
   background-size: 8px 8px, 100% 100%;
 }

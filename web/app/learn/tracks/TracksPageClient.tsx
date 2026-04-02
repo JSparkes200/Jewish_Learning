@@ -103,10 +103,11 @@ export function TracksPageClient() {
           the same rules — revisit tiers anytime; Progress keeps your badges.
         </p>
         <p className="mt-3 text-xs text-ink-faint">
-          <Link href="/learn/fluency" className="text-sage underline">
-            Fluency path overview
+          <Link href="/learn" className="text-sage underline">
+            Learn home
           </Link>{" "}
-          — how this fits your full journey (foundation → bridge → specialties).
+          — use the “i” button there for the full path overview (foundation →
+          bridge → specialties).
         </p>
       </header>
 
@@ -165,9 +166,28 @@ export function TracksPageClient() {
                       {tiers[0]?.meta.domainHe}
                     </span>
                   </div>
-                  <p className="mb-4 text-xs text-ink-muted">
+                  <p className="mb-2 text-xs text-ink-muted">
                     {tiers[0]?.meta.blurb}
                   </p>
+                  <p className="mb-2 font-label text-[8px] uppercase tracking-wide text-ink-faint">
+                    You&apos;re building toward
+                  </p>
+                  <ul className="mb-3 list-inside list-disc space-y-0.5 text-[11px] text-ink-muted">
+                    {tiers[0]?.meta.outcomes.slice(0, 3).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                  <div className="mb-4 flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
+                    {tiers[0]?.meta.practiceLinks.map((pl) => (
+                      <Link
+                        key={pl.href + pl.label}
+                        href={pl.href}
+                        className="text-sage underline"
+                      >
+                        {pl.label}
+                      </Link>
+                    ))}
+                  </div>
                   <ol className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     {tiers.map((t) => {
                       const href = `/learn/tracks/${encodeURIComponent(t.trackId)}/${encodeURIComponent(t.tier)}`;
@@ -189,6 +209,9 @@ export function TracksPageClient() {
                                 ) : (
                                   "Open"
                                 )}
+                              </span>
+                              <span className="line-clamp-3 text-[9px] leading-snug text-ink-faint">
+                                {t.meta.tierGoals[t.tier]}
                               </span>
                             </Link>
                           ) : (

@@ -35,16 +35,13 @@ export function LegacyParityPanel({ variant = "full" }: Props) {
     return (
       <div className="rounded-2xl border border-ink/10 border-t-sage/25 bg-parchment-card/50 p-4">
         <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-          Legacy parity
+          Product checklist
         </p>
         <p className="mt-1 text-xs text-ink-muted">
-          Weighted checklist vs{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">
-            hebrew-v8.2.html
-          </code>
-          . For the full subsystem migration map, see{" "}
+          Maintainer-only weighted score vs the old single-file app. Full
+          workstream list:{" "}
           <Link href="/migration" className="text-sage hover:underline">
-            Roadmap
+            Migration roadmap
           </Link>
           .
         </p>
@@ -77,18 +74,18 @@ export function LegacyParityPanel({ variant = "full" }: Props) {
       className="scroll-mt-24 rounded-xl border border-ink/12 bg-parchment-card/80 p-4"
     >
       <h3 className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
-        Legacy parity (weighted)
+        Product checklist (weighted)
       </h3>
       <p className="mt-2 text-xs text-ink-muted">
-        Same model as the Progress page — edit checklist in{" "}
+        Not shown on Progress — edit items in{" "}
         <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
           lib/legacy-parity.ts
         </code>
         . The{" "}
         <Link href="/migration" className="text-sage hover:underline">
-          Roadmap
+          migration roadmap
         </Link>{" "}
-        page tracks the larger HTML → Next workstreams (
+        tracks the larger HTML workstreams (
         <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
           lib/html-full-migration.ts
         </code>

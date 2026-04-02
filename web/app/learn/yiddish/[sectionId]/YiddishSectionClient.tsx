@@ -8,6 +8,7 @@ import { getYiddishSectionMeta } from "@/data/yiddish-course";
 import { getYiddishDrillPack } from "@/data/yiddish-drills";
 import { meetsFoundationExitPassPercent } from "@/lib/foundation-exit-pass";
 import {
+  type GradedPracticeContext,
   loadLearnProgress,
   recordGradedAnswer,
   saveLearnProgress,
@@ -36,10 +37,10 @@ export function YiddishSectionClient({ sectionId }: Props) {
   const unlocked = yiddishSectionUnlocked(yiddish, sectionId);
   const passedSection = yiddish.completedSections[sectionId] === true;
 
-  const onPracticeAnswer = useCallback((correct: boolean) => {
+  const onPracticeAnswer = useCallback((correct: boolean, ctx?: GradedPracticeContext) => {
     const p = loadLearnProgress();
     let n = touchDailyStreak(p);
-    n = recordGradedAnswer(n, correct);
+    n = recordGradedAnswer(n, correct, ctx);
     saveLearnProgress(n);
   }, []);
 
@@ -130,6 +131,7 @@ export function YiddishSectionClient({ sectionId }: Props) {
       <McqDrill
         pack={pack}
         defaultShowNikkud={showNikkud}
+        skillTags={["recognition", "definition", "comprehension"]}
         onPracticeAnswer={onPracticeAnswer}
         endHint={
           lastAttempt

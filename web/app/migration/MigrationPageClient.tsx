@@ -16,21 +16,16 @@ export function MigrationPageClient() {
 
       <div className="rounded-2xl border border-ink/10 border-t-sage/20 bg-parchment-card/50 p-4">
         <p className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
-          Restructure note
+          For builders
         </p>
         <p className="mt-2 text-sm text-ink-muted">
-          The score below compares the monolithic{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-            hebrew-v8.2.html
-          </code>{" "}
-          to this Next app. <strong className="text-ink">New routes</strong>{" "}
-          (bridge, foundation exit, specialty tracks, Yiddish) are listed as
-          their own workstreams where they do not map 1:1 to legacy tabs —
-          they still count toward “learner” phase completion honestly.
+          This page is an internal map of what the old single-file course covered
+          vs this app. New product slices (bridge, foundation exit, specialty
+          tracks, Yiddish) appear as their own rows when they do not map 1:1 to
+          old tabs.
         </p>
         <p className="mt-2 text-xs text-ink-faint">
-          Device backup: Developer → JSON v2 includes Hebrew course + optional
-          Yiddish; merge is union-based for both.
+          Backups: Advanced → Developer → JSON v2 (Hebrew + optional Yiddish).
         </p>
       </div>
 

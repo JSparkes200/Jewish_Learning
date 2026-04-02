@@ -3,7 +3,7 @@ import { LibraryPageClient } from "./LibraryPageClient";
 
 export default function LibraryPage() {
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-3xl">
       <Hebrew as="h1" className="mb-4 block text-2xl text-ink">
         סִפְרִיָּה
       </Hebrew>

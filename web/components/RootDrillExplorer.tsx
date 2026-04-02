@@ -113,7 +113,11 @@ export function RootDrillExplorer({
       if (!fam) return;
       setPicked(j);
       const ok = j === drillRound.correctIndex;
-      onGradedPick(ok, { promptHe: drillRound.word.h, rootKey: fam.root });
+      onGradedPick(ok, {
+        promptHe: drillRound.word.h,
+        rootKey: fam.root,
+        skills: ["grammar", "production", "definition"],
+      });
     },
     [drillRound, drillFamilyIndex, families, picked, onGradedPick],
   );

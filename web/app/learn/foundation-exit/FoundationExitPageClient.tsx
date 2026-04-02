@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { DrillPrepGate } from "@/components/DrillPrepGate";
 import { McqDrill } from "@/components/McqDrill";
 import { FOUNDATION_EXIT_PACKS } from "@/data/foundation-exit-drills";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/lib/foundation-exit-pass";
 import {
   LEARN_PROGRESS_EVENT,
+  type GradedPracticeContext,
   countIncompleteFoundationSections,
   createEmptyLearnProgressState,
   getFoundationExitStrands,
@@ -24,6 +26,7 @@ import {
   type FoundationExitStrands,
   type LearnProgressState,
 } from "@/lib/learn-progress";
+import { buildPrepCardsFromMcqPack } from "@/lib/drill-prep";
 
 const STRANDS: {
   key: keyof FoundationExitStrands;
@@ -92,10 +95,10 @@ export function FoundationExitPageClient() {
   };
 
   const onPracticeAnswer = useCallback(
-    (correct: boolean, ctx?: { promptHe?: string }) => {
+    (correct: boolean, ctx?: GradedPracticeContext) => {
       setProgress((p) => {
         let n = touchDailyStreak(p);
-        n = recordGradedAnswer(n, correct);
+        n = recordGradedAnswer(n, correct, ctx);
         n = recordVocabPracticeForPrompt(n, ctx?.promptHe, correct);
         saveLearnProgress(n);
         return n;
@@ -204,23 +207,37 @@ export function FoundationExitPageClient() {
               {!on ? (
                 foundationReady ? (
                   <>
-                    <McqDrill
-                      key={key}
-                      pack={pack}
-                      defaultShowNikkud
-                      onPracticeAnswer={onPracticeAnswer}
-                      endHint={
-                        attempt
-                          ? meetsFoundationExitPassPercent(
-                              attempt.correct,
-                              attempt.total,
-                            )
-                            ? "This strand meets the score — marked passed. Finish the other strands to open the bridge."
-                            : `Score ${attempt.correct}/${attempt.total}. Need at least ${Math.ceil(FOUNDATION_EXIT_MIN_PCT * attempt.total - 1e-9)} of ${attempt.total} for ${Math.round(FOUNDATION_EXIT_MIN_PCT * 100)}%.`
-                          : "Scores at or above 90% mark this strand passed automatically."
-                      }
-                      onPackComplete={onStrandPackComplete(key)}
-                    />
+                    <DrillPrepGate
+                      title={`${label} strand prep`}
+                      subtitle={hint}
+                      cards={buildPrepCardsFromMcqPack(pack, 6)}
+                      ctaLabel="Start strand quiz"
+                    >
+                      <McqDrill
+                        key={key}
+                        pack={pack}
+                        defaultShowNikkud
+                        skillTags={
+                          key === "grammar"
+                            ? ["grammar", "recognition", "definition"]
+                            : key === "reading"
+                              ? ["comprehension", "recognition", "definition"]
+                              : ["definition", "recognition"]
+                        }
+                        onPracticeAnswer={onPracticeAnswer}
+                        endHint={
+                          attempt
+                            ? meetsFoundationExitPassPercent(
+                                attempt.correct,
+                                attempt.total,
+                              )
+                              ? "This strand meets the score — marked passed. Finish the other strands to open the bridge."
+                              : `Score ${attempt.correct}/${attempt.total}. Need at least ${Math.ceil(FOUNDATION_EXIT_MIN_PCT * attempt.total - 1e-9)} of ${attempt.total} for ${Math.round(FOUNDATION_EXIT_MIN_PCT * 100)}%.`
+                            : "Scores at or above 90% mark this strand passed automatically."
+                        }
+                        onPackComplete={onStrandPackComplete(key)}
+                      />
+                    </DrillPrepGate>
                     {attempt &&
                     !meetsFoundationExitPassPercent(
                       attempt.correct,

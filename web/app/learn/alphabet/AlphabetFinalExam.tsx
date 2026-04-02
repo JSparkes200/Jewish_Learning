@@ -12,6 +12,7 @@ import {
 import { meetsFoundationExitPassPercent } from "@/lib/foundation-exit-pass";
 import {
   completeAlphabetTrack,
+  type GradedPracticeContext,
   loadLearnProgress,
   recordGradedAnswer,
   recordVocabPracticeForPrompt,
@@ -43,11 +44,11 @@ export function AlphabetFinalExam({ onComplete }: Props) {
 
   const onSoundPractice = (
     correct: boolean,
-    ctx?: { promptHe?: string },
+    ctx?: GradedPracticeContext,
   ) => {
     const cur = loadLearnProgress();
     let n = touchDailyStreak(cur);
-    n = recordGradedAnswer(n, correct);
+    n = recordGradedAnswer(n, correct, ctx);
     n = recordVocabPracticeForPrompt(n, ctx?.promptHe, correct);
     saveLearnProgress(n);
   };
@@ -106,6 +107,7 @@ export function AlphabetFinalExam({ onComplete }: Props) {
           pack={ALPHABET_FINAL_SOUND_PACK}
           corpusMaxLevel={1}
           defaultShowNikkud={false}
+          skillTags={["recognition", "listening", "definition"]}
           onPracticeAnswer={onSoundPractice}
           endHint={
             soundAttempt

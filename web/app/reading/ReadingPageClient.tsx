@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
 import { Hebrew } from "@/components/Hebrew";
 import { ReadingTapCarousel } from "@/components/ReadingTapCarousel";
 import { READING_HUB_ENTRIES } from "@/data/reading-hub";
@@ -12,7 +13,74 @@ import {
   type LearnProgressState,
 } from "@/lib/learn-progress";
 
+function ReadingHelpModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="w-[min(100vw-2rem,26rem)] rounded-2xl border border-ink/12 bg-parchment-card p-5 shadow-elevated-lg">
+      <h2
+        id="reading-help-title"
+        className="font-label text-[10px] uppercase tracking-[0.2em] text-sage"
+      >
+        Reading &amp; comprehension
+      </h2>
+      <p className="mt-2 text-sm font-medium text-ink">
+        How progress is counted and where to practise
+      </p>
+      <p className="mt-2 text-[11px] text-ink-faint">
+        Press <kbd className="rounded border border-ink/15 bg-parchment-deep/50 px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>{" "}
+        to close this panel.
+      </p>
+      <ul className="mt-4 space-y-3 text-sm leading-relaxed text-ink-muted">
+        <li>
+          <strong className="text-ink">Passage carousel</strong> — Cards appear
+          as you unlock them in the course (first story, then each level).
+          Jewish texts open one at a time: after you open one, the next appears.
+          Open the center card, tap words to hear them, and use{" "}
+          <strong className="text-ink">Start exercises</strong> when a passage
+          includes quizzes. Correct answers count toward your daily streak and
+          practice stats like other Learn drills.
+        </li>
+        <li>
+          <strong className="text-ink">Longer comprehension</strong> — Full
+          Hebrew passages with multiple questions live in{" "}
+          <Link href="/learn" className="text-sage underline hover:text-sage/90">
+            Learn
+          </Link>{" "}
+          as the sections marked comprehension in each level.
+        </li>
+        <li>
+          <strong className="text-ink">Stories &amp; mini-quizzes</strong> — Use
+          the level rows below (Aleph guided read, level stories). They reinforce
+          vocabulary and count toward the same progress storage.
+        </li>
+        <li>
+          <strong className="text-ink">Review</strong> —{" "}
+          <Link href="/study" className="text-sage underline hover:text-sage/90">
+            Study
+          </Link>{" "}
+          suggests re-runs and ties into your active level.
+        </li>
+        <li>
+          <strong className="text-ink">Active level</strong> — The carousel
+          filters some passages by your active level (set on the{" "}
+          <Link href="/learn" className="text-sage underline hover:text-sage/90">
+            Learn
+          </Link>{" "}
+          home). You can still open any hub link below anytime.
+        </li>
+      </ul>
+      <button
+        type="button"
+        onClick={onClose}
+        className="btn-elevated-primary mt-6 w-full"
+      >
+        Close
+      </button>
+    </div>
+  );
+}
+
 export function ReadingPageClient() {
+  const { openModal, closeModal } = useAppShell();
   const [progress, setProgress] = useState<LearnProgressState>(() =>
     createEmptyLearnProgressState(),
   );
@@ -29,45 +97,47 @@ export function ReadingPageClient() {
 
   const active = progress.activeLevel;
 
+  const openReadingHelp = useCallback(() => {
+    openModal(
+      <ReadingHelpModal
+        onClose={() => {
+          closeModal();
+        }}
+      />,
+    );
+  }, [openModal, closeModal]);
+
   return (
     <div className="mx-auto max-w-lg space-y-8">
-      <nav className="flex flex-wrap gap-3 text-[10px] uppercase tracking-[0.15em] text-ink-muted">
-        <Link href="/" className="text-sage hover:underline">
-          Home
-        </Link>
-        <span className="text-ink-faint">/</span>
-        <span className="text-ink">Reading</span>
-      </nav>
+      <ReadingTapCarousel progress={progress} />
 
-      <header>
-        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
-          Reading passages
-        </p>
-        <Hebrew
-          as="h1"
-          className="mt-2 block text-3xl leading-snug text-ink sm:text-4xl"
+      <div className="flex items-start gap-3">
+        <button
+          type="button"
+          onClick={openReadingHelp}
+          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-ink/15 bg-parchment-deep/50 font-serif text-base font-semibold italic leading-none text-ink-muted shadow-sm transition hover:border-sage/40 hover:bg-sage/10 hover:text-ink"
+          aria-label="How reading progress and exercises work"
         >
-          קְרִיאָה
-        </Hebrew>
-        <p className="mt-2 text-sm italic text-ink-muted">
-          Course stories, guided Aleph reading, saved library snippets, and the
-          same combined carousel as legacy (
-          <code className="text-[11px]">JT</code> Jewish Texts,{" "}
-          <code className="text-[11px]">RD</code> course readings, library
-          saves) — word tap, listen, notes, Sefaria links, and RD quizzes.
-        </p>
-      </header>
-
-      <ReadingTapCarousel activeLevel={active} />
-
-      <p className="rounded-xl border border-ink/10 bg-parchment-card/50 px-3 py-2 text-[11px] text-ink-muted">
-        Active level for unlock hints:{" "}
-        <strong className="text-ink">{active}</strong> (change on{" "}
-        <Link href="/learn" className="text-sage underline">
-          Learn home
-        </Link>
-        ). You can still open any link below.
-      </p>
+          i
+        </button>
+        <div className="min-w-0 flex-1">
+          <p
+            id="reading-hubs-heading"
+            className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted"
+          >
+            Stories &amp; reading hubs
+          </p>
+          <Hebrew
+            as="p"
+            className="mt-1 text-xl leading-snug text-ink sm:text-2xl"
+          >
+            אָלֶף עַד דָּלֶת
+          </Hebrew>
+          <p className="mt-1 text-xs text-ink-faint">
+            Aleph guided read, level stories, and library — tap a row to open.
+          </p>
+        </div>
+      </div>
 
       <ul className="space-y-3">
         {READING_HUB_ENTRIES.map((e) => {
@@ -110,29 +180,20 @@ export function ReadingPageClient() {
         })}
       </ul>
 
-      <section className="rounded-2xl border border-ink/10 bg-parchment-deep/25 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-          Comprehension drills
-        </p>
-        <p className="mt-2 text-sm text-ink-muted">
-          Longer guided readings with questions live in{" "}
-          <strong className="text-ink">Learn</strong> as marked comprehension
-          sections (ported from legacy).
-        </p>
-        <Link
-          href="/learn"
-          className="mt-3 inline-block font-label text-[10px] uppercase tracking-wide text-sage underline"
-        >
-          Open Learn →
+      <p className="rounded-xl border border-ink/10 bg-parchment-deep/25 px-3 py-2.5 text-center text-[11px] text-ink-muted">
+        Streak, section counts, and word levels are on{" "}
+        <Link href="/progress" className="font-medium text-sage underline">
+          Progress
         </Link>
-      </section>
+        — useful to see how reading and comprehension drills add up.
+      </p>
 
       <p className="flex flex-wrap justify-center gap-4 border-t border-ink/10 pt-4 text-[11px]">
         <Link href="/study" className="text-sage underline">
           Study
         </Link>
-        <Link href="/numbers" className="text-sage underline">
-          Numbers
+        <Link href="/library" className="text-sage underline">
+          Library
         </Link>
         <Link href="/progress" className="text-sage underline">
           Progress

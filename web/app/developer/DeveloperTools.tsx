@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CorpusDPreview } from "@/components/CorpusDPreview";
 import { PassageValidatorPanel } from "@/components/PassageValidatorPanel";
@@ -125,7 +126,7 @@ export function DeveloperTools() {
 
   const storageLines = useMemo(
     () => [
-      `${LEARN_PROGRESS_KEY} — completions, active level, streak, MCQ tallies, vocabLevels, rootDrill (legacy import + JSON backup)`,
+      `${LEARN_PROGRESS_KEY} — completions, active level, streak, MCQ tallies, vocabLevels, rootDrill (legacy import + JSON backup); readingCarouselRevealed, readingPassageLastOpenedAt, readingPassageQuizComplete; numbersCarouselLastOpenedAt, numbersDrillEngaged`,
       `${NEXT_UP_EXPANDED_STORAGE_KEY} — Next-up bar expanded`,
       `${LOCAL_PROFILE_KEY} — optional display name (header)`,
       `${TRIAL_SESSION_STORAGE_KEY} — local 72h trial (Rabbi + badge slot; dev tools)`,
@@ -189,9 +190,7 @@ export function DeveloperTools() {
   return (
     <div className="mt-8 space-y-6">
       <DeveloperAuthPanel />
-      <HtmlMigrationTracker variant="compact" />
       <PassageValidatorPanel />
-      <LegacyParityPanel variant="full" />
       <CorpusDPreview />
 
       <div className="rounded-xl border border-ink/12 border-t-rust/20 bg-parchment-card/80 p-4">
@@ -1173,19 +1172,41 @@ export function DeveloperTools() {
         </p>
       </div>
 
+      <div
+        id="dev-parity-migration"
+        className="space-y-6 rounded-xl border border-ink/12 border-dashed border-ink/15 bg-parchment-deep/25 p-4"
+      >
+        <div>
+          <h3 className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
+            Maintainer scores (optional)
+          </h3>
+          <p className="mt-2 text-xs text-ink-muted">
+            Weighted checklists for porting work from the old single-file app.
+            Hidden from Progress; open{" "}
+            <Link href="/migration" className="text-sage underline hover:text-sage/90">
+              Migration roadmap
+            </Link>{" "}
+            for the full HTML workstream list.
+          </p>
+        </div>
+        <HtmlMigrationTracker variant="compact" />
+        <LegacyParityPanel variant="full" />
+      </div>
+
       <div className="rounded-xl border border-ink/12 bg-parchment-card/80 p-4">
         <h3 className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
           Docs
         </h3>
         <p className="mt-2 text-xs text-ink-muted">
-          Repo root:{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-            docs/next-migration.md
-          </code>
-          ,{" "}
+          Repo:{" "}
           <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
             docs/auth-security.md
           </code>
+          ,{" "}
+          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
+            docs/vercel-environment.md
+          </code>
+          , and other notes at the project root.
         </p>
       </div>
     </div>

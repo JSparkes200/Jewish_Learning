@@ -11,6 +11,7 @@ import {
   TIME_HE,
   TIME_PRON,
 } from "@/data/course-numbers-extra";
+import type { GradedPracticeContext } from "@/lib/learn-progress";
 import { speakHebrew } from "@/lib/speech-hebrew";
 
 function shuffle<T>(arr: T[]): T[] {
@@ -117,7 +118,7 @@ type Props = {
   variant: NumbersTopicVariant;
   onPracticeAnswer?: (
     correct: boolean,
-    context?: { promptHe?: string },
+    context?: GradedPracticeContext,
   ) => void;
 };
 
@@ -137,9 +138,13 @@ export function NumbersTopicMcqDrill({ variant, onPracticeAnswer }: Props) {
       if (picked != null) return;
       setPicked(j);
       const ok = j === round.correctIndex;
-      onPracticeAnswer?.(ok, { promptHe: round.correctHe });
+      onPracticeAnswer?.(ok, {
+        promptHe: round.correctHe,
+        skills: ["recognition", "definition"],
+        numbersHubEngageId: variant,
+      });
     },
-    [picked, round.correctHe, round.correctIndex, onPracticeAnswer],
+    [picked, round.correctHe, round.correctIndex, onPracticeAnswer, variant],
   );
 
   const playAnswer = useCallback(() => {

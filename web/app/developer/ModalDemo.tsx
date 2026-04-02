@@ -23,8 +23,8 @@ export function ModalDemo() {
               <div className="text-sm text-ink-muted">
                 <p className="mb-2 font-medium text-ink">Sample modal</p>
                 <p>
-                  Course modals, Library, and Ask the Rabbi will render here
-                  during migration.
+                  Course modals, Library, and teaching overlays use this same
+                  shell.
                 </p>
                 <button
                   type="button"

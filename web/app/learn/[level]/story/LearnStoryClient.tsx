@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DrillPrepGate } from "@/components/DrillPrepGate";
+import { HebrewTapText } from "@/components/HebrewTapText";
 import { McqDrill } from "@/components/McqDrill";
-import { Hebrew } from "@/components/Hebrew";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { storyPageDefaultShowNikkud } from "@/data/course";
 import { getStoryMcqPack } from "@/data/course-stories";
 import { getMcqPackForSection } from "@/data/section-drills";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
 import {
+  type GradedPracticeContext,
   loadLearnProgress,
   normalizeStreak,
   recordGradedAnswer,
@@ -18,6 +20,12 @@ import {
   touchDailyStreak,
 } from "@/lib/learn-progress";
 import { useLearnProgressSync } from "@/lib/use-learn-progress-sync";
+import {
+  buildPrepCardsFromMcqPack,
+  sectionGrammarHint,
+} from "@/lib/drill-prep";
+import { buildCorrectSentencePackFromMcq } from "@/lib/sentence-correctness";
+import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
 
 type Props = { level: number; he: string; en: string };
 
@@ -36,12 +44,20 @@ export function LearnStoryClient({ level, he, en }: Props) {
     if (level === 1) return getMcqPackForSection("1-read");
     return getStoryMcqPack(level);
   }, [level]);
+  const prepCards = buildPrepCardsFromMcqPack(pack, 6);
+  const sentencePack = useMemo(
+    () => (pack ? buildCorrectSentencePackFromMcq(pack, level, 4) : null),
+    [pack, level],
+  );
+  const storyGloss = Object.fromEntries(
+    (pack?.items ?? []).map((it) => [it.promptHe, it.correctEn]),
+  );
 
   const onPracticeAnswer = useCallback(
-    (correct: boolean, ctx?: { promptHe?: string }) => {
+    (correct: boolean, ctx?: GradedPracticeContext) => {
       const cur = loadLearnProgress();
       let n = touchDailyStreak(cur);
-      n = recordGradedAnswer(n, correct);
+      n = recordGradedAnswer(n, correct, ctx);
       n = recordVocabPracticeForPrompt(n, ctx?.promptHe, correct);
       saveLearnProgress(n);
     },
@@ -82,34 +98,47 @@ export function LearnStoryClient({ level, he, en }: Props) {
         )}
       </p>
 
-      <div className="mb-6 rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
-        <div className="mb-3 flex justify-end">
-          <NikkudExerciseToggle
-            showNikkud={storyShowNikkud}
-            onToggle={() => setStoryShowNikkud((v) => !v)}
+      <DrillPrepGate
+        title={`Level ${level} story prep`}
+        subtitle={sectionGrammarHint(level, "comprehension")}
+        cards={prepCards}
+        ctaLabel="Start story quiz"
+      >
+        <div className="mb-6 rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
+          <div className="mb-3 flex justify-end">
+            <NikkudExerciseToggle
+              showNikkud={storyShowNikkud}
+              onToggle={() => setStoryShowNikkud((v) => !v)}
+            />
+          </div>
+          <HebrewTapText
+            text={storyShowNikkud ? he : stripNikkud(he)}
+            className="text-lg text-ink"
+            glossByWord={storyGloss}
           />
+          <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
+            {en}
+          </p>
         </div>
-        <Hebrew
-          as="p"
-          className="mb-4 text-right text-lg leading-relaxed text-ink"
-        >
-          {storyShowNikkud ? he : stripNikkud(he)}
-        </Hebrew>
-        <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
-          {en}
-        </p>
-      </div>
 
-      {pack ? (
-        <div className="mb-6">
-          <McqDrill
-            pack={pack}
-            corpusMaxLevel={level}
-            defaultShowNikkud={nikkudDefault}
-            onPracticeAnswer={onPracticeAnswer}
-          />
-        </div>
-      ) : null}
+        {pack ? (
+          <div className="mb-6 space-y-4">
+            <McqDrill
+              pack={pack}
+              corpusMaxLevel={level}
+              defaultShowNikkud={nikkudDefault}
+              skillTags={["comprehension", "recognition", "definition"]}
+              onPracticeAnswer={onPracticeAnswer}
+            />
+            {sentencePack ? (
+              <CorrectSentenceDrill
+                pack={sentencePack}
+                onPracticeAnswer={onPracticeAnswer}
+              />
+            ) : null}
+          </div>
+        ) : null}
+      </DrillPrepGate>
 
       <p className="mb-4 text-xs text-ink-muted">
         This level-wide story matches the legacy <code className="rounded bg-parchment-deep/50 px-1">LVS</code> idea. The mini-quiz counts toward your daily streak and Hebrew MCQ prompts update vocabulary mastery for course gates. It does not mark subsections complete — use the section list for path progress.

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Hebrew — Yeshiva",
   description:
-    "Hebrew course (Aleph–Dalet), drills, library links, and progress — Next.js app.",
+    "Hebrew course (Alef–Dalet), drills, reading practice, library links, and saved progress.",
   appleWebApp: {
     capable: true,
     title: "Hebrew — Yeshiva",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Hebrew — Yeshiva",
     description:
-      "Hebrew course, MCQ drills, and study tools — migration from the legacy single-page app.",
+      "Structured Hebrew lessons, practice drills, reading, and review — save progress in your browser.",
     type: "website",
     locale: "en_US",
     images: [
@@ -47,7 +47,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Hebrew — Yeshiva",
-    description: "Hebrew course and drills — Yeshiva",
+    description:
+      "Structured Hebrew lessons, drills, reading, and review — Yeshiva",
   },
 };
 
@@ -66,7 +67,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" dir="ltr" className={`${fontHebrew.variable} ${fontUi.variable}`}>
-      <body className="font-body">
+      <body className="font-body bg-parchment-grain">
         <AppShell>{children}</AppShell>
         <ServiceWorkerRegister />
       </body>

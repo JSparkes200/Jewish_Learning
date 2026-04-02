@@ -27,7 +27,7 @@ export const READING_HUB_ENTRIES: readonly ReadingHubEntry[] = [
   {
     id: "story-1",
     label: "Level 1 — story & mini-quiz",
-    description: "Same narrative flavor as legacy “Dani & books” track.",
+    description: "Short narrative track with a mini-quiz at the end.",
     href: "/learn/1/story",
     icon: "📚",
     minLevel: 1,
@@ -63,7 +63,7 @@ export const READING_HUB_ENTRIES: readonly ReadingHubEntry[] = [
   {
     id: "library",
     label: "Library — saved passages",
-    description: "Your snippets + curated links (legacy “My library” merge).",
+    description: "Your snippets and curated external links.",
     href: "/library",
     icon: "📜",
     minLevel: 1,

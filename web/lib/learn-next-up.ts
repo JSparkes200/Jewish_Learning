@@ -1,18 +1,14 @@
 import { COURSE_LEVELS, getSectionsForLevel } from "@/data/course";
-import {
-  SPECIALTY_TIER_IDS,
-  SPECIALTY_TRACKS,
-} from "@/data/specialty-tracks";
+import { SPECIALTY_TRACKS } from "@/data/specialty-tracks";
 import { YIDDISH_SECTIONS } from "@/data/yiddish-course";
 import type { YiddishProgressState } from "@/lib/yiddish-progress";
 import { yiddishSectionUnlocked } from "@/lib/yiddish-progress";
 import {
   getBridgeModulePassed,
   getFoundationExitStrands,
-  isSpecialtyTierRecordedPassed,
+  getNextSpecialtyTierForTrack,
   isSpecialtyTracksUnlocked,
   sectionUnlocked,
-  specialtyTierUnlockedForAttempt,
   type LearnProgressState,
 } from "@/lib/learn-progress";
 
@@ -29,17 +25,14 @@ function firstIncompleteSpecialtyNext(
 ): LearnNextUp | null {
   if (!isSpecialtyTracksUnlocked(progress)) return null;
   for (const track of SPECIALTY_TRACKS) {
-    for (const tier of SPECIALTY_TIER_IDS) {
-      if (!specialtyTierUnlockedForAttempt(progress, track.id, tier)) continue;
-      if (isSpecialtyTierRecordedPassed(progress, track.id, tier)) continue;
-      const shortTitle =
-        track.title.split("—")[0]?.trim() ?? track.id;
-      return {
-        href: `/learn/tracks/${encodeURIComponent(track.id)}/${encodeURIComponent(tier)}`,
-        label: `Specialty · ${shortTitle} (${tier})`,
-        icon: "🎖️",
-      };
-    }
+    const next = getNextSpecialtyTierForTrack(progress, track.id);
+    if (!next) continue;
+    const shortTitle = track.title.split("—")[0]?.trim() ?? track.id;
+    return {
+      href: next.href,
+      label: `Specialty · ${shortTitle} (${next.tier})`,
+      icon: "🎖️",
+    };
   }
   return null;
 }

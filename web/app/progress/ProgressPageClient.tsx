@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CourseMasteryList } from "@/components/CourseMasteryList";
-import { HtmlMigrationTracker } from "@/components/HtmlMigrationTracker";
-import { LegacyParityPanel } from "@/components/LegacyParityPanel";
+import { CourseProgressHero } from "@/components/CourseProgressHero";
 import {
   COURSE_LEVELS,
   getSectionsForLevel,
@@ -15,6 +14,7 @@ import { BRIDGE_UNITS } from "@/data/bridge-course";
 import {
   SPECIALTY_TIER_IDS,
   SPECIALTY_TRACKS,
+  type SpecialtyTierId,
 } from "@/data/specialty-tracks";
 import { YIDDISH_SECTIONS } from "@/data/yiddish-course";
 import { STATIC_ROOT_FAMILIES } from "@/data/course-roots";
@@ -28,10 +28,12 @@ import {
   effectiveCourseLevelMasteredCount,
   getBridgeModulePassed,
   getFoundationExitStrands,
+  getNextSpecialtyTierForTrack,
   isBridgeUnlocked,
-  isSpecialtyTierRecordedPassed,
-  createEmptyLearnProgressState,
   isFoundationCourseComplete,
+  isSpecialtyTierRecordedPassed,
+  isSpecialtyTracksUnlocked,
+  createEmptyLearnProgressState,
   loadLearnProgress,
   normalizeStreak,
   resolveAlphabetGateStatus,
@@ -46,7 +48,6 @@ import {
   isRootFamilyDrillComplete,
   rootDrillSolidCount,
 } from "@/lib/root-drill";
-
 export function ProgressPageClient() {
   const [progress, setProgress] = useState<LearnProgressState>(() =>
     createEmptyLearnProgressState(),
@@ -100,6 +101,14 @@ export function ProgressPageClient() {
   const trackedLemmas = countAllTrackedLemmas(progress.vocabLevels);
   const trackedGe2 = countTrackedLemmasAtLeast(progress.vocabLevels, 2);
 
+  const specialtyUnlocked = isSpecialtyTracksUnlocked(progress);
+
+  const tierBadgeShell: Record<SpecialtyTierId, string> = {
+    bronze: "border-amber-900/40 bg-amber-950/[0.07]",
+    silver: "border-slate-500/45 bg-slate-600/[0.08]",
+    gold: "border-yellow-700/45 bg-yellow-600/[0.1]",
+  };
+
   const rootDrillSummary = useMemo(() => {
     let familiesDone = 0;
     let solidForms = 0;
@@ -125,16 +134,11 @@ export function ProgressPageClient() {
           Progress
         </p>
         <p className="mt-2 text-sm text-ink-muted">
-          Saved in this browser as{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-            hebrew-web-course-v1
-          </code>{" "}
-          (separate from the legacy HTML app for now). Yiddish uses{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-            hebrew-web-yiddish-v1
-          </code>
-          . Developer → JSON backup (schema v2) bundles Hebrew + optional
-          Yiddish for device moves.
+          Course and Yiddish progress stay in this browser until you add an
+          account. To move devices, open{" "}
+          <strong className="text-ink">Advanced → Developer</strong> for JSON
+          backup (Hebrew + optional Yiddish) or optional cloud sync when your
+          host supports it.
         </p>
       </div>
 
@@ -150,56 +154,34 @@ export function ProgressPageClient() {
             href="/developer#dev-cloud-backup"
             className="text-sage underline hover:text-sage/90"
           >
-            Developer → Cloud backup
+            Advanced → Developer → Cloud backup
           </Link>
-          . Uses a per-browser sync key (not a login). Full details and security
-          notes:{" "}
+          . Uses a per-browser sync key (not a login). If you self-host, see{" "}
           <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">
             docs/cloud-progress.md
-          </code>
-          .
+          </code>{" "}
+          in the repo for setup and security notes.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-ink/10 bg-parchment-card/50 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-          Overview
+      <CourseProgressHero
+        sectionsDone={totalDone}
+        sectionsTotal={totalSecs}
+        streakCurrent={streak.current}
+        mcqAttempts={progress.mcqAttempts ?? 0}
+        mcqCorrect={progress.mcqCorrect ?? 0}
+        heading="Your snapshot"
+        intro="Sections you marked done, your streak, and how often practice answers were correct — all from this device."
+      />
+      {(progress.mcqAttempts ?? 0) === 0 ? (
+        <p className="text-[11px] text-ink-muted">
+          First drill pick starts your lifetime practice tally — open{" "}
+          <Link href="/study" className="text-sage underline">
+            Study
+          </Link>{" "}
+          or any Learn MCQ.
         </p>
-        <p className="mt-2 text-2xl font-semibold text-ink">
-          {totalDone}
-          <span className="text-lg font-normal text-ink-muted">
-            {" "}
-            / {totalSecs}
-          </span>
-        </p>
-        <p className="text-xs text-ink-muted">Sections marked complete</p>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-parchment-deep/80">
-          <div
-            className="h-full rounded-full bg-sage transition-all"
-            style={{
-              width: `${totalSecs ? Math.round((totalDone / totalSecs) * 100) : 0}%`,
-            }}
-          />
-        </div>
-        <Link
-          href="/learn"
-          className="mt-4 inline-block rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
-        >
-          Open Learn →
-        </Link>
-        {(progress.mcqAttempts ?? 0) > 0 ? (
-          <p className="mt-4 border-t border-ink/10 pt-3 text-[11px] text-ink-muted">
-            <strong className="text-ink">
-              {progress.mcqCorrect ?? 0}/{progress.mcqAttempts}
-            </strong>{" "}
-            MCQ &amp; comprehension answers correct (lifetime, first pick per
-            question).{" "}
-            <Link href="/study" className="text-sage underline">
-              Study hub →
-            </Link>
-          </p>
-        ) : null}
-      </div>
+      ) : null}
 
       <div className="rounded-2xl border border-ink/10 border-t-sage/20 bg-parchment-card/50 p-4">
         <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
@@ -268,8 +250,8 @@ export function ProgressPageClient() {
           <Link href="/learn/tracks" className="text-sage hover:underline">
             Specialty tracks
           </Link>
-          <Link href="/learn/fluency" className="text-sage hover:underline">
-            Fluency path
+          <Link href="/learn" className="text-sage hover:underline">
+            Learn path (tap i)
           </Link>
           <Link href="/learn/yiddish" className="text-sage hover:underline">
             Yiddish
@@ -282,41 +264,105 @@ export function ProgressPageClient() {
           Specialty badges
         </p>
         <p className="mt-2 text-xs text-ink-muted">
-          Modern tracks (news, literature, spoken) and traditional tracks
-          (Talmudic / rabbinic Hebrew, Jewish Babylonian Aramaic) — Bronze,
-          Silver, Gold per track. Unlocks after foundation exit + bridge pass;
-          saved with course progress. Revisit any tier anytime.
+          Post-bridge domain tracks: modern (news, literature, spoken) and
+          traditional (Talmudic / rabbinic Hebrew, Jewish Babylonian Aramaic).
+          Each runs Bronze → Silver → Gold (MCQ banks grow stricter). Badges live
+          here; drills stay open for review. Outcomes and links below match how
+          the app expects you to mix Reading, Study, and Library with tiers.
         </p>
-        <ul className="mt-3 space-y-2 text-[11px] text-ink">
-          {SPECIALTY_TRACKS.map((track) => (
-            <li key={track.id} className="flex flex-wrap items-baseline gap-2">
-              <span className="font-medium">{track.title}</span>
-              <span className="font-hebrew text-ink-muted">{track.domainHe}</span>
-              <span className="text-ink-muted">
-                {SPECIALTY_TIER_IDS.map((tier) => {
-                  const ok = isSpecialtyTierRecordedPassed(
-                    progress,
-                    track.id,
-                    tier,
-                  );
-                  return (
-                    <span key={tier} className="mr-2 inline-flex items-center gap-0.5">
-                      <span className="uppercase">{tier.slice(0, 1)}</span>
-                      {ok ? (
-                        <span className="text-sage">✓</span>
-                      ) : (
-                        <span className="text-ink-faint">·</span>
-                      )}
+        <ul className="mt-4 space-y-4 text-[11px] text-ink">
+          {SPECIALTY_TRACKS.map((track) => {
+            const next = specialtyUnlocked
+              ? getNextSpecialtyTierForTrack(progress, track.id)
+              : null;
+            const trackComplete =
+              specialtyUnlocked &&
+              SPECIALTY_TIER_IDS.every((tier) =>
+                isSpecialtyTierRecordedPassed(progress, track.id, tier),
+              );
+            return (
+              <li
+                key={track.id}
+                className="rounded-xl border border-ink/10 bg-parchment-deep/20 p-3"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <span className="font-medium text-ink">{track.title}</span>
+                    <span className="ml-2 font-hebrew text-ink-muted">
+                      {track.domainHe}
                     </span>
-                  );
-                })}
-              </span>
-            </li>
-          ))}
+                  </div>
+                  {specialtyUnlocked ? (
+                    next ? (
+                      <Link
+                        href={next.href}
+                        className="shrink-0 font-label text-[9px] uppercase tracking-wide text-sage underline"
+                      >
+                        Next: {next.tier} →
+                      </Link>
+                    ) : trackComplete ? (
+                      <span className="font-label text-[9px] uppercase tracking-wide text-sage">
+                        Complete
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-ink-faint">—</span>
+                    )
+                  ) : null}
+                </div>
+                <p className="mt-1 text-[11px] text-ink-muted">{track.blurb}</p>
+                <p className="mt-2 font-label text-[8px] uppercase tracking-wide text-ink-faint">
+                  Aims
+                </p>
+                <ul className="mt-1 list-inside list-disc text-[11px] leading-relaxed text-ink-muted">
+                  {track.outcomes.slice(0, 3).map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t border-ink/10 pt-2">
+                  {track.practiceLinks.map((pl) => (
+                    <Link
+                      key={pl.href + pl.label}
+                      href={pl.href}
+                      className="text-[10px] text-sage underline"
+                    >
+                      {pl.label}
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {SPECIALTY_TIER_IDS.map((tier) => {
+                    const ok = isSpecialtyTierRecordedPassed(
+                      progress,
+                      track.id,
+                      tier,
+                    );
+                    return (
+                      <div
+                        key={tier}
+                        title={track.tierGoals[tier]}
+                        className={`min-w-[5.5rem] flex-1 rounded-lg border px-2 py-1.5 ${tierBadgeShell[tier]}`}
+                      >
+                        <p className="font-label text-[8px] uppercase tracking-wide text-ink-muted">
+                          {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                        </p>
+                        <p className="mt-0.5 text-center text-sm">
+                          {ok ? (
+                            <span className="text-sage">✓</span>
+                          ) : (
+                            <span className="text-ink-faint">—</span>
+                          )}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </li>
+            );
+          })}
         </ul>
         <Link
           href="/learn/tracks"
-          className="mt-3 inline-block text-[10px] text-sage hover:underline"
+          className="mt-4 inline-block rounded-lg bg-sage px-3 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
         >
           Open specialty tracks →
         </Link>
@@ -356,15 +402,8 @@ export function ProgressPageClient() {
         </p>
         <p className="mt-2 text-xs text-ink-muted">
           Graduated drill on static root families: each form is solid after three
-          correct picks (same as legacy). Saved under{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">
-            rootDrill
-          </code>{" "}
-          in course storage; merged from legacy{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">
-            ivrit_lr
-          </code>{" "}
-          on Developer import.
+          correct answers. Saved with your course progress (Advanced → Developer
+          can merge older device data).
         </p>
         <p className="mt-3 text-sm text-ink">
           <strong className="tabular-nums">{rootDrillSummary.familiesDone}</strong>
@@ -393,13 +432,11 @@ export function ProgressPageClient() {
           Word levels (course gates)
         </p>
         <p className="mt-2 text-xs text-ink-muted">
-          Hebrew MCQ prompts in this app (plus legacy import) store a level{" "}
-          <strong className="text-ink">0–5</strong> per lemma.{" "}
-          <strong className="text-ink">Lv ≥ 2</strong> counts toward Bet–Dalet{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">
-            unlockMastered
-          </code>
-          , together with subsection completions — whichever is higher.
+          Each Hebrew word you practice can reach familiarity{" "}
+          <strong className="text-ink">0–5</strong>.{" "}
+          <strong className="text-ink">Level 2+</strong> counts toward Bet–Dalet
+          comprehension gates together with finished subsections — whichever is
+          higher for you.
         </p>
         <p className="mt-3 text-sm text-ink">
           <strong className="tabular-nums">{trackedGe2}</strong>
@@ -482,7 +519,7 @@ export function ProgressPageClient() {
             </p>
             <p className="mt-2 text-[11px] text-ink-faint">
               Counts a day when you answer a Learn drill or mark a section
-              complete (same rules as legacy, UTC calendar).
+              complete (UTC calendar).
             </p>
           </>
         ) : (
@@ -491,11 +528,6 @@ export function ProgressPageClient() {
             streak starts on the first activity each UTC day.
           </p>
         )}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <LegacyParityPanel variant="compact" />
-        <HtmlMigrationTracker variant="compact" />
       </div>
 
       <div>

@@ -12,8 +12,8 @@ export default function DeveloperPage() {
         פִּתּוּחַ
       </Hebrew>
       <p className="mt-2 text-sm text-ink-muted">
-        Shell APIs, local storage, and migration notes. Deeper tooling (poses,
-        corpus audit) can join here as parity grows.
+        Storage, backups, imports, and builder-only shortcuts. Learners do not
+        need this page — it is for you and for testing.
       </p>
       <ModalDemo />
       <DeveloperTools />

@@ -3,81 +3,19 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
+import { LibraryCoverCarousel } from "@/components/LibraryCoverCarousel";
+import { LIBRARY_EXTERNAL_LINKS } from "@/data/library-external-links";
 import {
   mergeLegacyLibraryIntoWebApp,
   previewLegacyLibraryImport,
 } from "@/lib/legacy-library-import";
 import {
   LIBRARY_SAVED_EVENT,
-  LIBRARY_SAVED_KEY,
   addLibrarySaved,
   loadLibrarySaved,
   removeLibrarySaved,
   type SavedLibraryPassage,
 } from "@/lib/library-saved";
-
-const LINKS = [
-  {
-    href: "https://www.sefaria.org/texts",
-    label: "Sefaria",
-    desc: "Tanakh, Talmud, commentaries — bilingual",
-    tags: "text bible talmud",
-  },
-  {
-    href: "https://pealim.com/",
-    label: "Pealim",
-    desc: "Verb conjugations & Hebrew dictionary",
-    tags: "verbs grammar dictionary",
-  },
-  {
-    href: "https://nakdan.dicta.org.il/",
-    label: "Dicta Nakdan",
-    desc: "Add niqqud to Hebrew text",
-    tags: "nikkud vocalization",
-  },
-  {
-    href: "https://www.nli.org.il/en/discover/manuscripts",
-    label: "National Library of Israel",
-    desc: "Manuscripts & digital collections",
-    tags: "manuscripts archive",
-  },
-  {
-    href: "https://www.morfix.co.il/",
-    label: "Morfix",
-    desc: "Hebrew–English dictionary & usage",
-    tags: "dictionary translation",
-  },
-  {
-    href: "https://hebrew-academy.org.il/",
-    label: "Hebrew Language Academy",
-    desc: "Official norms, terminology, and resources",
-    tags: "grammar academy standard",
-  },
-  {
-    href: "https://www.english.dicta.org.il/",
-    label: "Dicta (English)",
-    desc: "Lexicon, morphology, and text tools with an English UI",
-    tags: "dicta grammar morphology",
-  },
-  {
-    href: "https://context.reverso.net/translation/hebrew-english",
-    label: "Reverso Context",
-    desc: "Real-world Hebrew–English phrase examples",
-    tags: "examples translation phrases bilingual",
-  },
-  {
-    href: "https://forvo.com/languages/he/",
-    label: "Forvo — Hebrew",
-    desc: "Native speaker recordings for pronunciation",
-    tags: "pronunciation audio speaking listening",
-  },
-  {
-    href: "https://www.ktiv.co.il/",
-    label: "Ktiv",
-    desc: "Hebrew spelling and word forms (Israeli standard)",
-    tags: "spelling orthography writing",
-  },
-] as const;
 
 function normalize(s: string): string {
   return s.trim().toLowerCase();
@@ -110,8 +48,8 @@ export function LibraryPageClient() {
 
   const filteredLinks = useMemo(() => {
     const q = normalize(query);
-    if (!q) return [...LINKS];
-    return LINKS.filter((x) => {
+    if (!q) return [...LIBRARY_EXTERNAL_LINKS];
+    return LIBRARY_EXTERNAL_LINKS.filter((x) => {
       const hay = `${x.label} ${x.desc} ${x.tags}`;
       return normalize(hay).includes(q);
     });
@@ -125,6 +63,8 @@ export function LibraryPageClient() {
       return normalize(hay).includes(q);
     });
   }, [saved, query]);
+
+  const carouselLinks = filteredLinks;
 
   const onAddSaved = useCallback(() => {
     setFormMsg(null);
@@ -148,25 +88,23 @@ export function LibraryPageClient() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-sage/25 bg-sage/5 p-4">
+      {carouselLinks.length > 0 ? (
+        <LibraryCoverCarousel links={carouselLinks} />
+      ) : null}
+
+      <section className="surface-elevated p-4">
         <p className="font-label text-[10px] uppercase tracking-[0.18em] text-sage">
           Your saved passages
         </p>
         <p className="mt-1 text-xs text-ink-muted">
-          Stored in this browser (
-          <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">
-            {LIBRARY_SAVED_KEY}
-          </code>
-          ). If you used{" "}
-          <code className="text-[10px]">hebrew-v8.2.html</code> here, you can
-          merge passages from{" "}
-          <code className="text-[10px]">ivrit_lib</code> (see Developer for
-          details). To back up or move only these saves, use{" "}
+          Stored in this browser. If an older Hebrew study page left saved
+          passages in this browser, you can import them below. To back up or
+          move only these saves, use{" "}
           <Link
             href="/developer#dev-library-json"
             className="text-sage underline hover:text-sage/90"
           >
-            Developer → Library saves JSON
+            Advanced → Developer → Library saves JSON
           </Link>
           .
         </p>
@@ -174,9 +112,8 @@ export function LibraryPageClient() {
         legacyLibHint.mappableCount > 0 &&
         !legacyLibHint.parseError ? (
           <p className="mt-2 text-[11px] text-ink-muted">
-            Legacy library detected ({legacyLibHint.mappableCount} passage
-            {legacyLibHint.mappableCount === 1 ? "" : "s"} at{" "}
-            <code className="text-[10px]">{legacyLibHint.storageKey}</code>).
+            Older saved passages found ({legacyLibHint.mappableCount} passage
+            {legacyLibHint.mappableCount === 1 ? "" : "s"} in this browser).
           </p>
         ) : null}
         {legacyImportMsg ? (
@@ -203,9 +140,9 @@ export function LibraryPageClient() {
               }
               setLegacyLibTick((t) => t + 1);
             }}
-            className="rounded-lg border border-sage/40 px-3 py-1.5 font-label text-[9px] uppercase tracking-wide text-sage hover:bg-sage/10 disabled:cursor-not-allowed disabled:opacity-40"
+            className="btn-elevated-secondary disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Merge from legacy HTML library
+            Import older browser saves
           </button>
         </div>
 
@@ -220,7 +157,7 @@ export function LibraryPageClient() {
               onChange={(e) => setDraftTitle(e.target.value)}
               placeholder="e.g. Shabbat kiddush line"
               maxLength={120}
-              className="mt-1 w-full rounded-lg border border-ink/15 bg-parchment px-3 py-2 text-sm text-ink"
+              className="input-inset mt-1 w-full px-3 py-2 text-sm"
             />
           </div>
           <div>
@@ -234,7 +171,7 @@ export function LibraryPageClient() {
               rows={3}
               dir="rtl"
               lang="he"
-              className="mt-1 w-full rounded-lg border border-ink/15 bg-parchment px-3 py-2 font-hebrew text-base text-ink"
+              className="input-inset mt-1 w-full px-3 py-2 font-hebrew text-base"
             />
           </div>
           <div>
@@ -246,14 +183,14 @@ export function LibraryPageClient() {
               onChange={(e) => setDraftEn(e.target.value)}
               placeholder="Translation or source link…"
               rows={2}
-              className="mt-1 w-full rounded-lg border border-ink/15 bg-parchment px-3 py-2 text-sm text-ink"
+              className="input-inset mt-1 w-full px-3 py-2 text-sm"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={onAddSaved}
-              className="rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+              className="btn-elevated-primary"
             >
               Save passage
             </button>
@@ -274,7 +211,7 @@ export function LibraryPageClient() {
             {filteredSaved.map((x) => (
               <li
                 key={x.id}
-                className="rounded-xl border border-ink/10 bg-parchment-card/60 p-3"
+                className="rounded-xl border border-white/40 bg-parchment-deep/30 p-3 shadow-elevated"
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="font-label text-[11px] uppercase tracking-wide text-sage">
@@ -319,11 +256,11 @@ export function LibraryPageClient() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter by name, topic, keyword…"
             autoComplete="off"
-            className="mt-2 w-full rounded-xl border border-ink/15 bg-parchment px-3 py-2.5 text-sm text-ink placeholder:text-ink-faint"
+            className="input-inset mt-2 w-full px-3 py-2.5 text-sm"
           />
         </label>
         <p className="mt-2 text-sm text-ink-muted">
-          External sites open in a new tab.
+          External sites open in a new tab. List view below matches your filter.
         </p>
         {filteredLinks.length === 0 ? (
           <p className="mt-4 rounded-xl border border-ink/10 bg-parchment-card/40 px-4 py-6 text-center text-sm text-ink-muted">
@@ -344,13 +281,23 @@ export function LibraryPageClient() {
                   href={x.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block rounded-xl border border-ink/10 bg-parchment-card/40 px-4 py-3 transition hover:border-sage/40 hover:bg-parchment-deep/30"
+                  className="surface-elevated flex gap-3 rounded-2xl px-4 py-3 no-underline transition hover:border-sage/35"
                 >
-                  <span className="font-label text-[11px] uppercase tracking-wide text-sage">
-                    {x.label}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-ink-muted">
-                    {x.desc}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- local themed SVG */}
+                  <img
+                    src={x.iconSrc}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 shrink-0 rounded-xl border border-white/60 bg-white/90 object-contain p-1 shadow-elevated"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="font-label text-[11px] uppercase tracking-wide text-sage">
+                      {x.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-ink-muted">
+                      {x.desc}
+                    </span>
                   </span>
                 </a>
               </li>

@@ -1,0 +1,14 @@
+Bundled icons (scroll-texts.svg, verb-grid.svg, etc.)
+  Original SVG artwork for this app — Hebrew Yeshiva web UI.
+  License: same as the repository (use freely within the project).
+
+Optional external references (not bundled; use if you replace art later)
+  Wikimedia Commons — Hebrew alphabet & lettering (check each file’s license):
+    https://commons.wikimedia.org/wiki/File:Hebrew_Alphabet.svg  (public domain, Assyrio)
+    https://commons.wikimedia.org/wiki/Category:Hebrew_alphabet
+  OpenMoji (CC BY-SA 4.0 — attribution required if used):
+    https://openmoji.org/
+
+For photos of manuscripts or Israeli sites, prefer Wikimedia Commons with a
+clear license (CC0 / CC BY) and host copies under public/ with attribution in
+this file.

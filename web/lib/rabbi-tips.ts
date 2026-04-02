@@ -4,7 +4,7 @@ export type RabbiTip = {
   cta?: { label: string; href: string };
 };
 
-/** Short scripted guidance by route (expand during migration). */
+/** Short scripted guidance by route. */
 export function getRabbiTip(pathname: string): RabbiTip {
   if (pathname === "/") {
     return {
@@ -12,7 +12,7 @@ export function getRabbiTip(pathname: string): RabbiTip {
       lines: [
         "Use Learn for the leveled path (Aleph–Dalet). Progress saves in this browser.",
         "Roots opens the shoresh hub from the home grid or main menu; Numbers has ordinals, days, and listen drills. Install the PWA for shortcuts.",
-        "Optional: Developer → Display name shows under עִבְרִית in the header (local only).",
+        "Optional: Advanced → Developer lets you set a display name under עִבְרִית in the header (local only).",
         "Study suggests your next section; Reading lists stories + Aleph guided read; Library opens curated external sites.",
       ],
       cta: { label: "Open Learn", href: "/learn" },
@@ -52,24 +52,14 @@ export function getRabbiTip(pathname: string): RabbiTip {
       cta: { label: "Learn home", href: "/learn" },
     };
   }
-  if (pathname.startsWith("/learn/fluency")) {
-    return {
-      title: "Fluency path",
-      lines: [
-        "One spine: foundation → exit → bridge → specialty tiers (modern + traditional) → optional Yiddish, with Study/Reading/Roots alongside.",
-        "Relearning is expected — badges keep your place; drills are there to revisit.",
-        "Traditional tracks cover Talmudic / rabbinic Hebrew and Jewish Babylonian Aramaic lemmas in the same tier format as modern tracks.",
-      ],
-      cta: { label: "Specialty tracks", href: "/learn/tracks" },
-    };
-  }
   if (pathname.startsWith("/learn/tracks")) {
     return {
       title: "Specialty tracks",
       lines: [
         "Modern tracks (news, literature, spoken) and traditional tracks (Talmudic / Aramaic) — Bronze → Silver → Gold. Requires foundation exit (all three strands) and a passed bridge final.",
         "Tiers unlock in order on each track; pass the score bar to earn the badge (see Progress).",
-        "Next up can deep-link the first incomplete tier once you are eligible.",
+        "Each card lists outcomes and cross-links (Reading, Study, Library, Numbers) so MCQs are not your only reps — especially for literature, listening, and sugya reading.",
+        "Progress shows every tier checkmark; open the next open tier from there or from this hub.",
       ],
       cta: { label: "Progress", href: "/progress" },
     };
@@ -89,12 +79,12 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Inside Learn",
       lines: [
-        "Alef–Dalet is the foundation track: drills use a focused lemma set per level; big dictionary counts are for lookup, not a memorization quota.",
-        "Sections unlock in order. Do the mini-quiz when you see it, then mark complete to move on.",
-        "Reading comprehension sections show a full Hebrew passage + questions (ported from the legacy HTML).",
-        "Aleph: the first story sits in the section list after greetings & politeness. Bet–Dalet: a full-screen story link appears in the list after your first two subsections there — not at the very top.",
-        "On the Learn home, each level row shows course prompts at lv≥2 (MCQs + legacy import) toward comprehension gates.",
-        "Switch active level on the Learn home if you are reviewing a higher track.",
+        "The journey carousel runs Alef–Dalet, foundation exit, bridge, then each specialty track. Open the center card for unlock rules and links — muted cards are gated.",
+        "Tap the “i” circle under the carousel for the full path overview (goals and how stages connect).",
+        "Alef–Dalet drills use a focused lemma set per level; big dictionary counts are lookup scope, not a memorization quota.",
+        "Sections unlock in order inside each level; reading comprehension uses a full passage plus questions.",
+        "Aleph: first story after greetings & politeness. Bet–Dalet: story link after your first two subsections there.",
+        "Expand Progress controls on Learn home to change active level (or use Developer bypass to unlock all foundation levels in the carousel).",
       ],
       cta: { label: "See Progress", href: "/progress" },
     };
@@ -107,7 +97,7 @@ export function getRabbiTip(pathname: string): RabbiTip {
         "MCQ & comprehension first clicks add to your lifetime practice tally; Hebrew MCQ prompts also build word levels for unlock gates.",
         "The Word levels card sums lv≥2 lemmas; Progress has the per-level breakdown.",
         "Re-run quizzes anytime — only “Mark section complete” moves the course checklist.",
-        "Moving devices: Developer has Learn JSON, Library saves JSON, and optional cloud backup (KV) for course progress.",
+        "Moving devices: Advanced → Developer has Learn JSON, Library saves JSON, and optional cloud backup when your server is set up for it.",
       ],
       cta: { label: "Learn home", href: "/learn" },
     };
@@ -116,9 +106,9 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Reading",
       lines: [
-        "This hub lists level stories, Aleph guided read, and a carousel of JT passages, reading drills (RD), and Library saves.",
-        "Tap underlined words where available; some rows open notes (e.g. Sefaria) or short quizzes.",
-        "Saves you add on the Library page can appear here when they match the carousel filter.",
+        "The carousel lists passages you’ve unlocked in the course; Jewish texts unlock one after another as you open each. Drag or use arrows, then open the center card.",
+        "Below it, rows jump to Aleph guided reading, each level’s story, and Library. Tap the “i” circle for progress and exercises. Esc closes that help panel.",
+        "Tap underlined words in a passage where available; some rows open notes (e.g. Sefaria) or short quizzes.",
       ],
       cta: { label: "Library", href: "/library" },
     };
@@ -127,8 +117,8 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Numbers",
       lines: [
-        "Listen-and-pick covers 0–10 cardinals; topic quizzes match the legacy tab for ordinals, weekdays, and time units.",
-        "The price card rotates sample shekel amounts; full 11–100 cardinals stay in the HTML file until the corpus migrates.",
+        "Listen-and-pick covers 0–10 cardinals; topic quizzes cover ordinals, weekdays, and time units.",
+        "The price card rotates sample shekel amounts; higher cardinals continue to grow in the course and hub.",
         "Practice here counts toward your MCQ streak and lifetime tally the same as Learn drills.",
       ],
       cta: { label: "Aleph numbers section", href: "/learn/1/1-nums" },
@@ -139,7 +129,7 @@ export function getRabbiTip(pathname: string): RabbiTip {
       title: "Roots",
       lines: [
         "Each family groups forms built from the same three-letter root (shoresh).",
-        "Drill asks for the English gloss of a Hebrew form; three correct hits per form matches the legacy “solid” bar.",
+        "Drill asks for the English gloss of the Hebrew form; three correct hits per form marks it solid.",
         "Study expands tiers (core verbs → derivatives) with example sentences where we have them.",
         "The same explorer appears inside Bet–Dalet roots course sections; this page is for quick access from the menu.",
       ],
@@ -150,8 +140,8 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Library",
       lines: [
-        "Save Hebrew snippets at the top; you can merge from legacy ivrit_lib if you used the HTML app in this browser.",
-        "Developer → Library saves JSON (anchor #dev-library-json) downloads or merges your Next app saves.",
+        "Save Hebrew snippets at the top; you can import older passages stored in this browser from a previous study page.",
+        "Advanced → Developer → Library saves JSON downloads or merges your saves.",
         "External links open in a new tab; use search to filter both links and your saves.",
       ],
       cta: { label: "Back to Learn", href: "/learn" },
@@ -161,10 +151,10 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Progress",
       lines: [
-        "Counts reflect sections you marked complete in this Next app (not the legacy HTML file yet).",
+        "Counts reflect sections you marked complete in this app.",
         "Streak uses UTC days when you answer a Learn drill or mark a section complete.",
-        "Backup or move devices: Developer → JSON file (download / merge / replace). Optional: same page → Cloud backup (Vercel KV) when the server has KV linked.",
-        "Legacy HTML: merge ivrit_lr in Developer, or export from Next and import there.",
+        "Specialty badges list aims, cross-links (Reading, Study, Library…), and a Next: link per track when the bridge is cleared — tiers are MCQ checkpoints, not the whole skill picture.",
+        "Backup or move devices: Advanced → Developer → JSON file (download / merge / replace). Optional cloud backup when your deploy supports it.",
       ],
       cta: { label: "Developer tools", href: "/developer#dev-cloud-backup" },
     };
@@ -173,13 +163,12 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Developer",
       lines: [
-        "Developer mode: when the server has DEVELOPER_USERNAME, DEVELOPER_EMAIL, and DEVELOPER_SESSION_SECRET set, sign in below with that pair to unlock all Learn gates in this browser (HttpOnly cookie).",
+        "When the server has DEVELOPER_USERNAME, DEVELOPER_EMAIL, and DEVELOPER_SESSION_SECRET set, sign in below with that pair to unlock all Learn gates in this browser (HttpOnly cookie).",
         "Reset storage to test onboarding; modal demo exercises the shared shell.",
         "JSON backup downloads Learn progress; merge unions completions and keeps the higher active level.",
-        "Library saves JSON: same page — download / merge / replace passages stored under hebrew-web-library-saved-v1.",
-        "Cloud backup (Vercel KV): push / restore with a sync key when KV is configured on the deploy — see docs/cloud-progress.md.",
-        "ivrit export builds ivrit_lr / ivrit_lv for the legacy HTML app — merge with existing legacy storage in this browser when present.",
-        "Read docs/next-migration.md in the repo for the full checklist.",
+        "Library saves JSON: same page — download / merge / replace passages stored for this app.",
+        "Cloud backup: push / restore with a sync key when your host has KV configured — see docs/cloud-progress.md in the repo.",
+        "You can export data in a format an older single-page study file understands — merge carefully in that browser if you still use it.",
       ],
       cta: { label: "Home", href: "/" },
     };
@@ -188,9 +177,9 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Migration roadmap",
       lines: [
-        "This percentage is the full HTML → Next scope (weighted workstreams), not the shorter legacy parity checklist on Progress.",
+        "Internal checklist for builders: how much of the old single-file app is represented here.",
         "Phases group foundation, learner surfaces, content engine, and platform tools; “suggested next” follows the order in source.",
-        "When a slice ships, update statuses in lib/html-full-migration.ts so the bar stays honest.",
+        "Update statuses in lib/html-full-migration.ts when you ship a slice — learners do not see this page in the menu.",
       ],
       cta: { label: "Open Learn", href: "/learn" },
     };
@@ -198,8 +187,8 @@ export function getRabbiTip(pathname: string): RabbiTip {
   return {
     title: "Keep going",
     lines: [
-      "Use the menu (top left) for Home, Learn, Study, Numbers, Roots, Library, Reading, Progress, Roadmap, Developer.",
-      "Roadmap shows the full HTML → Next migration score; Progress shows the shorter legacy parity bar too.",
+      "Use the menu (top left) for Home, Learn, Progress, then Practice & resources (Study, Reading, Numbers, Roots, Library, Yiddish).",
+      "Advanced → Developer is only for backups, imports, and builder tools.",
       "The Next up chip suggests your next Learn section when you are not on Home.",
     ],
     cta: { label: "Learn", href: "/learn" },

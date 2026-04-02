@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
+import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
+import { DrillPrepGate } from "@/components/DrillPrepGate";
 import { McqDrill } from "@/components/McqDrill";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import {
@@ -14,6 +16,7 @@ import { getSpecialtyTierMcqPack } from "@/data/specialty-tier-packs";
 import { meetsFoundationExitPassPercent } from "@/lib/foundation-exit-pass";
 import {
   getBridgeModulePassed,
+  type GradedPracticeContext,
   isBridgeUnlocked,
   isSpecialtyTierRecordedPassed,
   isSpecialtyTracksUnlocked,
@@ -25,6 +28,8 @@ import {
   touchDailyStreak,
 } from "@/lib/learn-progress";
 import { useLearnProgressSync } from "@/lib/use-learn-progress-sync";
+import { buildCorrectSentencePackFromMcq } from "@/lib/sentence-correctness";
+import { buildPrepCardsFromMcqPack } from "@/lib/drill-prep";
 
 type Props = {
   trackId: string;
@@ -49,16 +54,20 @@ export function SpecialtyTierClient({ trackId, tier }: Props) {
 
   const passPct = SPECIALTY_PASS_PCT[tier];
   const total = pack?.items.length ?? 0;
+  const sentencePack = useMemo(
+    () => (pack ? buildCorrectSentencePackFromMcq(pack, 4, 5) : null),
+    [pack],
+  );
   const minCorrect = useMemo(
     () => (total > 0 ? getSpecialtyPassMinCorrect(total, tier) : 0),
     [total, tier],
   );
 
   const onPracticeAnswer = useCallback(
-    (correct: boolean, ctx?: { promptHe?: string }) => {
+    (correct: boolean, ctx?: GradedPracticeContext) => {
       setProgress((p) => {
         let n = touchDailyStreak(p);
-        n = recordGradedAnswer(n, correct);
+        n = recordGradedAnswer(n, correct, ctx);
         n = recordVocabPracticeForPrompt(n, ctx?.promptHe, correct);
         saveLearnProgress(n);
         return n;
@@ -166,6 +175,25 @@ export function SpecialtyTierClient({ trackId, tier }: Props) {
         </p>
         <h1 className="mt-1 font-hebrew text-2xl text-ink">{pack.title}</h1>
         <p className="mt-2 text-sm text-ink-muted">{pack.intro}</p>
+        <div className="mt-3 rounded-xl border border-sage/20 bg-sage/5 px-3 py-2">
+          <p className="font-label text-[8px] uppercase tracking-wide text-sage">
+            Tier focus
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+            {meta.tierGoals[tier]}
+          </p>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
+          {meta.practiceLinks.map((pl) => (
+            <Link
+              key={pl.href + pl.label}
+              href={pl.href}
+              className="text-sage underline"
+            >
+              {pl.label}
+            </Link>
+          ))}
+        </div>
         <p className="mt-2 text-xs text-ink-faint">
           Pass: at least {minCorrect} correct out of {total} (
           {total > 0 ? Math.round((minCorrect / total) * 100) : 0}% bar).
@@ -179,23 +207,39 @@ export function SpecialtyTierClient({ trackId, tier }: Props) {
         />
       </div>
 
-      <McqDrill
-        pack={pack}
-        defaultShowNikkud={showNikkud}
-        onPracticeAnswer={onPracticeAnswer}
-        endHint={
-          lastAttempt
-            ? meetsFoundationExitPassPercent(
-                lastAttempt.correct,
-                lastAttempt.total,
-                passPct,
-              )
-              ? `Tier passed — ${lastAttempt.correct}/${lastAttempt.total}.`
-              : `Score ${lastAttempt.correct}/${lastAttempt.total}. Need at least ${Math.ceil(passPct * lastAttempt.total - 1e-9)} for ${tierTitle}.`
-            : `Need ${minCorrect}/${total}+ to pass ${tierTitle}.`
-        }
-        onPackComplete={onPackComplete}
-      />
+      <DrillPrepGate
+        title={`${tierTitle} prep`}
+        subtitle="Review the key terms and sentence logic before the tier quiz."
+        cards={buildPrepCardsFromMcqPack(pack, 6)}
+        ctaLabel={`Start ${tierTitle} drills`}
+      >
+        <McqDrill
+          pack={pack}
+          defaultShowNikkud={showNikkud}
+          skillTags={["grammar", "definition", "recognition", "comprehension"]}
+          onPracticeAnswer={onPracticeAnswer}
+          endHint={
+            lastAttempt
+              ? meetsFoundationExitPassPercent(
+                  lastAttempt.correct,
+                  lastAttempt.total,
+                  passPct,
+                )
+                ? `Tier passed — ${lastAttempt.correct}/${lastAttempt.total}.`
+                : `Score ${lastAttempt.correct}/${lastAttempt.total}. Need at least ${Math.ceil(passPct * lastAttempt.total - 1e-9)} for ${tierTitle}.`
+              : `Need ${minCorrect}/${total}+ to pass ${tierTitle}.`
+          }
+          onPackComplete={onPackComplete}
+        />
+        {sentencePack ? (
+          <div className="mt-5">
+            <CorrectSentenceDrill
+              pack={sentencePack}
+              onPracticeAnswer={onPracticeAnswer}
+            />
+          </div>
+        ) : null}
+      </DrillPrepGate>
 
       {lastAttempt &&
       !meetsFoundationExitPassPercent(

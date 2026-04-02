@@ -173,7 +173,7 @@ const MODERN_HEBREW_PACKS: Record<string, McqDrillPack> = {
 
   [specialtyTierPackId("news", "gold")]: mcq(
     "News — Gold",
-    "Framing, bias vocabulary, and argument in the press — 18 questions.",
+    "Framing, bias vocabulary, and argument in the press — 25 questions.",
     [
       {
         id: "nw-gd-1",

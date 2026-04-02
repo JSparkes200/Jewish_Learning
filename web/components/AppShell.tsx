@@ -47,7 +47,6 @@ const NAV_PRIMARY = [
 
 /** Drills, reading, and parallel tracks. */
 const NAV_PRACTICE = [
-  { href: "/learn/fluency", label: "Fluency" },
   { href: "/study", label: "Study" },
   { href: "/reading", label: "Reading" },
   { href: "/numbers", label: "Numbers" },
@@ -127,14 +126,9 @@ function NavMenu({
 }) {
   const pathname = usePathname();
 
-  const projectItems = useMemo(() => {
-    const out: { href: string; label: string }[] = [
-      { href: "/migration", label: "Roadmap" },
-    ];
-    if (process.env.NEXT_PUBLIC_HIDE_DEVELOPER_NAV !== "true") {
-      out.push({ href: "/developer", label: "Developer" });
-    }
-    return out;
+  const advancedNavItems = useMemo(() => {
+    if (process.env.NEXT_PUBLIC_HIDE_DEVELOPER_NAV === "true") return [];
+    return [{ href: "/developer", label: "Developer" }];
   }, []);
 
   if (!open) return null;
@@ -174,23 +168,27 @@ function NavMenu({
               </Link>
             </li>
           ))}
-          <li
-            className="px-4 pb-0 pt-2 font-label text-[9px] uppercase tracking-[0.2em] text-[#2c2416]/55"
-            aria-hidden
-          >
-            Project
-          </li>
-          {projectItems.map((item) => (
-            <li key={item.href} className="w-full">
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                className={navLinkClass(isNavActive(pathname, item.href))}
+          {advancedNavItems.length > 0 ? (
+            <>
+              <li
+                className="px-4 pb-0 pt-2 font-label text-[9px] uppercase tracking-[0.2em] text-[#2c2416]/55"
+                aria-hidden
               >
-                {item.label}
-              </Link>
-            </li>
-          ))}
+                Advanced
+              </li>
+              {advancedNavItems.map((item) => (
+                <li key={item.href} className="w-full">
+                  <Link
+                    href={item.href}
+                    onClick={onNavigate}
+                    className={navLinkClass(isNavActive(pathname, item.href))}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </>
+          ) : null}
         </ul>
       </nav>
     </div>
@@ -460,7 +458,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   return (
     <AppShellContext.Provider value={ctx}>
       <div ref={rootRef} className="min-h-dvh bg-parchment-grain text-ink">
-        <header className="sticky top-0 z-50 border-b border-ink/15 bg-[#faf3e6] shadow-sm backdrop-blur-sm">
+        <header className="sticky top-0 z-50 border-b border-ink/12 bg-parchment/88 shadow-sm backdrop-blur-md">
           <div className="relative mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
             <div className="relative shrink-0">
               <button

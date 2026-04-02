@@ -49,11 +49,8 @@ export function HtmlMigrationTracker({ variant = "full" }: Props) {
           Full HTML migration
         </p>
         <p className="mt-1 text-xs text-ink-muted">
-          1:1 scope vs{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">
-            hebrew-v8.2.html
-          </code>{" "}
-          — workstreams, not the lighter “legacy parity” score.
+          1:1 scope vs the old single-file app — workstreams, not the shorter
+          product checklist on Developer.
         </p>
         <p className="mt-3 text-2xl font-semibold tabular-nums text-ink">
           {percent}
@@ -93,11 +90,11 @@ export function HtmlMigrationTracker({ variant = "full" }: Props) {
             hebrew-v8.2.html
           </code>{" "}
           (routes, corpus, auth, tools). It is intentionally separate from the
-          lighter{" "}
+          shorter{" "}
           <Link href="/developer#legacy-parity" className="text-sage underline">
-            legacy parity
+            product checklist
           </Link>{" "}
-          checklist on Progress/Developer. Update statuses in{" "}
+          on Developer. Update statuses in{" "}
           <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
             lib/html-full-migration.ts
           </code>{" "}

@@ -3,6 +3,7 @@ import { getMasteryWordListForLevel } from "@/data/course-mastery-words";
 import { ALPHABET_LETTER_IDS } from "@/data/alphabet-letters";
 import { BRIDGE_UNIT_IDS } from "@/data/bridge-course";
 import {
+  SPECIALTY_TIER_IDS,
   SPECIALTY_TRACK_IDS,
   type SpecialtyTierId,
   isValidSpecialtyTierStorageKey,
@@ -80,6 +81,58 @@ export type LearnProgressState = {
    * pass ({@link isSpecialtyTracksUnlocked}).
    */
   specialtyTierPassed?: Record<string, boolean>;
+  /**
+   * Internal fluency balance metrics. Each graded drill pick can contribute to
+   * one or more dimensions (recognition, production, grammar, etc.).
+   */
+  skillMetrics?: SkillMetrics;
+  /**
+   * Per-lemma skill stability, used for smarter review ordering.
+   * Keys: Hebrew lemma -> skill -> attempts/correct + timestamp.
+   */
+  lemmaSkillMetrics?: LemmaSkillMetrics;
+  /**
+   * Reading hub carousel: passages opened here (`jt-0`, RD ids, library ids).
+   * Jewish-text slots chain: `jt-k` unlocks after `jt-(k-1)` was opened.
+   */
+  readingCarouselRevealed?: Record<string, boolean>;
+  /** Reading carousel: last time each passage was opened (recency sort). */
+  readingPassageLastOpenedAt?: Record<string, number>;
+  /** Reading hub: learner finished the passage quiz flow at least once. */
+  readingPassageQuizComplete?: Record<string, boolean>;
+  /** Numbers hub carousel: last opened hub tile (recency sort). */
+  numbersCarouselLastOpenedAt?: Record<string, number>;
+  /** Numbers hub: user has practised this drill at least once (clears “try it” dot). */
+  numbersDrillEngaged?: Record<string, boolean>;
+};
+
+export type SkillMetricKey =
+  | "recognition"
+  | "production"
+  | "grammar"
+  | "definition"
+  | "listening"
+  | "comprehension";
+
+export type SkillMetricStat = {
+  attempts: number;
+  correct: number;
+};
+
+export type SkillMetrics = Partial<Record<SkillMetricKey, SkillMetricStat>>;
+export type LemmaSkillStat = SkillMetricStat & { lastSeen: number };
+export type LemmaSkillMetrics = Record<
+  string,
+  Partial<Record<SkillMetricKey, LemmaSkillStat>>
+>;
+
+export const SKILL_METRIC_LABELS: Record<SkillMetricKey, string> = {
+  recognition: "Recognition",
+  production: "Production",
+  grammar: "Grammar",
+  definition: "Definition",
+  listening: "Listening",
+  comprehension: "Comprehension",
 };
 
 const defaultState: LearnProgressState = {
@@ -143,6 +196,76 @@ export function parseBridgeUnitsCompleted(
     if (o[id] === true) out[id] = true;
   }
   return Object.keys(out).length > 0 ? out : undefined;
+}
+
+const MAX_PROGRESS_SIDE_MAP_KEYS = 96;
+
+function parseStringBooleanMap(
+  raw: unknown,
+  maxKeys = MAX_PROGRESS_SIDE_MAP_KEYS,
+): Record<string, boolean> | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  const out: Record<string, boolean> = {};
+  let n = 0;
+  for (const [k, v] of Object.entries(o)) {
+    if (n >= maxKeys) break;
+    if (typeof k !== "string" || k.length > 128) continue;
+    if (v === true || v === 1 || v === "true") {
+      out[k] = true;
+      n++;
+    }
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function parseStringNumberMap(
+  raw: unknown,
+  maxKeys = MAX_PROGRESS_SIDE_MAP_KEYS,
+): Record<string, number> | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  const out: Record<string, number> = {};
+  let n = 0;
+  for (const [k, v] of Object.entries(o)) {
+    if (n >= maxKeys) break;
+    if (typeof k !== "string" || k.length > 128) continue;
+    if (typeof v === "number" && Number.isFinite(v) && v >= 0 && v < 4e12) {
+      out[k] = Math.floor(v);
+      n++;
+    }
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+export function parseReadingCarouselRevealed(
+  raw: unknown,
+): Record<string, boolean> | undefined {
+  return parseStringBooleanMap(raw);
+}
+
+export function parseReadingPassageLastOpenedAt(
+  raw: unknown,
+): Record<string, number> | undefined {
+  return parseStringNumberMap(raw);
+}
+
+export function parseReadingPassageQuizComplete(
+  raw: unknown,
+): Record<string, boolean> | undefined {
+  return parseStringBooleanMap(raw);
+}
+
+export function parseNumbersCarouselLastOpenedAt(
+  raw: unknown,
+): Record<string, number> | undefined {
+  return parseStringNumberMap(raw);
+}
+
+export function parseNumbersDrillEngaged(
+  raw: unknown,
+): Record<string, boolean> | undefined {
+  return parseStringBooleanMap(raw);
 }
 
 export function parseSpecialtyTierPassed(
@@ -283,6 +406,27 @@ export function specialtyTierUnlockedForAttempt(
     return isSpecialtyTierRecordedPassed(state, trackId, "bronze");
   }
   return isSpecialtyTierRecordedPassed(state, trackId, "silver");
+}
+
+/**
+ * First tier on this track that is unlocked and not yet passed (for deep links).
+ */
+export function getNextSpecialtyTierForTrack(
+  state: LearnProgressState,
+  trackId: string,
+): { tier: SpecialtyTierId; href: string } | null {
+  if (!SPECIALTY_TRACK_IDS.includes(trackId)) return null;
+  if (!isSpecialtyTracksUnlocked(state)) return null;
+  for (const tier of SPECIALTY_TIER_IDS) {
+    if (!specialtyTierUnlockedForAttempt(state, trackId, tier)) break;
+    if (!isSpecialtyTierRecordedPassed(state, trackId, tier)) {
+      return {
+        tier,
+        href: `/learn/tracks/${encodeURIComponent(trackId)}/${encodeURIComponent(tier)}`,
+      };
+    }
+  }
+  return null;
 }
 
 export function setSpecialtyTierPassed(
@@ -562,6 +706,73 @@ export function parseRootDrillField(
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+function parseSkillMetricStat(raw: unknown): SkillMetricStat | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const attemptsRaw = parseNonNegInt(o.attempts);
+  const correctRaw = parseNonNegInt(o.correct);
+  if (attemptsRaw == null || attemptsRaw <= 0) return null;
+  const correct = Math.min(correctRaw ?? 0, attemptsRaw);
+  return { attempts: attemptsRaw, correct };
+}
+
+function parseLemmaSkillStat(raw: unknown): LemmaSkillStat | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const base = parseSkillMetricStat(raw);
+  if (!base) return null;
+  const lastSeenRaw = typeof o.lastSeen === "number" ? o.lastSeen : 0;
+  return {
+    ...base,
+    lastSeen: Number.isFinite(lastSeenRaw) && lastSeenRaw > 0 ? lastSeenRaw : 0,
+  };
+}
+
+export function parseSkillMetricsField(v: unknown): SkillMetrics | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  const o = v as Record<string, unknown>;
+  const out: SkillMetrics = {};
+  const keys: SkillMetricKey[] = [
+    "recognition",
+    "production",
+    "grammar",
+    "definition",
+    "listening",
+    "comprehension",
+  ];
+  for (const k of keys) {
+    const stat = parseSkillMetricStat(o[k]);
+    if (stat) out[k] = stat;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+export function parseLemmaSkillMetricsField(v: unknown): LemmaSkillMetrics | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  const out: LemmaSkillMetrics = {};
+  const root = v as Record<string, unknown>;
+  const keys: SkillMetricKey[] = [
+    "recognition",
+    "production",
+    "grammar",
+    "definition",
+    "listening",
+    "comprehension",
+  ];
+  for (const [lemmaRaw, bySkillRaw] of Object.entries(root)) {
+    const lemma = lemmaRaw.trim();
+    if (!lemma || !bySkillRaw || typeof bySkillRaw !== "object") continue;
+    const bySkillObj = bySkillRaw as Record<string, unknown>;
+    const slot: Partial<Record<SkillMetricKey, LemmaSkillStat>> = {};
+    for (const k of keys) {
+      const stat = parseLemmaSkillStat(bySkillObj[k]);
+      if (stat) slot[k] = stat;
+    }
+    if (Object.keys(slot).length > 0) out[lemma] = slot;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 export function mergeRootDrillMaps(
   a: Record<string, Record<string, number>> | undefined,
   b: Record<string, Record<string, number>> | undefined,
@@ -624,6 +835,10 @@ export type GradedPracticeContext = {
   promptHe?: string;
   /** Roots graduated drill: increment `rootDrill` on correct (with `promptHe`). */
   rootKey?: string;
+  /** Skill dimensions this answer should count toward. */
+  skills?: SkillMetricKey[];
+  /** Numbers hub drill id (`cards` | `listen` | `ordinal` | …) for carousel engagement. */
+  numbersHubEngageId?: string;
 };
 
 /**
@@ -663,10 +878,172 @@ export function recordVocabPracticeForPrompt(
 export function recordGradedAnswer(
   state: LearnProgressState,
   correct: boolean,
+  ctx?: GradedPracticeContext,
 ): LearnProgressState {
   const attempts = (state.mcqAttempts ?? 0) + 1;
   const right = (state.mcqCorrect ?? 0) + (correct ? 1 : 0);
-  return { ...state, mcqAttempts: attempts, mcqCorrect: right };
+  const skills: SkillMetricKey[] = ctx?.skills?.length
+    ? ctx.skills
+    : ["recognition"];
+  const skillMetrics: SkillMetrics = { ...(state.skillMetrics ?? {}) };
+  const lemmaSkillMetrics: LemmaSkillMetrics = { ...(state.lemmaSkillMetrics ?? {}) };
+  const lemma = ctx?.promptHe?.trim();
+  const canTrackLemma = !!lemma && /[\u0590-\u05FF]/.test(lemma);
+  const now = Date.now();
+  for (const skill of skills) {
+    const prev = skillMetrics[skill] ?? { attempts: 0, correct: 0 };
+    skillMetrics[skill] = {
+      attempts: prev.attempts + 1,
+      correct: prev.correct + (correct ? 1 : 0),
+    };
+    if (canTrackLemma) {
+      const lemmaMap = { ...(lemmaSkillMetrics[lemma!] ?? {}) };
+      const prevLemma = lemmaMap[skill] ?? { attempts: 0, correct: 0, lastSeen: 0 };
+      lemmaMap[skill] = {
+        attempts: prevLemma.attempts + 1,
+        correct: prevLemma.correct + (correct ? 1 : 0),
+        lastSeen: now,
+      };
+      lemmaSkillMetrics[lemma!] = lemmaMap;
+    }
+  }
+  return {
+    ...state,
+    mcqAttempts: attempts,
+    mcqCorrect: right,
+    skillMetrics,
+    ...(canTrackLemma ? { lemmaSkillMetrics } : {}),
+  };
+}
+
+export function lemmaReviewPriority(
+  state: Pick<LearnProgressState, "lemmaSkillMetrics">,
+  lemma: string,
+): number {
+  const bySkill = state.lemmaSkillMetrics?.[lemma.trim()];
+  if (!bySkill) return 1;
+  const stats = Object.values(bySkill);
+  if (!stats.length) return 1;
+  const meanAcc =
+    stats.reduce((acc, s) => acc + (s.attempts > 0 ? s.correct / s.attempts : 0), 0) /
+    stats.length;
+  const meanAttempts =
+    stats.reduce((acc, s) => acc + s.attempts, 0) / stats.length;
+  const lastSeen = Math.max(...stats.map((s) => s.lastSeen || 0));
+  const ageDays = lastSeen > 0 ? (Date.now() - lastSeen) / (1000 * 60 * 60 * 24) : 3;
+  const confidence = Math.min(1, meanAttempts / 8);
+  const freshness = Math.min(1, ageDays / 5);
+  const weakness = 1 - meanAcc * confidence;
+  return weakness * 0.75 + freshness * 0.25;
+}
+
+export function getSkillMetricSnapshot(
+  state: LearnProgressState,
+): Record<SkillMetricKey, SkillMetricStat> {
+  const src = state.skillMetrics ?? {};
+  const keys: SkillMetricKey[] = [
+    "recognition",
+    "production",
+    "grammar",
+    "definition",
+    "listening",
+    "comprehension",
+  ];
+  return Object.fromEntries(
+    keys.map((k) => [
+      k,
+      {
+        attempts: src[k]?.attempts ?? 0,
+        correct: src[k]?.correct ?? 0,
+      },
+    ]),
+  ) as Record<SkillMetricKey, SkillMetricStat>;
+}
+
+/**
+ * Lowest-confidence dimensions first (used by Rabbi + review recommendations).
+ * Low attempts are treated as low confidence even with high temporary accuracy.
+ */
+export function getWeakestSkillMetrics(
+  state: LearnProgressState,
+  take = 2,
+): SkillMetricKey[] {
+  const snap = getSkillMetricSnapshot(state);
+  const scored = (
+    Object.entries(snap) as [SkillMetricKey, SkillMetricStat][]
+  ).map(([k, v]) => {
+    if (v.attempts <= 0) return { k, score: 0 };
+    const acc = v.correct / v.attempts;
+    const confidence = Math.min(1, v.attempts / 8);
+    return { k, score: acc * confidence };
+  });
+  scored.sort((a, b) => a.score - b.score);
+  return scored.slice(0, Math.max(1, take)).map((x) => x.k);
+}
+
+/** Mark a reading carousel passage as opened (unlocks next Jewish-text slot). */
+export function revealReadingCarouselPassage(
+  state: LearnProgressState,
+  passageId: string,
+): LearnProgressState {
+  const cur = state.readingCarouselRevealed ?? {};
+  if (cur[passageId]) return state;
+  return {
+    ...state,
+    readingCarouselRevealed: { ...cur, [passageId]: true },
+  };
+}
+
+/** Reveal (if needed) and bump last-opened time for carousel ordering. */
+export function touchReadingCarouselPassage(
+  state: LearnProgressState,
+  passageId: string,
+): LearnProgressState {
+  const withReveal = revealReadingCarouselPassage(state, passageId);
+  return {
+    ...withReveal,
+    readingPassageLastOpenedAt: {
+      ...(withReveal.readingPassageLastOpenedAt ?? {}),
+      [passageId]: Date.now(),
+    },
+  };
+}
+
+export function markReadingPassageQuizComplete(
+  state: LearnProgressState,
+  passageId: string,
+): LearnProgressState {
+  const cur = state.readingPassageQuizComplete ?? {};
+  if (cur[passageId]) return state;
+  return {
+    ...state,
+    readingPassageQuizComplete: { ...cur, [passageId]: true },
+  };
+}
+
+export function touchNumbersCarouselHub(
+  state: LearnProgressState,
+  hubId: string,
+): LearnProgressState {
+  return {
+    ...state,
+    numbersCarouselLastOpenedAt: {
+      ...(state.numbersCarouselLastOpenedAt ?? {}),
+      [hubId]: Date.now(),
+    },
+  };
+}
+
+export function markNumbersDrillEngaged(
+  state: LearnProgressState,
+  engageId: string,
+): LearnProgressState {
+  const cur = state.numbersDrillEngaged ?? {};
+  if (cur[engageId]) return state;
+  return {
+    ...state,
+    numbersDrillEngaged: { ...cur, [engageId]: true },
+  };
 }
 
 export function loadLearnProgress(): LearnProgressState {
@@ -689,6 +1066,8 @@ export function loadLearnProgress(): LearnProgressState {
 
     const vocabLevels = parseVocabLevelsField(p.vocabLevels);
     const rootDrill = parseRootDrillField(p.rootDrill);
+    const skillMetrics = parseSkillMetricsField(p.skillMetrics);
+    const lemmaSkillMetrics = parseLemmaSkillMetricsField(p.lemmaSkillMetrics);
     const alphabetGate = parseAlphabetGate(p.alphabetGate);
     const foundationExit = parseFoundationExit(p.foundationExit);
     const bridgeModulePassed = parseBridgeModulePassed(p.bridgeModulePassed);
@@ -702,6 +1081,19 @@ export function loadLearnProgress(): LearnProgressState {
       p.alphabetFinalExamPassed,
     );
     const specialtyTierPassed = parseSpecialtyTierPassed(p.specialtyTierPassed);
+    const readingCarouselRevealed = parseReadingCarouselRevealed(
+      p.readingCarouselRevealed,
+    );
+    const readingPassageLastOpenedAt = parseReadingPassageLastOpenedAt(
+      p.readingPassageLastOpenedAt,
+    );
+    const readingPassageQuizComplete = parseReadingPassageQuizComplete(
+      p.readingPassageQuizComplete,
+    );
+    const numbersCarouselLastOpenedAt = parseNumbersCarouselLastOpenedAt(
+      p.numbersCarouselLastOpenedAt,
+    );
+    const numbersDrillEngaged = parseNumbersDrillEngaged(p.numbersDrillEngaged);
 
     return {
       completedSections:
@@ -718,6 +1110,8 @@ export function loadLearnProgress(): LearnProgressState {
         : {}),
       ...(vocabLevels ? { vocabLevels } : {}),
       ...(rootDrill ? { rootDrill } : {}),
+      ...(skillMetrics ? { skillMetrics } : {}),
+      ...(lemmaSkillMetrics ? { lemmaSkillMetrics } : {}),
       ...(alphabetGate ? { alphabetGate } : {}),
       ...(foundationExit ? { foundationExit } : {}),
       ...(bridgeModulePassed === true ? { bridgeModulePassed: true } : {}),
@@ -727,6 +1121,15 @@ export function loadLearnProgress(): LearnProgressState {
         ? { alphabetFinalExamPassed: true }
         : {}),
       ...(specialtyTierPassed ? { specialtyTierPassed } : {}),
+      ...(readingCarouselRevealed ? { readingCarouselRevealed } : {}),
+      ...(readingPassageLastOpenedAt
+        ? { readingPassageLastOpenedAt }
+        : {}),
+      ...(readingPassageQuizComplete ? { readingPassageQuizComplete } : {}),
+      ...(numbersCarouselLastOpenedAt
+        ? { numbersCarouselLastOpenedAt }
+        : {}),
+      ...(numbersDrillEngaged ? { numbersDrillEngaged } : {}),
     };
   } catch {
     return { ...defaultState };
@@ -735,6 +1138,18 @@ export function loadLearnProgress(): LearnProgressState {
 
 /** Fired after `saveLearnProgress` so shell can refresh Next up, etc. */
 export const LEARN_PROGRESS_EVENT = "hebrew-web-learn-progress";
+
+/**
+ * Notify listeners after the current React update finishes. A synchronous
+ * dispatch inside `setState` updaters would update AppShell while a child is
+ * still rendering (React 18/19 cross-root warning).
+ */
+function dispatchLearnProgressEventDeferred(): void {
+  if (typeof window === "undefined") return;
+  queueMicrotask(() => {
+    window.dispatchEvent(new CustomEvent(LEARN_PROGRESS_EVENT));
+  });
+}
 
 /** Clear Learn progress + Next-up UI preference; notify listeners. */
 export function resetWebAppLocalCourseState(): void {
@@ -745,14 +1160,14 @@ export function resetWebAppLocalCourseState(): void {
   } catch {
     /* ignore */
   }
-  window.dispatchEvent(new CustomEvent(LEARN_PROGRESS_EVENT));
+  dispatchLearnProgressEventDeferred();
 }
 
 export function saveLearnProgress(state: LearnProgressState) {
   try {
     localStorage.setItem(LEARN_PROGRESS_KEY, JSON.stringify(state));
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent(LEARN_PROGRESS_EVENT));
+      dispatchLearnProgressEventDeferred();
     }
   } catch {
     /* quota */

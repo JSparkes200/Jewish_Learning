@@ -17,6 +17,35 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /**
+ * Prefer corpus rows whose Hebrew appears in `preferredHebrew`, then fill from the rest.
+ */
+export function pickCorpusRowsBiased(
+  pool: readonly LegacyCorpusEntry[],
+  count: number,
+  preferredHebrew?: readonly string[],
+): LegacyCorpusEntry[] {
+  if (!pool.length || count <= 0) return [];
+  if (!preferredHebrew?.length) {
+    return shuffle([...pool]).slice(0, Math.min(count, pool.length));
+  }
+  const pref = new Set(preferredHebrew.map((p) => p.trim()).filter(Boolean));
+  const pri = pool.filter((w) => pref.has(w.h.trim()));
+  const rest = pool.filter((w) => !pref.has(w.h.trim()));
+  const shPri = shuffle([...pri]);
+  const shRest = shuffle([...rest]);
+  const seen = new Set<string>();
+  const out: LegacyCorpusEntry[] = [];
+  for (const w of [...shPri, ...shRest]) {
+    const h = w.h.trim();
+    if (!h || seen.has(h)) continue;
+    seen.add(h);
+    out.push(w);
+    if (out.length >= count) break;
+  }
+  return out;
+}
+
+/**
  * Mixed pool for Study practice: corpus rows up to `level` plus course MCQ lemmas
  * resolved through `D` (legacy `vlv` + course list idea).
  */
@@ -62,16 +91,20 @@ export function legacyRowToMcqItem(
   };
 }
 
-/** Random subset for a short MCQ pack (shuffled). */
+export type StudyPoolPickOpts = {
+  preferredHebrew?: readonly string[];
+};
+
+/** Random subset for a short MCQ pack; optional bias toward due / review lemmas. */
 export function pickMcqItemsFromPool(
   pool: readonly LegacyCorpusEntry[],
   count: number,
   maxLevel: number,
+  opts?: StudyPoolPickOpts,
 ): McqItem[] {
   if (!pool.length) return [];
-  const sh = shuffle([...pool]);
-  const n = Math.min(count, sh.length);
-  return sh.slice(0, n).map((w, i) => legacyRowToMcqItem(w, `sp-${i}-${w.h}`, maxLevel));
+  const rows = pickCorpusRowsBiased(pool, count, opts?.preferredHebrew);
+  return rows.map((w, i) => legacyRowToMcqItem(w, `sp-${i}-${w.h}`, maxLevel));
 }
 
 export type FillRound = {
@@ -80,11 +113,57 @@ export type FillRound = {
   correctIndex: number;
 };
 
-export function buildFillRound(pool: readonly LegacyCorpusEntry[]): FillRound | null {
+export function buildFillRound(
+  pool: readonly LegacyCorpusEntry[],
+  opts?: StudyPoolPickOpts,
+): FillRound | null {
   if (pool.length < 4) return null;
-  const target = pool[Math.floor(Math.random() * pool.length)]!;
+  const pref = opts?.preferredHebrew?.length
+    ? new Set(opts.preferredHebrew.map((p) => p.trim()).filter(Boolean))
+    : null;
+  const candidates = pref?.size
+    ? pool.filter((x) => pref!.has(x.h.trim()))
+    : null;
+  const targetPool =
+    candidates && candidates.length > 0 ? candidates : pool;
+  const target = targetPool[Math.floor(Math.random() * targetPool.length)]!;
   const others = shuffle(pool.filter((x) => x.h !== target.h))
     .slice(0, 3)
+    .map((x) => x.h);
+  const optionsHe = shuffle([target.h, ...others]);
+  return {
+    target,
+    optionsHe,
+    correctIndex: optionsHe.indexOf(target.h),
+  };
+}
+
+export type TapRound = {
+  target: LegacyCorpusEntry;
+  optionsHe: string[];
+  correctIndex: number;
+};
+
+/**
+ * Reverse prompt round for "tap the word":
+ * show English gloss, pick matching Hebrew option.
+ */
+export function buildTapRound(
+  pool: readonly LegacyCorpusEntry[],
+  opts?: StudyPoolPickOpts,
+): TapRound | null {
+  if (pool.length < 6) return null;
+  const pref = opts?.preferredHebrew?.length
+    ? new Set(opts.preferredHebrew.map((p) => p.trim()).filter(Boolean))
+    : null;
+  const candidates = pref?.size
+    ? pool.filter((x) => pref!.has(x.h.trim()))
+    : null;
+  const targetPool =
+    candidates && candidates.length > 0 ? candidates : pool;
+  const target = targetPool[Math.floor(Math.random() * targetPool.length)]!;
+  const others = shuffle(pool.filter((x) => x.h !== target.h))
+    .slice(0, 5)
     .map((x) => x.h);
   const optionsHe = shuffle([target.h, ...others]);
   return {

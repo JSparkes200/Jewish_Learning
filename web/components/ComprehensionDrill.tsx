@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Hebrew } from "@/components/Hebrew";
+import { HebrewTapText } from "@/components/HebrewTapText";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
+import type { GradedPracticeContext, SkillMetricKey } from "@/lib/learn-progress";
 import type {
   ComprehensionPassage,
   ComprehensionQuestion,
@@ -36,8 +37,10 @@ type Props = {
   /** Comprehension does not pass `promptHe` (English questions); second arg reserved for MCQ parity. */
   onPracticeAnswer?: (
     correct: boolean,
-    context?: { promptHe?: string },
+    context?: GradedPracticeContext,
   ) => void;
+  /** Skill dimensions this drill should train. */
+  skillTags?: SkillMetricKey[];
 };
 
 export function ComprehensionDrill({
@@ -45,6 +48,7 @@ export function ComprehensionDrill({
   className = "",
   defaultShowNikkud = true,
   onPracticeAnswer,
+  skillTags = ["comprehension", "recognition", "definition"],
 }: Props) {
   const [qIndex, setQIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -73,10 +77,10 @@ export function ComprehensionDrill({
     (choice: string) => {
       if (picked != null || !q) return;
       setPicked(choice);
-      onPracticeAnswer?.(choice === correctText);
+      onPracticeAnswer?.(choice === correctText, { skills: skillTags });
       if (choice === correctText) setCorrectCount((c) => c + 1);
     },
-    [picked, q, correctText, onPracticeAnswer],
+    [picked, q, correctText, onPracticeAnswer, skillTags],
   );
 
   const nextQ = useCallback(() => {
@@ -126,12 +130,12 @@ export function ComprehensionDrill({
             onToggle={() => setShowNikkud((v) => !v)}
           />
         </div>
-        <Hebrew
-          as="p"
-          className="mt-3 text-right text-base leading-relaxed text-ink sm:text-lg"
-        >
-          {passageDisplay}
-        </Hebrew>
+        <div className="mt-3">
+          <HebrewTapText
+            text={passageDisplay}
+            className="text-base text-ink sm:text-lg"
+          />
+        </div>
         <p className="mt-4 border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
           {passage.e}
         </p>

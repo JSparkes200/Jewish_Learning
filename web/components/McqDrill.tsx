@@ -5,6 +5,7 @@ import { Hebrew } from "@/components/Hebrew";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import type { McqDrillPack } from "@/data/section-drill-types";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
+import type { GradedPracticeContext, SkillMetricKey } from "@/lib/learn-progress";
 import { buildInlineMcqChoices } from "@/lib/mcq-inline-choices";
 
 function hasHebrew(s: string): boolean {
@@ -26,7 +27,7 @@ type McqDrillProps = {
    */
   onPracticeAnswer?: (
     correct: boolean,
-    context?: { promptHe?: string },
+    context?: GradedPracticeContext,
   ) => void;
   /**
    * When set, replaces the default “Mark section complete” footer copy on the
@@ -43,6 +44,8 @@ type McqDrillProps = {
    * question). Not called again until they hit “Practice again” and finish again.
    */
   onPackComplete?: (result: { correct: number; total: number }) => void;
+  /** Skill dimensions this drill should train. */
+  skillTags?: SkillMetricKey[];
 };
 
 export function McqDrill({
@@ -53,6 +56,7 @@ export function McqDrill({
   endHint,
   defaultShowNikkud = true,
   onPackComplete,
+  skillTags,
 }: McqDrillProps) {
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -161,12 +165,13 @@ export function McqDrill({
       setPicked(choice);
       onPracticeAnswer?.(choice === item.correctEn, {
         promptHe: item.promptHe,
+        skills: skillTags,
       });
       if (choice === item.correctEn) {
         setCorrectCount((c) => c + 1);
       }
     },
-    [item, picked, onPracticeAnswer, choicesBusy],
+    [item, picked, onPracticeAnswer, choicesBusy, skillTags],
   );
 
   const next = useCallback(() => {

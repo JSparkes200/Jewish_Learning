@@ -12,15 +12,21 @@ import {
   YIDDISH_PROGRESS_EVENT,
   loadYiddishProgress,
 } from "@/lib/yiddish-progress";
+import { ProgressRing } from "@/components/ProgressRing";
+import { StudyDailySession } from "@/components/StudyDailySession";
 import { StudyPracticeGames } from "@/components/StudyPracticeGames";
 import { StudyReviewQueue } from "@/components/StudyReviewQueue";
 import {
   LEARN_PROGRESS_EVENT,
+  SKILL_METRIC_LABELS,
   completionRatio,
   countCourseListMastery,
   countTrackedLemmasAtLeast,
   createEmptyLearnProgressState,
   effectiveCourseLevelMasteredCount,
+  getSkillMetricSnapshot,
+  getWeakestSkillMetrics,
+  type GradedPracticeContext,
   loadLearnProgress,
   normalizeStreak,
   recordGradedAnswer,
@@ -28,13 +34,35 @@ import {
   saveLearnProgress,
   touchDailyStreak,
   type LearnProgressState,
+  type SkillMetricKey,
 } from "@/lib/learn-progress";
+
+const SKILL_RING_ORDER: SkillMetricKey[] = [
+  "recognition",
+  "production",
+  "grammar",
+  "definition",
+  "listening",
+  "comprehension",
+];
+
+const RING_TONES: Array<"sage" | "amber" | "rust"> = [
+  "sage",
+  "amber",
+  "rust",
+  "sage",
+  "amber",
+  "rust",
+];
 
 export function StudyPageClient() {
   const [progress, setProgress] = useState<LearnProgressState>(() =>
     createEmptyLearnProgressState(),
   );
   const [yiddishRev, setYiddishRev] = useState(0);
+  const [practiceBiasLemmas, setPracticeBiasLemmas] = useState<
+    readonly string[] | undefined
+  >(undefined);
 
   const sync = useCallback(() => {
     setProgress(loadLearnProgress());
@@ -83,12 +111,14 @@ export function StudyPageClient() {
   );
   const gateMax = maxUnlockMasteredRequirementForLevel(al);
   const lemmasGe2 = countTrackedLemmasAtLeast(progress.vocabLevels, 2);
+  const skillSnapshot = getSkillMetricSnapshot(progress);
+  const weakSkills = getWeakestSkillMetrics(progress, 2);
 
   const onPracticeAnswer = useCallback(
-    (correct: boolean, ctx?: { promptHe?: string }) => {
+    (correct: boolean, ctx?: GradedPracticeContext) => {
       const p = loadLearnProgress();
       let n = touchDailyStreak(p);
-      n = recordGradedAnswer(n, correct);
+      n = recordGradedAnswer(n, correct, ctx);
       n = recordVocabPracticeForPrompt(n, ctx?.promptHe, correct);
       saveLearnProgress(n);
       setProgress(n);
@@ -117,18 +147,77 @@ export function StudyPageClient() {
         </p>
         <Link
           href={next.href}
-          className="mt-3 inline-block rounded-lg bg-rust px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+          className="btn-elevated-rust mt-3 inline-flex items-center justify-center no-underline"
         >
           Go →
         </Link>
       </div>
 
+      <StudyDailySession
+        progress={progress}
+        practiceBiasLemmas={practiceBiasLemmas}
+        onApplyPracticeBias={(lemmas) => setPracticeBiasLemmas(lemmas)}
+        onClearPracticeBias={() => setPracticeBiasLemmas(undefined)}
+      />
+
       <StudyReviewQueue progress={progress} />
 
       <StudyPracticeGames
         activeLevel={progress.activeLevel}
+        preferredLemmas={practiceBiasLemmas}
+        onClearPreferredLemmas={() => setPracticeBiasLemmas(undefined)}
         onPracticeAnswer={onPracticeAnswer}
       />
+
+      <div className="surface-elevated p-4 sm:p-5">
+        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+          Learning balance
+        </p>
+        <p className="mt-1 text-sm text-ink-muted">
+          Rabbi guidance and review suggestions use these internal skill metrics.
+          Rings show accuracy when you have attempts; keep all dimensions moving.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {SKILL_RING_ORDER.map((key, i) => {
+            const stat = skillSnapshot[key];
+            const pct =
+              stat.attempts > 0
+                ? Math.round((stat.correct / stat.attempts) * 100)
+                : 0;
+            return (
+              <div
+                key={key}
+                className="flex flex-col items-center gap-1 rounded-xl border border-white/50 bg-parchment-deep/25 px-2 py-3 shadow-insetSoft"
+              >
+                <p className="text-center font-label text-[8px] uppercase leading-tight tracking-wide text-ink-muted">
+                  {SKILL_METRIC_LABELS[key]}
+                </p>
+                <ProgressRing
+                  percent={pct}
+                  label={`${pct}%`}
+                  sublabel={
+                    stat.attempts > 0
+                      ? `${stat.correct}/${stat.attempts}`
+                      : "—"
+                  }
+                  size={76}
+                  stroke={7}
+                  tone={RING_TONES[i] ?? "sage"}
+                  compact
+                />
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-4 text-xs text-ink-muted">
+          Priority now:{" "}
+          <strong className="text-ink">
+            {weakSkills.map((k) => SKILL_METRIC_LABELS[k]).join(" + ")}
+          </strong>
+          . Use Practice games and Focus sections above, then open the Rabbi for
+          targeted pacing notes.
+        </p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-2xl border border-amber/25 bg-amber/5 p-4">
@@ -210,7 +299,7 @@ export function StudyPageClient() {
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href={`/learn/${progress.activeLevel}`}
-            className="rounded-lg bg-sage px-3 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+            className="btn-elevated-primary inline-flex items-center justify-center px-3 py-2 no-underline"
           >
             Level menu
           </Link>

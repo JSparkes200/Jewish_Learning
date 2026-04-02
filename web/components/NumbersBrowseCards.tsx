@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import {
   NUMBER_CARD_ROWS,
@@ -8,13 +8,29 @@ import {
 } from "@/data/course-numbers-cards";
 import { speakHebrew } from "@/lib/speech-hebrew";
 
-export function NumbersBrowseCards() {
+type BrowseProps = {
+  /** Fires once on first swipe or first audio from this block. */
+  onEngage?: () => void;
+};
+
+export function NumbersBrowseCards({ onEngage }: BrowseProps) {
   const [i, setI] = useState(0);
   const row = NUMBER_CARD_ROWS[i]!;
+  const engagedRef = useRef(false);
 
-  const go = useCallback((next: number) => {
-    setI(Math.max(0, Math.min(NUMBER_CARD_ROW_COUNT - 1, next)));
-  }, []);
+  const fireEngage = useCallback(() => {
+    if (engagedRef.current) return;
+    engagedRef.current = true;
+    onEngage?.();
+  }, [onEngage]);
+
+  const go = useCallback(
+    (next: number) => {
+      setI(Math.max(0, Math.min(NUMBER_CARD_ROW_COUNT - 1, next)));
+      fireEngage();
+    },
+    [fireEngage],
+  );
 
   const sameMf = row.masc === row.fem;
 
@@ -94,7 +110,10 @@ export function NumbersBrowseCards() {
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
-            onClick={() => speakHebrew(row.masc)}
+            onClick={() => {
+              speakHebrew(row.masc);
+              fireEngage();
+            }}
             className="rounded-xl border border-rust/35 bg-parchment-deep/40 px-4 py-2 font-label text-[9px] uppercase tracking-wide text-ink hover:bg-parchment-deep/60"
           >
             Listen · masc
@@ -102,7 +121,10 @@ export function NumbersBrowseCards() {
           {!sameMf ? (
             <button
               type="button"
-              onClick={() => speakHebrew(row.fem)}
+              onClick={() => {
+                speakHebrew(row.fem);
+                fireEngage();
+              }}
               className="rounded-xl border border-rust/35 bg-parchment-deep/40 px-4 py-2 font-label text-[9px] uppercase tracking-wide text-ink hover:bg-parchment-deep/60"
             >
               Listen · fem

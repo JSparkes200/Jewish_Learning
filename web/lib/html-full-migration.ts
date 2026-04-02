@@ -153,7 +153,7 @@ export const HTML_FULL_MIGRATION_WORKSTREAMS: readonly HtmlMigrationWorkstream[]
       label: "Post-foundation: exit, bridge, specialty tiers",
       legacyRef: "N/A in single HTML (new product slice)",
       detail:
-        "Foundation exit (3 strands), bridge module, specialty MCQ tracks: modern (news / literature / spoken) + traditional (Talmudic / rabbinic Hebrew, Jewish Babylonian Aramaic), Bronze–Gold, `/learn/fluency` overview, gating + Progress badges. Next: reading-heavy Gold, more domains (Rashi, etc.).",
+        "Foundation exit (3 strands), bridge module, specialty MCQ tracks: modern (news / literature / spoken) + traditional (Talmudic / rabbinic Hebrew, Jewish Babylonian Aramaic), Bronze–Gold, Learn home journey carousel + i path overview, gating + Progress badges. Next: reading-heavy Gold, more domains (Rashi, etc.).",
       suggestedOrder: 3,
       weight: 2,
       status: "partial",

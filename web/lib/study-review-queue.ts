@@ -1,6 +1,7 @@
 import { getSectionsForLevel } from "@/data/course";
 import { getMasteryWordListForLevel } from "@/data/course-mastery-words";
 import { getMcqPackForSection, SECTION_IDS_WITH_MCQ } from "@/data/section-drills";
+import { lemmaReviewPriority, type LearnProgressState } from "@/lib/learn-progress";
 
 const MCQ_SECTION_IDS = new Set(SECTION_IDS_WITH_MCQ);
 
@@ -39,7 +40,7 @@ export type ReviewQueueEntry = {
  */
 export function buildStudyReviewQueue(
   level: number,
-  vocabLevels: Record<string, number> | undefined,
+  progress: Pick<LearnProgressState, "vocabLevels" | "lemmaSkillMetrics">,
   opts?: { belowGateMax?: number; unseenMax?: number },
 ): {
   belowGate: ReviewQueueEntry[];
@@ -49,7 +50,7 @@ export function buildStudyReviewQueue(
   const unseenMax = opts?.unseenMax ?? 10;
 
   const list = getMasteryWordListForLevel(level);
-  const vl = vocabLevels ?? {};
+  const vl = progress.vocabLevels ?? {};
 
   const belowGate: ReviewQueueEntry[] = [];
   for (const lemma of list) {
@@ -58,7 +59,13 @@ export function buildStudyReviewQueue(
       belowGate.push({ lemma, vocabLevel: v, kind: "below_gate" });
     }
   }
-  belowGate.sort((a, b) => a.lemma.localeCompare(b.lemma, "he"));
+  belowGate.sort((a, b) => {
+    if (a.vocabLevel !== b.vocabLevel) return a.vocabLevel - b.vocabLevel;
+    const bp = lemmaReviewPriority(progress, b.lemma);
+    const ap = lemmaReviewPriority(progress, a.lemma);
+    if (bp !== ap) return bp - ap;
+    return a.lemma.localeCompare(b.lemma, "he");
+  });
 
   const unseen: ReviewQueueEntry[] = [];
   for (const lemma of list) {
@@ -71,4 +78,62 @@ export function buildStudyReviewQueue(
     belowGate: belowGate.slice(0, belowGateMax),
     unseen: unseen.slice(0, unseenMax),
   };
+}
+
+export type ReviewQueueFocusSection = {
+  sectionId: string;
+  label: string;
+  belowGate: number;
+  unseen: number;
+  total: number;
+};
+
+/**
+ * Rank section drills by how many of their prompts are still below gate/unseen.
+ * Helps learners jump to the subsection with highest review value.
+ */
+export function buildReviewQueueFocusSections(
+  level: number,
+  progress: Pick<LearnProgressState, "vocabLevels" | "lemmaSkillMetrics">,
+  maxSections = 4,
+): ReviewQueueFocusSection[] {
+  const vl = progress.vocabLevels ?? {};
+  const sections = getSectionsForLevel(level);
+  const scored: ReviewQueueFocusSection[] = [];
+  for (const sec of sections) {
+    if (!MCQ_SECTION_IDS.has(sec.id)) continue;
+    const pack = getMcqPackForSection(sec.id);
+    if (!pack || pack.kind !== "mcq") continue;
+    let belowGate = 0;
+    let unseen = 0;
+    const seen = new Set<string>();
+    for (const it of pack.items) {
+      const lemma = it.promptHe.trim();
+      if (!lemma || seen.has(lemma)) continue;
+      seen.add(lemma);
+      const v = vl[lemma];
+      if (v == null) unseen += 1;
+      else if (v < 2) {
+        belowGate += 1;
+        const p = lemmaReviewPriority(progress, lemma);
+        if (p > 1.05) belowGate += 1;
+      }
+    }
+    const total = belowGate + unseen;
+    if (total > 0) {
+      scored.push({
+        sectionId: sec.id,
+        label: sec.label,
+        belowGate,
+        unseen,
+        total,
+      });
+    }
+  }
+  scored.sort((a, b) => {
+    if (a.total !== b.total) return b.total - a.total;
+    if (a.belowGate !== b.belowGate) return b.belowGate - a.belowGate;
+    return a.sectionId.localeCompare(b.sectionId);
+  });
+  return scored.slice(0, Math.max(1, maxSections));
 }

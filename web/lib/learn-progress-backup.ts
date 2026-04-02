@@ -18,6 +18,11 @@ import {
   parseBridgeUnitsCompleted,
   parseFoundationExit,
   mergeSpecialtyTierPassedMaps,
+  parseNumbersCarouselLastOpenedAt,
+  parseNumbersDrillEngaged,
+  parseReadingCarouselRevealed,
+  parseReadingPassageLastOpenedAt,
+  parseReadingPassageQuizComplete,
   parseRootDrillField,
   parseSpecialtyTierPassed,
   parseStreakFromJson,
@@ -136,6 +141,21 @@ export function sanitizeLearnProgress(
 
   const stp = parseSpecialtyTierPassed(raw.specialtyTierPassed);
   if (stp) out.specialtyTierPassed = stp;
+
+  const rc = parseReadingCarouselRevealed(raw.readingCarouselRevealed);
+  if (rc) out.readingCarouselRevealed = rc;
+
+  const rlo = parseReadingPassageLastOpenedAt(raw.readingPassageLastOpenedAt);
+  if (rlo) out.readingPassageLastOpenedAt = rlo;
+
+  const rqc = parseReadingPassageQuizComplete(raw.readingPassageQuizComplete);
+  if (rqc) out.readingPassageQuizComplete = rqc;
+
+  const nlo = parseNumbersCarouselLastOpenedAt(raw.numbersCarouselLastOpenedAt);
+  if (nlo) out.numbersCarouselLastOpenedAt = nlo;
+
+  const nde = parseNumbersDrillEngaged(raw.numbersDrillEngaged);
+  if (nde) out.numbersDrillEngaged = nde;
 
   return out;
 }
@@ -282,6 +302,84 @@ export function mergeLearnProgressStates(
     other.specialtyTierPassed,
   );
   if (mergedSt) out.specialtyTierPassed = mergedSt;
+
+  const mergedRc: Record<string, boolean> = {};
+  for (const k of new Set([
+    ...Object.keys(base.readingCarouselRevealed ?? {}),
+    ...Object.keys(other.readingCarouselRevealed ?? {}),
+  ])) {
+    if (
+      base.readingCarouselRevealed?.[k] === true ||
+      other.readingCarouselRevealed?.[k] === true
+    ) {
+      mergedRc[k] = true;
+    }
+  }
+  if (Object.keys(mergedRc).length > 0) {
+    out.readingCarouselRevealed = mergedRc;
+  }
+
+  const mergedRlo: Record<string, number> = {};
+  for (const k of new Set([
+    ...Object.keys(base.readingPassageLastOpenedAt ?? {}),
+    ...Object.keys(other.readingPassageLastOpenedAt ?? {}),
+  ])) {
+    const m = Math.max(
+      base.readingPassageLastOpenedAt?.[k] ?? 0,
+      other.readingPassageLastOpenedAt?.[k] ?? 0,
+    );
+    if (m > 0) mergedRlo[k] = m;
+  }
+  if (Object.keys(mergedRlo).length > 0) {
+    out.readingPassageLastOpenedAt = mergedRlo;
+  }
+
+  const mergedRqc: Record<string, boolean> = {};
+  for (const k of new Set([
+    ...Object.keys(base.readingPassageQuizComplete ?? {}),
+    ...Object.keys(other.readingPassageQuizComplete ?? {}),
+  ])) {
+    if (
+      base.readingPassageQuizComplete?.[k] === true ||
+      other.readingPassageQuizComplete?.[k] === true
+    ) {
+      mergedRqc[k] = true;
+    }
+  }
+  if (Object.keys(mergedRqc).length > 0) {
+    out.readingPassageQuizComplete = mergedRqc;
+  }
+
+  const mergedNlo: Record<string, number> = {};
+  for (const k of new Set([
+    ...Object.keys(base.numbersCarouselLastOpenedAt ?? {}),
+    ...Object.keys(other.numbersCarouselLastOpenedAt ?? {}),
+  ])) {
+    const m = Math.max(
+      base.numbersCarouselLastOpenedAt?.[k] ?? 0,
+      other.numbersCarouselLastOpenedAt?.[k] ?? 0,
+    );
+    if (m > 0) mergedNlo[k] = m;
+  }
+  if (Object.keys(mergedNlo).length > 0) {
+    out.numbersCarouselLastOpenedAt = mergedNlo;
+  }
+
+  const mergedNde: Record<string, boolean> = {};
+  for (const k of new Set([
+    ...Object.keys(base.numbersDrillEngaged ?? {}),
+    ...Object.keys(other.numbersDrillEngaged ?? {}),
+  ])) {
+    if (
+      base.numbersDrillEngaged?.[k] === true ||
+      other.numbersDrillEngaged?.[k] === true
+    ) {
+      mergedNde[k] = true;
+    }
+  }
+  if (Object.keys(mergedNde).length > 0) {
+    out.numbersDrillEngaged = mergedNde;
+  }
 
   return out;
 }

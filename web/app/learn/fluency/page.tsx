@@ -1,5 +1,6 @@
-import { FluencyPageClient } from "./FluencyPageClient";
+import { redirect } from "next/navigation";
 
-export default function FluencyPage() {
-  return <FluencyPageClient />;
+/** Path overview now lives on Learn — tap **i** on the Learn home carousel page. */
+export default function FluencyRedirectPage() {
+  redirect("/learn");
 }

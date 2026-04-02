@@ -1,6 +1,10 @@
 /**
  * Local trial session (e.g. readiness reward: 72h Rabbi + one advanced badge).
  * Server auth/subscription will replace or gate this later.
+ *
+ * `badgeId` should be a specialty **track** id (`news`, `literature`, `spoken`,
+ * `talmudic`, `aramaic`) — see `TRIAL_ADVANCED_BADGE_TRACK_IDS` in
+ * `data/specialty-tracks.ts` — not a tier key like `news:gold`.
  */
 
 export const TRIAL_SESSION_STORAGE_KEY = "hebrew_trial_session_v1";

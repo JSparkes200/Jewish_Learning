@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import type { LearnProgressState } from "@/lib/learn-progress";
 import {
+  buildReviewQueueFocusSections,
   buildStudyReviewQueue,
   findMcqSectionIdForLemma,
 } from "@/lib/study-review-queue";
@@ -12,8 +13,12 @@ import {
 export function StudyReviewQueue({ progress }: { progress: LearnProgressState }) {
   const level = progress.activeLevel;
   const { belowGate, unseen } = useMemo(
-    () => buildStudyReviewQueue(level, progress.vocabLevels),
-    [level, progress.vocabLevels],
+    () => buildStudyReviewQueue(level, progress),
+    [level, progress],
+  );
+  const focusSections = useMemo(
+    () => buildReviewQueueFocusSections(level, progress, 4),
+    [level, progress],
   );
 
   const nBelow = belowGate.length;
@@ -72,6 +77,30 @@ export function StudyReviewQueue({ progress }: { progress: LearnProgressState })
           </span>
         ) : null}
       </div>
+
+      {focusSections.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-ink/10 bg-parchment/70 p-3">
+          <p className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-faint">
+            Focus sections
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {focusSections.map((row) => (
+              <li key={`focus-${row.sectionId}`}>
+                <Link
+                  href={`/learn/${level}/${encodeURIComponent(row.sectionId)}`}
+                  className="inline-flex items-center gap-2 rounded-lg border border-ink/10 px-2 py-1.5 text-[10px] text-ink-muted transition hover:border-sage/40 hover:bg-parchment-deep/25"
+                >
+                  <span className="font-medium text-ink">{row.label}</span>
+                  <span className="text-ink-faint">
+                    {row.total} queued
+                    {row.belowGate > 0 ? ` (${row.belowGate} below gate)` : ""}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {nBelow > 0 ? (
         <ul className="mt-4 space-y-2">

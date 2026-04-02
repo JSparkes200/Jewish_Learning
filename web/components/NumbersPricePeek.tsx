@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import {
   CARDINAL_MASC_0_TO_10,
@@ -8,12 +8,24 @@ import {
 } from "@/data/course-numbers";
 import { speakHebrew } from "@/lib/speech-hebrew";
 
-export function NumbersPricePeek() {
+type PriceProps = {
+  onEngage?: () => void;
+};
+
+export function NumbersPricePeek({ onEngage }: PriceProps) {
   const [n, setN] = useState(() => Math.floor(Math.random() * 10) + 1);
+  const engagedRef = useRef(false);
+
+  const fireEngage = useCallback(() => {
+    if (engagedRef.current) return;
+    engagedRef.current = true;
+    onEngage?.();
+  }, [onEngage]);
 
   const refresh = useCallback(() => {
     setN(Math.floor(Math.random() * 10) + 1);
-  }, []);
+    fireEngage();
+  }, [fireEngage]);
 
   const idx = Math.min(n, 10);
   const he = CARDINAL_MASC_0_TO_10[idx]!;
@@ -44,7 +56,10 @@ export function NumbersPricePeek() {
       <div className="mt-4 flex flex-wrap justify-center gap-2">
         <button
           type="button"
-          onClick={() => speakHebrew(phrase)}
+          onClick={() => {
+            speakHebrew(phrase);
+            fireEngage();
+          }}
           className="rounded-lg border border-sage/35 bg-parchment-card px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink hover:bg-parchment-deep/40"
         >
           🔊 Listen

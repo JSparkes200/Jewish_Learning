@@ -28,6 +28,14 @@ const config: Config = {
         label: ["var(--font-ui)", "system-ui", "sans-serif"],
         body: ["var(--font-ui)", "Georgia", "serif"],
       },
+      boxShadow: {
+        elevated:
+          "6px 8px 22px rgba(44, 36, 22, 0.12), -2px -2px 10px rgba(245, 236, 216, 0.45)",
+        "elevated-lg":
+          "10px 12px 32px rgba(44, 36, 22, 0.14), -2px -2px 12px rgba(245, 236, 216, 0.5)",
+        insetSoft:
+          "inset 3px 3px 8px rgba(44, 36, 22, 0.1), inset -2px -2px 6px rgba(255, 255, 255, 0.45)",
+      },
     },
   },
   plugins: [],

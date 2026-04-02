@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Hebrew } from "@/components/Hebrew";
+import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
+import { DrillPrepGate } from "@/components/DrillPrepGate";
+import { HebrewTapText } from "@/components/HebrewTapText";
 import { McqDrill } from "@/components/McqDrill";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { BRIDGE_UNITS } from "@/data/bridge-course";
@@ -12,6 +14,7 @@ import {
   BRIDGE_TRACK_BLURB,
   BRIDGE_TRACK_TITLE,
 } from "@/data/course-post-foundation";
+import type { GradedPracticeContext } from "@/lib/learn-progress";
 import { meetsFoundationExitPassPercent } from "@/lib/foundation-exit-pass";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
 import {
@@ -32,6 +35,8 @@ import {
   touchDailyStreak,
 } from "@/lib/learn-progress";
 import { useLearnProgressSync } from "@/lib/use-learn-progress-sync";
+import { buildCorrectSentencePackFromMcq } from "@/lib/sentence-correctness";
+import { buildPrepCardsFromMcqPack } from "@/lib/drill-prep";
 
 function bridgeUnitUnlocked(
   state: Parameters<typeof effectiveBridgeUnitsCompleted>[0],
@@ -70,10 +75,10 @@ export function BridgePageClient() {
   const bridgePctLabel = Math.round(BRIDGE_PASS_TARGET_PCT * 100);
 
   const onPracticeAnswer = useCallback(
-    (correct: boolean, ctx?: { promptHe?: string }) => {
+    (correct: boolean, ctx?: GradedPracticeContext) => {
       setProgress((p) => {
         let n = touchDailyStreak(p);
-        n = recordGradedAnswer(n, correct);
+        n = recordGradedAnswer(n, correct, ctx);
         n = recordVocabPracticeForPrompt(n, ctx?.promptHe, correct);
         saveLearnProgress(n);
         return n;
@@ -214,6 +219,11 @@ export function BridgePageClient() {
             {BRIDGE_UNITS.map((unit, idx) => {
               const uOpen = bridgeUnitUnlocked(progress, idx, devBypass);
               const uDone = !!unitsDone[unit.id];
+              const unitSentencePack = buildCorrectSentencePackFromMcq(
+                unit.practicePack,
+                4,
+                4,
+              );
               return (
                 <li key={unit.id}>
                   <div className="rounded-2xl border border-ink/12 bg-parchment-card/90 p-4">
@@ -243,22 +253,36 @@ export function BridgePageClient() {
                       </p>
                     ) : (
                       <>
-                        <Hebrew
-                          as="p"
-                          className="mt-4 text-right text-lg leading-relaxed text-ink"
-                        >
-                          {showNikkud ? unit.he : stripNikkud(unit.he)}
-                        </Hebrew>
+                        <div className="mt-4">
+                          <HebrewTapText
+                            text={showNikkud ? unit.he : stripNikkud(unit.he)}
+                            className="text-lg text-ink"
+                          />
+                        </div>
                         <p className="mt-3 border-t border-ink/10 pt-3 text-sm italic leading-relaxed text-ink-muted">
                           {unit.en}
                         </p>
                         <div className="mt-6 space-y-4">
-                          <McqDrill
-                            key={unit.id}
-                            pack={unit.practicePack}
-                            defaultShowNikkud={false}
-                            onPracticeAnswer={onPracticeAnswer}
-                          />
+                          <DrillPrepGate
+                            title={`${unit.title} prep`}
+                            subtitle="Read, tap-hear, then quiz."
+                            cards={buildPrepCardsFromMcqPack(unit.practicePack, 5)}
+                            ctaLabel="Start unit drills"
+                          >
+                            <McqDrill
+                              key={unit.id}
+                              pack={unit.practicePack}
+                              defaultShowNikkud={false}
+                              skillTags={["grammar", "definition", "recognition"]}
+                              onPracticeAnswer={onPracticeAnswer}
+                            />
+                            {unitSentencePack ? (
+                              <CorrectSentenceDrill
+                                pack={unitSentencePack}
+                                onPracticeAnswer={onPracticeAnswer}
+                              />
+                            ) : null}
+                          </DrillPrepGate>
                           {!uDone ? (
                             <button
                               type="button"
@@ -313,23 +337,31 @@ export function BridgePageClient() {
                   {bridgePctLabel}%.
                 </p>
                 <div className="mt-4">
-                  <McqDrill
-                    pack={BRIDGE_FINAL_EXAM_PACK}
-                    defaultShowNikkud={false}
-                    onPracticeAnswer={onPracticeAnswer}
-                    endHint={
-                      lastBridgeAttempt
-                        ? meetsFoundationExitPassPercent(
-                            lastBridgeAttempt.correct,
-                            lastBridgeAttempt.total,
-                            BRIDGE_PASS_TARGET_PCT,
-                          )
-                          ? `Score meets ${bridgePctLabel}% — bridge complete.`
-                          : `Score ${lastBridgeAttempt.correct}/${lastBridgeAttempt.total}. Need at least ${Math.ceil(BRIDGE_PASS_TARGET_PCT * lastBridgeAttempt.total - 1e-9)} of ${lastBridgeAttempt.total} for ${bridgePctLabel}%.`
-                        : `Scores at or above ${bridgePctLabel}% pass the bridge checkpoint.`
-                    }
-                    onPackComplete={onBridgePackComplete}
-                  />
+                  <DrillPrepGate
+                    title="Bridge final prep"
+                    subtitle="Quick review before the checkpoint exam."
+                    cards={buildPrepCardsFromMcqPack(BRIDGE_FINAL_EXAM_PACK, 6)}
+                    ctaLabel="Start final checkpoint"
+                  >
+                    <McqDrill
+                      pack={BRIDGE_FINAL_EXAM_PACK}
+                      defaultShowNikkud={false}
+                      skillTags={["grammar", "comprehension", "definition", "recognition"]}
+                      onPracticeAnswer={onPracticeAnswer}
+                      endHint={
+                        lastBridgeAttempt
+                          ? meetsFoundationExitPassPercent(
+                              lastBridgeAttempt.correct,
+                              lastBridgeAttempt.total,
+                              BRIDGE_PASS_TARGET_PCT,
+                            )
+                            ? `Score meets ${bridgePctLabel}% — bridge complete.`
+                            : `Score ${lastBridgeAttempt.correct}/${lastBridgeAttempt.total}. Need at least ${Math.ceil(BRIDGE_PASS_TARGET_PCT * lastBridgeAttempt.total - 1e-9)} of ${lastBridgeAttempt.total} for ${bridgePctLabel}%.`
+                          : `Scores at or above ${bridgePctLabel}% pass the bridge checkpoint.`
+                      }
+                      onPackComplete={onBridgePackComplete}
+                    />
+                  </DrillPrepGate>
                 </div>
                 {lastBridgeAttempt &&
                 !meetsFoundationExitPassPercent(

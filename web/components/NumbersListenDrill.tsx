@@ -6,6 +6,7 @@ import {
   CARDINAL_MASC_0_TO_10,
   ROMAN_0_TO_10,
 } from "@/data/course-numbers";
+import type { GradedPracticeContext } from "@/lib/learn-progress";
 import { speakHebrew } from "@/lib/speech-hebrew";
 
 function shuffle<T>(arr: T[]): T[] {
@@ -44,7 +45,7 @@ function buildRound(): {
 type Props = {
   onPracticeAnswer?: (
     correct: boolean,
-    context?: { promptHe?: string },
+    context?: GradedPracticeContext,
   ) => void;
 };
 
@@ -66,7 +67,11 @@ export function NumbersListenDrill({ onPracticeAnswer }: Props) {
       if (picked != null) return;
       setPicked(j);
       const ok = j === round.correctIndex;
-      onPracticeAnswer?.(ok, { promptHe: round.correctHe });
+      onPracticeAnswer?.(ok, {
+        promptHe: round.correctHe,
+        skills: ["listening", "recognition", "definition"],
+        numbersHubEngageId: "listen",
+      });
     },
     [picked, round.correctIndex, round.correctHe, onPracticeAnswer],
   );
