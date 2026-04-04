@@ -43,6 +43,7 @@ const NAV_PRIMARY = [
   { href: "/", label: "Home" },
   { href: "/learn", label: "Learn" },
   { href: "/progress", label: "Progress" },
+  { href: "/settings", label: "Settings" },
 ] as const;
 
 /** Drills, reading, and parallel tracks. */
@@ -486,13 +487,22 @@ function ShellInner({ children }: { children: ReactNode }) {
                 עִבְרִית
               </Hebrew>
               {displayName ? (
-                <span
-                  className="max-w-[7rem] truncate font-label text-[9px] uppercase tracking-wide text-ink-muted"
-                  title={displayName}
+                <Link
+                  href="/settings"
+                  className="max-w-[7rem] truncate font-label text-[9px] uppercase tracking-wide text-ink-muted underline decoration-ink/20 underline-offset-2 transition hover:text-sage hover:decoration-sage/40"
+                  title={`${displayName} — open settings`}
                 >
                   {displayName}
-                </span>
-              ) : null}
+                </Link>
+              ) : (
+                <Link
+                  href="/settings"
+                  className="font-label text-[9px] uppercase tracking-wide text-ink-faint underline decoration-ink/15 underline-offset-2 transition hover:text-sage hover:decoration-sage/30"
+                  title="Settings and local profile"
+                >
+                  Account
+                </Link>
+              )}
             </div>
 
             <button

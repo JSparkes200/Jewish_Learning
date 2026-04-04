@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { setDeveloperModeBypass } from "@/lib/developer-mode";
 
@@ -109,6 +110,14 @@ export function DeveloperAuthPanel() {
         <div className="mt-3">
           <p className="text-sm text-sage">
             Developer session active — progression gates are bypassed.
+          </p>
+          <p className="mt-2">
+            <Link
+              href="/developer/tools"
+              className="font-label text-[10px] font-semibold uppercase tracking-[0.14em] text-sage underline decoration-sage/40 underline-offset-4 hover:decoration-sage"
+            >
+              Open developer tools
+            </Link>
           </p>
           <button
             type="button"

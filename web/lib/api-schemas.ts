@@ -23,3 +23,13 @@ export const validateHebrewPassageBodySchema = z.object({
 export const progressPutBodySchema = z.object({
   progress: z.record(z.string(), z.any()),
 });
+
+/** POST /api/rabbi */
+export const rabbiBodySchema = z.object({
+  targetHe: z.string().min(1).max(500),
+  level: z.enum(["beginner", "intermediate", "advanced"]),
+  translit: z.string().max(500).optional(),
+  meaningEn: z.string().max(2000).optional(),
+  /** Optional pre-fetched LightRAG text (e.g. from CLI); skips server-side Python */
+  ragContext: z.string().max(120_000).optional(),
+});

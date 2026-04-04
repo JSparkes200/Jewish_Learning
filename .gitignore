@@ -2,5 +2,36 @@
 *.log
 node_modules/
 
+# Local secrets (LightRAG ingest, local tooling). Never commit.
+.env
+.env.local
+
+# LightRAG working directory (graphs, vector DB files)
+knowledge_store/
+
+# Generated Markdown corpus for RAG (regenerate with `npm run export:knowledge` in web/)
+knowledge/exported/
+
 # Python venvs (content pipeline tools)
 tools/hebrew-content-pipeline/.venv/
+__pycache__/
+*.py[cod]
+
+
+# Local IDE / agent tooling (not part of the app)
+.agent/
+.claude/
+.codebuddy/
+.codex/
+.continue/
+.cursor/
+.gemini/
+.kiro/
+.opencode/
+.qoder/
+.roo/
+.trae/
+.windsurf/
+
+# Local API test output
+web/rabbi-out.md

@@ -104,6 +104,15 @@ export type LearnProgressState = {
   numbersCarouselLastOpenedAt?: Record<string, number>;
   /** Numbers hub: user has practised this drill at least once (clears “try it” dot). */
   numbersDrillEngaged?: Record<string, boolean>;
+  /**
+   * Lifetime count of graded drill answers (first click per question), aligned
+   * with legacy `learner.total` in `hebrew-v8.2.html`.
+   */
+  lessonAnswerTotal?: number;
+  /**
+   * Per-mode correct/wrong tallies for Study-style games (legacy `learner.gt`).
+   */
+  studyGameStats?: Record<string, { correct: number; wrong: number }>;
 };
 
 export type SkillMetricKey =
@@ -134,6 +143,82 @@ export const SKILL_METRIC_LABELS: Record<SkillMetricKey, string> = {
   listening: "Listening",
   comprehension: "Comprehension",
 };
+
+/** Legacy dashboard game rows (`rDash` / `mkL().gt` in `hebrew-v8.2.html`) + Next-only `sent`. */
+export const DASHBOARD_GAME_IDS = [
+  "mc",
+  "fill",
+  "tap",
+  "match",
+  "trans",
+  "img",
+  "num",
+  "roots",
+  "gram",
+  "sent",
+] as const;
+
+export type DashboardGameId = (typeof DASHBOARD_GAME_IDS)[number];
+
+const DASHBOARD_GAME_ID_SET = new Set<string>(DASHBOARD_GAME_IDS);
+
+export const FLUENCY_TARGET_WORDS = 15_000;
+
+/** Cap for `lessonAnswerTotal` (import merges / sanitization use the same). */
+export const LESSON_ANSWER_TOTAL_CAP = 500_000;
+
+export function countWordsMasteredForFluency(
+  vocabLevels: Record<string, number> | undefined,
+): number {
+  return Object.values(vocabLevels ?? {}).filter((lv) => lv >= 3).length;
+}
+
+/** 0–100 for the legacy fluency bar (`fluencyPct` in HTML). */
+export function fluencyBarPercent(
+  vocabLevels: Record<string, number> | undefined,
+): number {
+  const mastered = countWordsMasteredForFluency(vocabLevels);
+  return Math.min(100, (mastered / FLUENCY_TARGET_WORDS) * 100);
+}
+
+export function fluencyTierLabel(percent: number): string {
+  if (percent < 1) return "Absolute beginner";
+  if (percent < 5) return "Beginner";
+  if (percent < 15) return "Elementary";
+  if (percent < 30) return "Pre-intermediate";
+  if (percent < 50) return "Intermediate";
+  if (percent < 70) return "Upper-intermediate";
+  if (percent < 85) return "Advanced";
+  if (percent < 95) return "Proficient";
+  return "Fluent";
+}
+
+export function dashboardGameShortLabel(id: string): string {
+  switch (id) {
+    case "mc":
+      return "MC";
+    case "fill":
+      return "Fill";
+    case "tap":
+      return "Tap";
+    case "match":
+      return "Match";
+    case "trans":
+      return "Trans";
+    case "img":
+      return "Emoji";
+    case "num":
+      return "Nums";
+    case "roots":
+      return "Roots";
+    case "gram":
+      return "Gram";
+    case "sent":
+      return "Sent";
+    default:
+      return id;
+  }
+}
 
 const defaultState: LearnProgressState = {
   completedSections: {},
@@ -670,6 +755,35 @@ function parseNonNegInt(x: unknown): number | undefined {
   return Math.floor(x);
 }
 
+export function parseLessonAnswerTotalField(
+  raw: unknown,
+): number | undefined {
+  const n = parseNonNegInt(raw);
+  if (n == null || n === 0) return undefined;
+  return Math.min(n, LESSON_ANSWER_TOTAL_CAP);
+}
+
+export function parseStudyGameStats(
+  raw: unknown,
+): Record<string, { correct: number; wrong: number }> | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  const out: Record<string, { correct: number; wrong: number }> = {};
+  for (const id of DASHBOARD_GAME_IDS) {
+    const v = o[id];
+    if (!v || typeof v !== "object") continue;
+    const rec = v as Record<string, unknown>;
+    const c = parseNonNegInt(rec.correct);
+    const w = parseNonNegInt(rec.wrong);
+    if (c == null && w == null) continue;
+    out[id] = {
+      correct: Math.min(c ?? 0, 1_000_000),
+      wrong: Math.min(w ?? 0, 1_000_000),
+    };
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /** Normalize stored `vocabLevels` from JSON / backup. */
 export function parseVocabLevelsField(
   v: unknown,
@@ -839,6 +953,8 @@ export type GradedPracticeContext = {
   skills?: SkillMetricKey[];
   /** Numbers hub drill id (`cards` | `listen` | `ordinal` | …) for carousel engagement. */
   numbersHubEngageId?: string;
+  /** Legacy `learner.gt` bucket (dashboard game accuracy row). */
+  studyGameId?: DashboardGameId;
 };
 
 /**
@@ -907,10 +1023,27 @@ export function recordGradedAnswer(
       lemmaSkillMetrics[lemma!] = lemmaMap;
     }
   }
+  const lessonAnswerTotal = Math.min(
+    LESSON_ANSWER_TOTAL_CAP,
+    (state.lessonAnswerTotal ?? 0) + 1,
+  );
+  let studyGameStats = state.studyGameStats;
+  const gid = ctx?.studyGameId;
+  if (gid && DASHBOARD_GAME_ID_SET.has(gid)) {
+    const cur = { ...(studyGameStats ?? {}) };
+    const prev = cur[gid] ?? { correct: 0, wrong: 0 };
+    cur[gid] = {
+      correct: prev.correct + (correct ? 1 : 0),
+      wrong: prev.wrong + (correct ? 0 : 1),
+    };
+    studyGameStats = cur;
+  }
   return {
     ...state,
     mcqAttempts: attempts,
     mcqCorrect: right,
+    lessonAnswerTotal,
+    ...(studyGameStats ? { studyGameStats } : {}),
     skillMetrics,
     ...(canTrackLemma ? { lemmaSkillMetrics } : {}),
   };
@@ -1094,6 +1227,15 @@ export function loadLearnProgress(): LearnProgressState {
       p.numbersCarouselLastOpenedAt,
     );
     const numbersDrillEngaged = parseNumbersDrillEngaged(p.numbersDrillEngaged);
+    let lessonAnswerTotal = parseLessonAnswerTotalField(p.lessonAnswerTotal);
+    if (
+      (lessonAnswerTotal == null || lessonAnswerTotal === 0) &&
+      mcqAttempts != null &&
+      mcqAttempts > 0
+    ) {
+      lessonAnswerTotal = Math.min(LESSON_ANSWER_TOTAL_CAP, mcqAttempts);
+    }
+    const studyGameStats = parseStudyGameStats(p.studyGameStats);
 
     return {
       completedSections:
@@ -1130,6 +1272,10 @@ export function loadLearnProgress(): LearnProgressState {
         ? { numbersCarouselLastOpenedAt }
         : {}),
       ...(numbersDrillEngaged ? { numbersDrillEngaged } : {}),
+      ...(lessonAnswerTotal != null && lessonAnswerTotal > 0
+        ? { lessonAnswerTotal }
+        : {}),
+      ...(studyGameStats ? { studyGameStats } : {}),
     };
   } catch {
     return { ...defaultState };

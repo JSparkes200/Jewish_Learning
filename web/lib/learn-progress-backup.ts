@@ -18,6 +18,7 @@ import {
   parseBridgeUnitsCompleted,
   parseFoundationExit,
   mergeSpecialtyTierPassedMaps,
+  parseLessonAnswerTotalField,
   parseNumbersCarouselLastOpenedAt,
   parseNumbersDrillEngaged,
   parseReadingCarouselRevealed,
@@ -26,18 +27,26 @@ import {
   parseRootDrillField,
   parseSpecialtyTierPassed,
   parseStreakFromJson,
+  parseStudyGameStats,
   parseVocabLevelsField,
+  DASHBOARD_GAME_IDS,
+  LESSON_ANSWER_TOTAL_CAP,
   type LearnProgressState,
   type LearnStreak,
 } from "@/lib/learn-progress";
 import type { YiddishProgressState } from "@/lib/yiddish-progress";
+import type { SavedWordEntry } from "@/lib/saved-words";
+import { mergeSavedWordLists, sanitizeSavedWordsFromJson } from "@/lib/saved-words";
 import { sanitizeYiddishProgress } from "@/lib/yiddish-progress";
 
 /** Legacy single-blob export (Learn only). */
 const SCHEMA_VERSION = 1;
 
-/** App-wide backup: Hebrew course + optional Yiddish. */
-export const APP_BACKUP_SCHEMA_VERSION = 2;
+/** Current app-wide backup: Hebrew + optional Yiddish + optional saved words (Phase A). */
+export const APP_BACKUP_SCHEMA_VERSION = 3;
+
+/** Older exports without {@link AppProgressExportV2.savedWords}. */
+export const APP_BACKUP_SCHEMA_VERSION_V2 = 2;
 
 export type LearnProgressExportFile = {
   schemaVersion: number;
@@ -46,11 +55,13 @@ export type LearnProgressExportFile = {
 };
 
 export type AppProgressExportV2 = {
-  schemaVersion: typeof APP_BACKUP_SCHEMA_VERSION;
+  schemaVersion: typeof APP_BACKUP_SCHEMA_VERSION | typeof APP_BACKUP_SCHEMA_VERSION_V2;
   exportedAt: string;
   progress: LearnProgressState;
   /** Omitted or empty when learner has not started Yiddish. */
   yiddishProgress?: YiddishProgressState;
+  /** Migrated legacy bookmarks (`ivrit_saved`); schema 3 only. */
+  savedWords?: SavedWordEntry[];
 };
 
 function knownSectionIds(): Set<string> {
@@ -156,6 +167,12 @@ export function sanitizeLearnProgress(
 
   const nde = parseNumbersDrillEngaged(raw.numbersDrillEngaged);
   if (nde) out.numbersDrillEngaged = nde;
+
+  const lat = parseLessonAnswerTotalField(raw.lessonAnswerTotal);
+  if (lat != null && lat > 0) out.lessonAnswerTotal = lat;
+
+  const sgs = parseStudyGameStats(raw.studyGameStats);
+  if (sgs) out.studyGameStats = sgs;
 
   return out;
 }
@@ -381,6 +398,28 @@ export function mergeLearnProgressStates(
     out.numbersDrillEngaged = mergedNde;
   }
 
+  const lt = (base.lessonAnswerTotal ?? 0) + (other.lessonAnswerTotal ?? 0);
+  if (lt > 0) {
+    out.lessonAnswerTotal = Math.min(LESSON_ANSWER_TOTAL_CAP, lt);
+  }
+
+  const mergedGames: Record<string, { correct: number; wrong: number }> = {};
+  for (const id of DASHBOARD_GAME_IDS) {
+    const a = base.studyGameStats?.[id];
+    const b = other.studyGameStats?.[id];
+    if (!a && !b) continue;
+    mergedGames[id] = {
+      correct: Math.min(
+        1_000_000,
+        (a?.correct ?? 0) + (b?.correct ?? 0),
+      ),
+      wrong: Math.min(1_000_000, (a?.wrong ?? 0) + (b?.wrong ?? 0)),
+    };
+  }
+  if (Object.keys(mergedGames).length > 0) {
+    out.studyGameStats = mergedGames;
+  }
+
   return out;
 }
 
@@ -399,31 +438,48 @@ export function stringifyLearnProgressExport(current: LearnProgressState): strin
 export function buildAppProgressExport(
   progress: LearnProgressState,
   yiddish: YiddishProgressState,
+  savedWords?: SavedWordEntry[],
 ): AppProgressExportV2 {
   const hasYiddish =
     Object.keys(yiddish.completedSections).length > 0;
+  const sw =
+    savedWords && savedWords.length > 0
+      ? mergeSavedWordLists([], savedWords)
+      : undefined;
   return {
     schemaVersion: APP_BACKUP_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     progress,
     ...(hasYiddish ? { yiddishProgress: yiddish } : {}),
+    ...(sw && sw.length ? { savedWords: sw } : {}),
   };
 }
 
 export function stringifyAppProgressExport(
   progress: LearnProgressState,
   yiddish: YiddishProgressState,
+  savedWords?: SavedWordEntry[],
 ): string {
-  return JSON.stringify(buildAppProgressExport(progress, yiddish), null, 2);
+  return JSON.stringify(
+    buildAppProgressExport(progress, yiddish, savedWords),
+    null,
+    2,
+  );
 }
 
 export type ParseAppProgressResult =
-  | { ok: true; progress: LearnProgressState; yiddish?: YiddishProgressState }
+  | {
+      ok: true;
+      progress: LearnProgressState;
+      yiddish?: YiddishProgressState;
+      /** Set only for schema 3 when `savedWords` key exists in JSON. */
+      savedWords?: SavedWordEntry[];
+    }
   | { ok: false; error: string };
 
 /**
- * Accepts schema v2 (Hebrew + optional Yiddish) or legacy v1 Learn-only
- * wrappers from {@link parseLearnProgressJson}.
+ * Accepts app backup schema v2/v3 (Hebrew + optional Yiddish + optional savedWords on v3)
+ * or legacy v1 Learn-only wrappers from {@link parseLearnProgressJson}.
  */
 export function parseAppProgressJson(text: string): ParseAppProgressResult {
   let parsed: unknown;
@@ -436,10 +492,11 @@ export function parseAppProgressJson(text: string): ParseAppProgressResult {
     return { ok: false, error: "JSON root must be an object." };
   }
   const root = parsed as Record<string, unknown>;
-  if (root.schemaVersion === APP_BACKUP_SCHEMA_VERSION) {
+  const sv = root.schemaVersion;
+  if (sv === APP_BACKUP_SCHEMA_VERSION || sv === APP_BACKUP_SCHEMA_VERSION_V2) {
     const pr = root.progress;
     if (!pr || typeof pr !== "object") {
-      return { ok: false, error: "Missing progress (schema v2)." };
+      return { ok: false, error: "Missing progress (app backup)." };
     }
     const progress = sanitizeLearnProgress(pr as Record<string, unknown>);
     const yRaw = root.yiddishProgress;
@@ -447,7 +504,12 @@ export function parseAppProgressJson(text: string): ParseAppProgressResult {
     if (yRaw && typeof yRaw === "object") {
       yiddish = sanitizeYiddishProgress(yRaw as Record<string, unknown>);
     }
-    return { ok: true, progress, yiddish };
+    let savedWords: SavedWordEntry[] | undefined;
+    if (sv === APP_BACKUP_SCHEMA_VERSION && "savedWords" in root) {
+      const parsedWords = sanitizeSavedWordsFromJson(root.savedWords);
+      savedWords = parsedWords ?? [];
+    }
+    return { ok: true, progress, yiddish, savedWords };
   }
   const legacy = parseLearnProgressJson(text);
   if (!legacy.ok) return legacy;

@@ -3,9 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
+import { SaveWordButton } from "@/components/SaveWordButton";
 import type { McqDrillPack } from "@/data/section-drill-types";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
-import type { GradedPracticeContext, SkillMetricKey } from "@/lib/learn-progress";
+import type {
+  DashboardGameId,
+  GradedPracticeContext,
+  SkillMetricKey,
+} from "@/lib/learn-progress";
 import { buildInlineMcqChoices } from "@/lib/mcq-inline-choices";
 
 function hasHebrew(s: string): boolean {
@@ -46,6 +51,10 @@ type McqDrillProps = {
   onPackComplete?: (result: { correct: number; total: number }) => void;
   /** Skill dimensions this drill should train. */
   skillTags?: SkillMetricKey[];
+  /**
+   * Progress dashboard bucket (defaults to `mc` for course + study multiple choice).
+   */
+  studyGameId?: DashboardGameId;
 };
 
 export function McqDrill({
@@ -57,6 +66,7 @@ export function McqDrill({
   defaultShowNikkud = true,
   onPackComplete,
   skillTags,
+  studyGameId = "mc",
 }: McqDrillProps) {
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -166,12 +176,13 @@ export function McqDrill({
       onPracticeAnswer?.(choice === item.correctEn, {
         promptHe: item.promptHe,
         skills: skillTags,
+        studyGameId,
       });
       if (choice === item.correctEn) {
         setCorrectCount((c) => c + 1);
       }
     },
-    [item, picked, onPracticeAnswer, choicesBusy, skillTags],
+    [item, picked, onPracticeAnswer, choicesBusy, skillTags, studyGameId],
   );
 
   const next = useCallback(() => {
@@ -249,12 +260,20 @@ export function McqDrill({
       </div>
 
       {hasHebrew(item.promptHe) ? (
-        <Hebrew
-          as="p"
-          className="mt-4 text-right text-xl font-medium leading-relaxed text-ink"
-        >
-          {promptDisplay}
-        </Hebrew>
+        <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+          <Hebrew
+            as="p"
+            className="min-w-0 flex-1 text-right text-xl font-medium leading-relaxed text-ink"
+          >
+            {promptDisplay}
+          </Hebrew>
+          <SaveWordButton
+            variant="compact"
+            he={item.promptHe}
+            en={hasHebrew(item.correctEn) ? undefined : item.correctEn}
+            className="shrink-0"
+          />
+        </div>
       ) : (
         <p className="mt-4 text-lg font-medium leading-relaxed text-ink">
           {promptDisplay}

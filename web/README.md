@@ -70,10 +70,13 @@ Set **`NEXT_PUBLIC_SITE_URL`** (see `.env.example`) on Vercel for correct Open G
 | Route | Env vars | Data in repo |
 | --- | --- | --- |
 | `POST /api/mcq-choices` | None | `data/corpus-d.ts` (regenerate: `npm run extract:corpus-d`) |
-| `POST /api/auth/request-reset` | `AUTH_RESET_EMAIL_MAP`, optional `RESEND_*`, `DEMO_RESET_CODE` | Template: `data/auth-reset-email-map.example.json` (real map only on Vercel) |
-| `POST /api/auth/confirm-reset` | `KV_REST_API_URL` + `KV_REST_API_TOKEN` recommended | — |
+| `POST /api/auth/request-reset` | `AUTH_RESET_EMAIL_MAP`, optional `RESEND_*`, `DEMO_RESET_CODE`, optional `AUTH_CORS_ORIGINS` | Template: `data/auth-reset-email-map.example.json` (real map only on Vercel). **Production** returns **503** without KV. |
+| `POST /api/auth/confirm-reset` | Same KV + CORS as request-reset | — |
+| Sentry | Optional `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, build-time `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` | Error reporting + optional source maps |
 
 **Full Vercel checklist:** [`docs/vercel-environment.md`](../docs/vercel-environment.md) (what to add in the dashboard; nothing auto-uploads from Git except your code).
+
+**Legacy → Next backup (Phase A):** [`docs/legacy-retirement-plan.md`](../docs/legacy-retirement-plan.md) — `npm run merge:legacy-backup` in `web/` merges a localStorage JSON dump into schema **v3** (optional `savedWords`, library file). Example dump: [`docs/legacy-localstorage-dump.example.json`](../docs/legacy-localstorage-dump.example.json).
 
 ## Password reset API (optional)
 

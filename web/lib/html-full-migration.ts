@@ -87,7 +87,7 @@ export const HTML_FULL_MIGRATION_WORKSTREAMS: readonly HtmlMigrationWorkstream[]
       label: "Study / practice / review queue",
       legacyRef: "`rReviewHub`, `rPractice`, `rReview`, `learner.rq`, `gt` games",
       detail:
-        "Study hub: streak, next-up, MCQ tallies, review queue, practice grid — MC + fill-in modals (corpus pool); tap/match/trans/img/gram still HTML-only. Optional: `gt` stats strip per mode.",
+        "Study hub: streak, next-up, MCQ tallies, review queue, practice grid — modals include MC, fill, tap, correct sentence, match, translate, word+emoji, grammar (`StudyPracticeGames`). Optional: legacy `gt` stats strip per game type.",
       suggestedOrder: 4,
       weight: 10,
       status: "partial",
@@ -186,7 +186,7 @@ export const HTML_FULL_MIGRATION_WORKSTREAMS: readonly HtmlMigrationWorkstream[]
       label: "Grammar exercise sets (`GRAM`)",
       legacyRef: "`GRAM` exercises in HTML",
       detail:
-        "Not in Next as first-class drills; some grammar touched via MCQ themes only.",
+        "Legacy embedded `GRAM` sets in HTML; Next has grammar mode in Study (`grammar-drills.ts`) — parity with every legacy GRAM exercise not guaranteed.",
       suggestedOrder: 11,
       weight: 5,
       status: "not_started",

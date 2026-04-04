@@ -32,6 +32,20 @@ export async function saveResetCodeHash(
   mem.set(u, { hash: codeHash, exp: Date.now() + ex * 1000 });
 }
 
+export async function deleteResetCodeHash(username: string): Promise<void> {
+  const u = username.toLowerCase().trim();
+  if (kvConfigured()) {
+    try {
+      const { kv } = await import("@vercel/kv");
+      await kv.del(KEY(u));
+      return;
+    } catch {
+      /* fall through */
+    }
+  }
+  mem.delete(u);
+}
+
 export async function consumeResetCodeHash(
   username: string,
   codeHash: string,

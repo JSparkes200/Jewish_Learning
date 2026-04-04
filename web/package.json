@@ -12,15 +12,20 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "extract:corpus-d": "node scripts/extract-corpus-d.mjs",
-    "validate:hebrew-passage": "tsx scripts/validate-hebrew-passage.ts"
+    "validate:hebrew-passage": "tsx scripts/validate-hebrew-passage.ts",
+    "merge:legacy-backup": "tsx scripts/merge-legacy-to-app-backup.ts",
+    "export:knowledge": "tsx scripts/export-knowledge.ts"
   },
   "dependencies": {
     "@hebcal/core": "^4.5.1",
+    "@sentry/nextjs": "^10.47.0",
     "@upstash/ratelimit": "^2.0.8",
     "@vercel/kv": "^3.0.0",
     "next": "^15.1.7",
+    "openai": "^6.33.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

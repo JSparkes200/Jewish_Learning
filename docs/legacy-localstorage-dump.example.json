@@ -1,0 +1,9 @@
+{
+  "_comment": "Example: export from browser after running a snippet that copies localStorage to JSON. Values may be strings (as stored) or parsed objects.",
+  "ivrit_session_v1": "learner1",
+  "ivrit_lr__learner1": "{\"completedSections\":{\"1-read\":true},\"streak\":{\"current\":2,\"longest\":5,\"lastDay\":\"2026-04-01\"},\"vocab\":{\"שָׁלוֹם\":{\"lv\":3}}}",
+  "ivrit_lv__learner1": "2",
+  "ivrit_lib__learner1": "[{\"id\":\"p1\",\"label\":\"My verse\",\"h\":\"בְּרֵאשִׁית\",\"e\":\"In the beginning\"}]",
+  "ivrit_saved__learner1": "[{\"h\":\"שָׁלוֹם\",\"p\":\"shalom\",\"e\":\"peace, hello\",\"col\":\"hey there\"}]",
+  "ivrit_openai_key__learner1": "REPLACE_WITH_VERCEL_OPENAI_API_KEY"
+}

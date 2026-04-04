@@ -1,24 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimitIfExceeded } from "@/lib/api-rate-limit";
+import { authCorsHeaders, isAuthCorsBlocked } from "@/lib/auth-cors";
 import { consumeResetCodeHash } from "@/lib/pw-reset-store";
 import { sha256Hex } from "@/lib/sha256-hex";
 
-const corsHeaders: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
-
-export function OPTIONS() {
-  return new NextResponse(null, { headers: corsHeaders });
+export function OPTIONS(req: NextRequest) {
+  const h = authCorsHeaders(req);
+  if (isAuthCorsBlocked(req)) {
+    return new NextResponse(null, { status: 403, headers: h });
+  }
+  return new NextResponse(null, { headers: h });
 }
 
 export async function POST(req: NextRequest) {
+  const cors = authCorsHeaders(req);
+  if (isAuthCorsBlocked(req)) {
+    return new NextResponse(null, { status: 403, headers: cors });
+  }
+
   const limited = await rateLimitIfExceeded(req, "auth");
   if (limited) {
+    const retry = limited.headers.get("Retry-After");
+    const headers: Record<string, string> = { ...cors };
+    if (retry) headers["Retry-After"] = retry;
     return NextResponse.json(
       { error: "Too many requests. Try again shortly." },
-      { status: 429, headers: corsHeaders },
+      { status: 429, headers },
     );
   }
 
@@ -28,7 +35,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON" },
-      { status: 400, headers: corsHeaders },
+      { status: 400, headers: cors },
     );
   }
 
@@ -41,13 +48,13 @@ export async function POST(req: NextRequest) {
   if (!u || !code) {
     return NextResponse.json(
       { error: "Missing fields" },
-      { status: 400, headers: corsHeaders },
+      { status: 400, headers: cors },
     );
   }
   if (np.length < 6) {
     return NextResponse.json(
       { error: "Password should be at least 6 characters" },
-      { status: 400, headers: corsHeaders },
+      { status: 400, headers: cors },
     );
   }
 
@@ -56,9 +63,9 @@ export async function POST(req: NextRequest) {
   if (!ok) {
     return NextResponse.json(
       { error: "Invalid or expired code" },
-      { status: 400, headers: corsHeaders },
+      { status: 400, headers: cors },
     );
   }
 
-  return NextResponse.json({ ok: true }, { headers: corsHeaders });
+  return NextResponse.json({ ok: true }, { headers: cors });
 }

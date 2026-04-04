@@ -71,6 +71,7 @@ export function NumbersListenDrill({ onPracticeAnswer }: Props) {
         promptHe: round.correctHe,
         skills: ["listening", "recognition", "definition"],
         numbersHubEngageId: "listen",
+        studyGameId: "num",
       });
     },
     [picked, round.correctIndex, round.correctHe, onPracticeAnswer],

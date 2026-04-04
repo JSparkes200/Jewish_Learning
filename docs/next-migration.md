@@ -34,7 +34,7 @@
 
 - [x] Scaffold `web/` (package.json, Tailwind, TS, ESLint).
 - [x] Home shell + routes: `/learn`, `/study`, `/library`, `/progress`, `/developer`.
-- [x] Shared **`AppShell`** + hamburger **main nav** (matches legacy tabs).
+- [x] Shared **`AppShell`** + hamburger **main nav** (matches legacy tabs). Developer entry: **`/developer`** (sign-in); full tools **`/developer/tools`** (server-gated in production when dev env is set).
 - [x] **Modal layer** (`openModal` / `closeModal` via `useAppShell()`).
 - [x] **Next up** bar (collapsed FAB / expanded strip; hidden on `/`; default suggestion → Learn).
 - [x] Wire Next up from Learn progress (`getNextLearnUp` + `hebrew-web-learn-progress` event); persist expanded preference (`hebrew-web-next-up-expanded`).
@@ -50,6 +50,10 @@
 - [x] **Rabbi:** header **?** → modal with route-based tips (`lib/rabbi-tips.ts` + `RabbiTipBody`).
 - [x] **PWA-ish:** `app/manifest.ts`, `public/hebrew-icon.svg`, `app/icon.tsx`, `appleWebApp` metadata (install / home-screen friendly).
 - [x] **Service worker (prod):** `public/sw.js` caches `/_next/static/*` only; `ServiceWorkerRegister` skips in dev.
+
+## Legacy HTML retirement
+
+Detailed gap analysis, phased cutover, and post-retirement auth/storage model: **[legacy-retirement-plan.md](./legacy-retirement-plan.md)**.
 
 ## Open questions (answer when ready)
 

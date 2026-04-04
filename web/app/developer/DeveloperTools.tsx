@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CorpusDPreview } from "@/components/CorpusDPreview";
+import { DeveloperLexiconBrowse } from "@/components/DeveloperLexiconBrowse";
+import { DeveloperLegacyHtmlTools } from "@/components/DeveloperLegacyHtmlTools";
 import { PassageValidatorPanel } from "@/components/PassageValidatorPanel";
 import { DeveloperAuthPanel } from "./DeveloperAuthPanel";
 import { HtmlMigrationTracker } from "@/components/HtmlMigrationTracker";
@@ -78,6 +80,11 @@ import {
   getOrCreateCloudSyncToken,
   regenerateCloudSyncToken,
 } from "@/lib/cloud-sync-token";
+import {
+  loadSavedWords,
+  mergeSavedWordLists,
+  saveSavedWords,
+} from "@/lib/saved-words";
 
 export function DeveloperTools() {
   const drillCount = SECTION_IDS_WITH_MCQ.length;
@@ -192,6 +199,8 @@ export function DeveloperTools() {
       <DeveloperAuthPanel />
       <PassageValidatorPanel />
       <CorpusDPreview />
+      <DeveloperLexiconBrowse />
+      <DeveloperLegacyHtmlTools />
 
       <div className="rounded-xl border border-ink/12 border-t-rust/20 bg-parchment-card/80 p-4">
         <h3 className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
@@ -736,17 +745,23 @@ export function DeveloperTools() {
           JSON backup (this app)
         </h3>
         <p className="mt-2 text-xs text-ink-muted">
-          Download <strong className="text-ink">schema v2</strong>: Hebrew (
+          Download <strong className="text-ink">schema v3</strong>: Hebrew (
           <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
             {LEARN_PROGRESS_KEY}
           </code>
-          ) plus optional Yiddish (
+          ), optional Yiddish (
           <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
             hebrew-web-yiddish-v1
           </code>
-          ) when you have Yiddish completions. Legacy v1 Learn-only files still
-          import. Merge unions section completions and specialty tiers; Yiddish
-          sections union on merge. Replace overwrites both stores.
+          ), and optional saved words (
+          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
+            hebrew-web-saved-words-v1
+          </code>
+          ) from legacy <code className="text-[11px]">ivrit_saved</code> merges.
+          v2 backups still import. Merge unions progress; Yiddish sections union;
+          saved words merge by Hebrew/translit/gloss. Replace overwrites Hebrew,
+          Yiddish, and saved words only when the file includes a{" "}
+          <code className="text-[11px]">savedWords</code> array (v3).
         </p>
         {backupFeedback ? (
           <p
@@ -764,6 +779,7 @@ export function DeveloperTools() {
               const json = stringifyAppProgressExport(
                 loadLearnProgress(),
                 loadYiddishProgress(),
+                loadSavedWords(),
               );
               const blob = new Blob([json], { type: "application/json" });
               const url = URL.createObjectURL(blob);
@@ -772,7 +788,7 @@ export function DeveloperTools() {
               a.download = `hebrew-app-backup-${new Date().toISOString().slice(0, 10)}.json`;
               a.click();
               URL.revokeObjectURL(url);
-              setBackupFeedback({ variant: "ok", text: "Download started (v2)." });
+              setBackupFeedback({ variant: "ok", text: "Download started (v3)." });
             }}
           >
             Download JSON
@@ -828,9 +844,15 @@ export function DeveloperTools() {
               saveYiddishProgress(
                 parsed.yiddish ?? createEmptyYiddishProgressState(),
               );
+              if (parsed.savedWords !== undefined) {
+                saveSavedWords(parsed.savedWords);
+              }
               setBackupFeedback({
                 variant: "ok",
-                text: "Replaced local Hebrew and Yiddish from file.",
+                text:
+                  parsed.savedWords !== undefined
+                    ? "Replaced local Hebrew, Yiddish, and saved words from file."
+                    : "Replaced local Hebrew and Yiddish from file.",
               });
               setLegacyImportTick((t) => t + 1);
               return;
@@ -847,9 +869,14 @@ export function DeveloperTools() {
               );
               saveYiddishProgress(yMerged);
             }
+            if (parsed.savedWords !== undefined && parsed.savedWords.length > 0) {
+              saveSavedWords(
+                mergeSavedWordLists(loadSavedWords(), parsed.savedWords),
+              );
+            }
             setBackupFeedback({
               variant: "ok",
-              text: "Merged file into local progress (Hebrew + Yiddish if present).",
+              text: "Merged file into local progress (Hebrew + Yiddish + saved words if present).",
             });
             setLegacyImportTick((t) => t + 1);
           }}

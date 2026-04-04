@@ -5,6 +5,7 @@
 
 import { COURSE_LEVELS, getSectionsForLevel } from "@/data/course";
 import {
+  createEmptyLearnProgressState,
   loadLearnProgress,
   mergeRootDrillMaps,
   mergeStreakWithLegacy,
@@ -18,7 +19,7 @@ export const LEGACY_LEARNER_STORAGE_KEY = "ivrit_lr";
 export const LEGACY_LEVEL_STORAGE_KEY = "ivrit_lv";
 export const LEGACY_SESSION_KEY = "ivrit_session_v1";
 
-type LegacyLearnerShape = {
+export type LegacyLearnerShape = {
   completedSections?: Record<string, boolean | string | number>;
   streak?: unknown;
   /** Per-lemma stats; mastery level in `.lv` */
@@ -244,6 +245,61 @@ export type LegacyImportResult = {
 };
 
 /**
+ * Merge legacy `ivrit_lr` snapshot into an arbitrary base progress (browser import,
+ * CLI Phase A merge). Same rules as {@link mergeLegacyLearnIntoWebApp}.
+ */
+export function applyLegacyLearnerToProgress(
+  current: LearnProgressState,
+  learner: LegacyLearnerShape,
+  legacyLevel: number | null,
+): LearnProgressState {
+  const cs = learner.completedSections;
+  const nextCompleted = { ...current.completedSections };
+  if (cs && typeof cs === "object") {
+    for (const [id, val] of Object.entries(cs)) {
+      if (!truthyLegacyCompletion(val)) continue;
+      if (!KNOWN_IDS.has(id)) continue;
+      nextCompleted[id] = true;
+    }
+  }
+
+  let activeLevel = current.activeLevel;
+  if (legacyLevel != null) {
+    activeLevel = Math.min(4, Math.max(current.activeLevel, legacyLevel));
+  }
+
+  const streak = mergeStreakWithLegacy(current, learner.streak);
+  const legacyVocab = parseLegacyVocabFromLearner(learner.vocab);
+  const mergedVocab = mergeVocabLevelMaps(current.vocabLevels, legacyVocab);
+  const legacyRd = parseRootDrillField(learner.rootDrill);
+  const mergedRd = mergeRootDrillMaps(current.rootDrill, legacyRd);
+
+  const next: LearnProgressState = {
+    ...current,
+    completedSections: nextCompleted,
+    activeLevel,
+  };
+  if (streak.longest > 0 || streak.current > 0 || streak.lastDay !== "") {
+    next.streak = streak;
+  }
+  if (mergedVocab) next.vocabLevels = mergedVocab;
+  if (mergedRd) next.rootDrill = mergedRd;
+  return next;
+}
+
+/** Progress slice produced only from legacy learner + level (merge into empty = legacy-only). */
+export function learnProgressFromLegacyLearnerOnly(
+  learner: LegacyLearnerShape,
+  legacyLevel: number | null,
+): LearnProgressState {
+  return applyLegacyLearnerToProgress(
+    createEmptyLearnProgressState(),
+    learner,
+    legacyLevel,
+  );
+}
+
+/**
  * Merge legacy `completedSections` into Next progress (OR: keep existing true flags).
  * `activeLevel` becomes max(current, legacy level) when legacy level is present.
  */
@@ -285,39 +341,23 @@ export function mergeLegacyLearnIntoWebApp(): LegacyImportResult {
     };
   }
 
-  const nextCompleted = { ...current.completedSections };
   let sectionsMerged = 0;
   for (const [id, val] of Object.entries(cs)) {
     if (!truthyLegacyCompletion(val)) continue;
     if (!KNOWN_IDS.has(id)) continue;
-    if (!nextCompleted[id]) sectionsMerged++;
-    nextCompleted[id] = true;
+    if (!current.completedSections[id]) sectionsMerged++;
   }
 
   const lvInfo = readLegacyLevelValue();
-  let activeLevel = current.activeLevel;
-  if (lvInfo != null) {
-    activeLevel = Math.min(4, Math.max(current.activeLevel, lvInfo.level));
-  }
-
-  const streak = mergeStreakWithLegacy(current, blob.learner.streak);
   const legacyVocab = parseLegacyVocabFromLearner(blob.learner.vocab);
-  const mergedVocab = mergeVocabLevelMaps(current.vocabLevels, legacyVocab);
   const legacyRd = parseRootDrillField(blob.learner.rootDrill);
-  const mergedRd = mergeRootDrillMaps(current.rootDrill, legacyRd);
   const mergedRootDrill = !!legacyRd && Object.keys(legacyRd).length > 0;
 
-  const next: LearnProgressState = {
-    ...current,
-    completedSections: nextCompleted,
-    activeLevel,
-  };
-  if (streak.longest > 0 || streak.current > 0 || streak.lastDay !== "") {
-    next.streak = streak;
-  }
-  if (mergedVocab) next.vocabLevels = mergedVocab;
-  if (mergedRd) next.rootDrill = mergedRd;
-
+  const next = applyLegacyLearnerToProgress(
+    current,
+    blob.learner,
+    lvInfo?.level ?? null,
+  );
   saveLearnProgress(next);
 
   return {
@@ -325,7 +365,7 @@ export function mergeLegacyLearnIntoWebApp(): LegacyImportResult {
     message: `Merged from ${blob.storageKey}${lvInfo ? `; active level ≥ legacy (${lvInfo.level})` : ""}.${mergedRootDrill ? " Root drill counts merged (max per form)." : ""}`,
     sectionsMerged,
     activeLevelBefore: beforeLevel,
-    activeLevelAfter: activeLevel,
+    activeLevelAfter: next.activeLevel,
     vocabLemmasMerged: Object.keys(legacyVocab).length,
   };
 }

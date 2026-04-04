@@ -91,7 +91,7 @@ export function HtmlMigrationTracker({ variant = "full" }: Props) {
           </code>{" "}
           (routes, corpus, auth, tools). It is intentionally separate from the
           shorter{" "}
-          <Link href="/developer#legacy-parity" className="text-sage underline">
+          <Link href="/developer/tools#legacy-parity" className="text-sage underline">
             product checklist
           </Link>{" "}
           on Developer. Update statuses in{" "}

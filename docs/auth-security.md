@@ -19,7 +19,7 @@
 - **Allowlist:** `AUTH_RESET_EMAIL_MAP` (JSON) on the server. Only matching `username` + `email` get a code. This mirrors your bootstrap until you have a real database.
 - **Codes:** Stored as **SHA-256 hash** with **15-minute** expiry via **Vercel KV** if `KV_REST_API_URL` / `KV_REST_API_TOKEN` are set; otherwise **in-memory** (often **broken** across Vercel instances — link KV for production).
 - **Email:** Optional **Resend** (`RESEND_API_KEY`, `RESEND_FROM`).
-- **CORS:** `Access-Control-Allow-Origin: *` for simplicity; tighten to your static app origin when both URLs are stable.
+- **CORS:** Set **`AUTH_CORS_ORIGINS`** (comma-separated) on the server to allow only known browser origins (e.g. GitHub Pages HTML app). If unset, behavior remains `Access-Control-Allow-Origin: *` for backward compatibility.
 
 ## Recommendations (strongest → lightest)
 
@@ -30,11 +30,17 @@
    Store **Argon2id** or **bcrypt** hashes server-side, per-user salt, rate-limit reset endpoints, and send codes only over HTTPS. Do **not** commit real user emails in public repos.
 
 3. **Keep current hybrid**  
-   - Add **Vercel KV** (or Upstash Redis) for reset codes.  
-   - Set **CORS** to your real Pages/domain.  
+   - Add **Vercel KV** (or Upstash Redis) for reset codes. **Production Next.js** returns **503** on reset endpoints without KV.  
+   - Set **`AUTH_CORS_ORIGINS`** to your real Pages/domain when the HTML app origin is fixed.  
    - Turn **HTTPS** only.  
    - Remove **`AUTH_EMAIL_BOOTSTRAP`** from git if the repo is public (use env-only allowlist on Vercel).  
    - Replace **SHA-256** with **PBKDF2/Argon2** in the client if you stay password-in-localStorage (still weaker than server-side).
+
+### Next.js API behavior (enumeration + email)
+
+- **`request-reset`** always returns the same generic success body whether or not the username/email matched the allowlist, so callers cannot infer allowlist membership from the JSON.
+- **`DEMO_RESET_CODE`:** `_demoCode` is only included when `DEMO_RESET_CODE=1` **and** `NODE_ENV` is not `production`.
+- **Resend failures:** If the Resend HTTP call fails or returns a non-OK status, the stored code is removed and the event is reported to **Sentry** (when configured); the HTTP response stays generic.
 
 4. **“Recovery phrase” alternative (no email)**  
    At signup, show a one-time **recovery phrase**; store only a hash. Reset works without email but users must save the phrase.

@@ -1,0 +1,11 @@
+# Railway config-as-code (repo root). Build context must stay the monorepo root
+# so Dockerfile COPY paths (services/*, scripts/*) resolve.
+# https://docs.railway.com/config-as-code/reference
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "services/lightrag-api/Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 120

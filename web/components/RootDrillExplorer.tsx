@@ -117,6 +117,7 @@ export function RootDrillExplorer({
         promptHe: drillRound.word.h,
         rootKey: fam.root,
         skills: ["grammar", "production", "definition"],
+        studyGameId: "roots",
       });
     },
     [drillRound, drillFamilyIndex, families, picked, onGradedPick],

@@ -8,13 +8,21 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { NextResponse } from "next/server";
 import { cloudProgressKvConfigured } from "@/lib/cloud-progress-kv";
 
-export type RateLimitBucket = "mcq" | "validate" | "progress" | "auth";
+export type RateLimitBucket =
+  | "mcq"
+  | "validate"
+  | "progress"
+  | "auth"
+  | "hebcal"
+  | "rabbi";
 
 type Limiters = {
   mcq: Ratelimit;
   validate: Ratelimit;
   progress: Ratelimit;
   auth: Ratelimit;
+  hebcal: Ratelimit;
+  rabbi: Ratelimit;
 };
 
 let limitersPromise: Promise<Limiters | null> | null = null;
@@ -45,6 +53,16 @@ function loadLimiters(): Promise<Limiters | null> {
           limiter: Ratelimit.slidingWindow(8, "60 s"),
           prefix: "rl:auth",
         }),
+        hebcal: new Ratelimit({
+          redis: kv,
+          limiter: Ratelimit.slidingWindow(60, "60 s"),
+          prefix: "rl:hebcal",
+        }),
+        rabbi: new Ratelimit({
+          redis: kv,
+          limiter: Ratelimit.slidingWindow(24, "60 s"),
+          prefix: "rl:rabbi",
+        }),
       };
     })();
   }
@@ -70,7 +88,18 @@ export async function rateLimitIfExceeded(
   bucket: RateLimitBucket,
 ): Promise<NextResponse | null> {
   const limiters = await loadLimiters();
-  if (!limiters) return null;
+  if (!limiters) {
+    if (bucket === "auth" && process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        {
+          error:
+            "Password reset is temporarily unavailable. Link Vercel KV (KV_REST_API_URL / KV_REST_API_TOKEN) for this deployment.",
+        },
+        { status: 503 },
+      );
+    }
+    return null;
+  }
   const ip = clientIp(req);
   const rl = limiters[bucket];
   const { success, reset } = await rl.limit(`${bucket}:${ip}`);

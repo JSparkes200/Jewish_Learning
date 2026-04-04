@@ -115,6 +115,7 @@ export function LearnStoryClient({ level, he, en }: Props) {
             text={storyShowNikkud ? he : stripNikkud(he)}
             className="text-lg text-ink"
             glossByWord={storyGloss}
+            showSaveWord
           />
           <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
             {en}

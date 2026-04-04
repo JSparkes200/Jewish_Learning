@@ -7,7 +7,7 @@ import {
   pickCorpusEnglishDistractors,
 } from "@/lib/corpus-d-lookup";
 
-function shuffle<T>(arr: T[]): T[] {
+export function shuffleArray<T>(arr: readonly T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -26,13 +26,13 @@ export function pickCorpusRowsBiased(
 ): LegacyCorpusEntry[] {
   if (!pool.length || count <= 0) return [];
   if (!preferredHebrew?.length) {
-    return shuffle([...pool]).slice(0, Math.min(count, pool.length));
+    return shuffleArray([...pool]).slice(0, Math.min(count, pool.length));
   }
   const pref = new Set(preferredHebrew.map((p) => p.trim()).filter(Boolean));
   const pri = pool.filter((w) => pref.has(w.h.trim()));
   const rest = pool.filter((w) => !pref.has(w.h.trim()));
-  const shPri = shuffle([...pri]);
-  const shRest = shuffle([...rest]);
+  const shPri = shuffleArray([...pri]);
+  const shRest = shuffleArray([...rest]);
   const seen = new Set<string>();
   const out: LegacyCorpusEntry[] = [];
   for (const w of [...shPri, ...shRest]) {
@@ -127,10 +127,10 @@ export function buildFillRound(
   const targetPool =
     candidates && candidates.length > 0 ? candidates : pool;
   const target = targetPool[Math.floor(Math.random() * targetPool.length)]!;
-  const others = shuffle(pool.filter((x) => x.h !== target.h))
+  const others = shuffleArray(pool.filter((x) => x.h !== target.h))
     .slice(0, 3)
     .map((x) => x.h);
-  const optionsHe = shuffle([target.h, ...others]);
+  const optionsHe = shuffleArray([target.h, ...others]);
   return {
     target,
     optionsHe,
@@ -162,13 +162,61 @@ export function buildTapRound(
   const targetPool =
     candidates && candidates.length > 0 ? candidates : pool;
   const target = targetPool[Math.floor(Math.random() * targetPool.length)]!;
-  const others = shuffle(pool.filter((x) => x.h !== target.h))
+  const others = shuffleArray(pool.filter((x) => x.h !== target.h))
     .slice(0, 5)
     .map((x) => x.h);
-  const optionsHe = shuffle([target.h, ...others]);
+  const optionsHe = shuffleArray([target.h, ...others]);
   return {
     target,
     optionsHe,
     correctIndex: optionsHe.indexOf(target.h),
   };
+}
+
+export type StudyMatchRound = {
+  words: LegacyCorpusEntry[];
+  /** English column order (same lemmas as `words`, shuffled). */
+  enShuffled: LegacyCorpusEntry[];
+};
+
+/** Four Hebrew↔English pairs (legacy `buildMatch`). */
+export function buildStudyMatchRound(
+  pool: readonly LegacyCorpusEntry[],
+  opts?: StudyPoolPickOpts,
+): StudyMatchRound | null {
+  if (pool.length < 4) return null;
+  const words = pickCorpusRowsBiased(pool, 4, opts?.preferredHebrew);
+  if (words.length < 4) return null;
+  return {
+    words,
+    enShuffled: shuffleArray([...words]),
+  };
+}
+
+export type StudyTransRound = {
+  target: LegacyCorpusEntry;
+  /** Hebrew tokens to tap (includes the correct lemma once). */
+  bankHe: string[];
+};
+
+/** Legacy translate drill: build Hebrew from English gloss (usually one word). */
+export function buildStudyTransRound(
+  pool: readonly LegacyCorpusEntry[],
+  opts?: StudyPoolPickOpts,
+): StudyTransRound | null {
+  if (pool.length < 6) return null;
+  const pref = opts?.preferredHebrew?.length
+    ? new Set(opts.preferredHebrew.map((p) => p.trim()).filter(Boolean))
+    : null;
+  const candidates = pref?.size
+    ? pool.filter((x) => pref!.has(x.h.trim()))
+    : null;
+  const targetPool =
+    candidates && candidates.length > 0 ? candidates : pool;
+  const target = targetPool[Math.floor(Math.random() * targetPool.length)]!;
+  const others = shuffleArray(pool.filter((x) => x.h !== target.h))
+    .slice(0, 5)
+    .map((x) => x.h);
+  const bankHe = shuffleArray([target.h, ...others]);
+  return { target, bankHe };
 }

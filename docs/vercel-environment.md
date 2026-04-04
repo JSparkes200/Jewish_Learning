@@ -17,6 +17,15 @@ Open **Vercel → your project → Settings → Environment Variables**. Add eac
 | Variable | Required | Used by |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | `app/layout.tsx` — `metadataBase`, Open Graph URLs (e.g. `https://your-app.vercel.app`) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Optional | Sentry browser + server SDK (`instrumentation-client.ts`, `sentry.*.config.ts`) |
+| `SENTRY_DSN` | Optional | Server-only DSN override (defaults to `NEXT_PUBLIC_SENTRY_DSN`) |
+| `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | Optional | Upload source maps during `next build` (Vercel or CI) |
+| `AUTH_CORS_ORIGINS` | Optional | Comma-separated origins for `/api/auth/*` CORS; unset = `*` (see `docs/auth-security.md`) |
+| `OPENAI_API_KEY` | Optional (Ask Rabbi) | **Server-only.** Rabbi API route; never `NEXT_PUBLIC_*`. |
+| `OPENAI_RABBI_MODEL` | Optional | Rabbi chat model (default `gpt-4o-mini` in code). |
+| `RABBI_USE_LIGHTRAG` | Optional | Set `0` to skip all LightRAG retrieval (local + remote). |
+| `RABBI_LIGHTRAG_RETRIEVE_URL` | Optional | Base URL of the [Railway LightRAG service](./railway-lightrag.md) (e.g. `https://….up.railway.app`). When set, Vercel calls `POST …/retrieve` instead of spawning Python. |
+| `RABBI_LIGHTRAG_RETRIEVE_SECRET` | Recommended with URL above | Must match `LIGHTRAG_RETRIEVE_SECRET` on Railway. |
 | `AUTH_RESET_EMAIL_MAP` | For password reset | `POST /api/auth/request-reset` — **single-line JSON** object: `{"username":"email@domain.com"}`. Keys are **lowercase** usernames. Copy from `web/data/auth-reset-email-map.example.json`, edit, then **minify to one line** for the dashboard. |
 | `RESEND_API_KEY` | Optional | `request-reset` — send real email via [Resend](https://resend.com) |
 | `RESEND_FROM` | Optional | Verified sender (default in code: `onboarding@resend.dev`) |
@@ -25,6 +34,8 @@ Open **Vercel → your project → Settings → Environment Variables**. Add eac
 | `DEMO_RESET_CODE` | Never in prod | If exactly `1`, `request-reset` returns `_demoCode` in JSON for debugging only |
 
 **KV:** In Vercel, **Storage → Create Database → KV**, then **Connect** to the project. Vercel usually injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically — you do not paste them from GitHub.
+
+**Production password reset:** `POST /api/auth/request-reset` and `confirm-reset` return **503** when `NODE_ENV=production` and KV is not linked (rate limits and reset code storage require KV).
 
 **Secrets:** Do **not** commit `.env.local` or real `AUTH_RESET_EMAIL_MAP` / `RESEND_API_KEY`. `web/.env.example` lists the same names with placeholders.
 

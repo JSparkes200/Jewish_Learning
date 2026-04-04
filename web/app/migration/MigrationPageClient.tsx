@@ -36,7 +36,7 @@ export function MigrationPageClient() {
           Progress
         </Link>
         {" · "}
-        <Link href="/developer" className="text-sage hover:underline">
+        <Link href="/developer/tools" className="text-sage hover:underline">
           Developer
         </Link>
         {" · "}

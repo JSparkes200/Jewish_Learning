@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ComprehensionDrill } from "@/components/ComprehensionDrill";
 import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
 import { DrillPrepGate } from "@/components/DrillPrepGate";
+import { LessonPrimerPanel } from "@/components/LessonPrimerPanel";
 import { HebrewTapText } from "@/components/HebrewTapText";
 import { McqDrill } from "@/components/McqDrill";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
@@ -16,6 +17,7 @@ import {
   LEVEL_1_STORY,
   sectionDefaultShowNikkud,
 } from "@/data/course";
+import { getSectionLessonPrimer } from "@/data/course-section-primers";
 import { getMcqPackForSection } from "@/data/section-drills";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
 import {
@@ -162,6 +164,7 @@ export function LearnSectionClient({ level, sectionId }: Props) {
       ? buildPrepCardsFromMcqPack(mcqPack ?? generatedPack, 6)
       : buildPrepCardsFromComprehension(comprehension, 4);
   const prepSubtitle = sectionGrammarHint(level, sec.type);
+  const lessonPrimer = getSectionLessonPrimer(sectionId);
   const storyGloss = Object.fromEntries(
     (mcqPack?.items ?? []).map((it) => [it.promptHe, it.correctEn]),
   );
@@ -181,6 +184,8 @@ export function LearnSectionClient({ level, sectionId }: Props) {
       <h1 className="mb-4 font-label text-xs uppercase tracking-wide text-ink">
         {sec.label}
       </h1>
+
+      {lessonPrimer ? <LessonPrimerPanel primer={lessonPrimer} /> : null}
 
       {comprehension ? (
         <div className="mb-6">
@@ -224,6 +229,7 @@ export function LearnSectionClient({ level, sectionId }: Props) {
                 text={storyShowNikkud ? LEVEL_1_STORY.he : stripNikkud(LEVEL_1_STORY.he)}
                 className="text-lg text-ink"
                 glossByWord={storyGloss}
+                showSaveWord
               />
               <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
                 {LEVEL_1_STORY.en}

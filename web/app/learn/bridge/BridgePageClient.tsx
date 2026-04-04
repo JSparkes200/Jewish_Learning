@@ -257,6 +257,7 @@ export function BridgePageClient() {
                           <HebrewTapText
                             text={showNikkud ? unit.he : stripNikkud(unit.he)}
                             className="text-lg text-ink"
+                            showSaveWord
                           />
                         </div>
                         <p className="mt-3 border-t border-ink/10 pt-3 text-sm italic leading-relaxed text-ink-muted">

@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { Hebrew } from "@/components/Hebrew";
-import { DeveloperTools } from "./DeveloperTools";
-import { ModalDemo } from "./ModalDemo";
+import { DeveloperAuthPanel } from "./DeveloperAuthPanel";
 
 export default function DeveloperPage() {
   return (
@@ -12,11 +12,18 @@ export default function DeveloperPage() {
         פִּתּוּחַ
       </Hebrew>
       <p className="mt-2 text-sm text-ink-muted">
-        Storage, backups, imports, and builder-only shortcuts. Learners do not
-        need this page — it is for you and for testing.
+        Sign in below when your server has developer credentials set. Then open
+        the full tools page (backups, imports, corpus).
       </p>
-      <ModalDemo />
-      <DeveloperTools />
+      <DeveloperAuthPanel />
+      <p className="mt-6 text-center">
+        <Link
+          href="/developer/tools"
+          className="font-label text-xs font-semibold uppercase tracking-[0.14em] text-sage underline decoration-sage/40 underline-offset-4 hover:decoration-sage"
+        >
+          Open developer tools
+        </Link>
+      </p>
     </div>
   );
 }

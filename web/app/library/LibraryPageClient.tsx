@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import { LibraryCoverCarousel } from "@/components/LibraryCoverCarousel";
+import { SavedWordsSection } from "@/components/SavedWordsSection";
 import { LIBRARY_EXTERNAL_LINKS } from "@/data/library-external-links";
 import {
   mergeLegacyLibraryIntoWebApp,
@@ -13,6 +14,7 @@ import {
   LIBRARY_SAVED_EVENT,
   addLibrarySaved,
   loadLibrarySaved,
+  patchLibrarySaved,
   removeLibrarySaved,
   type SavedLibraryPassage,
 } from "@/lib/library-saved";
@@ -27,6 +29,9 @@ export function LibraryPageClient() {
   const [draftTitle, setDraftTitle] = useState("");
   const [draftHe, setDraftHe] = useState("");
   const [draftEn, setDraftEn] = useState("");
+  const [draftNote, setDraftNote] = useState("");
+  const [noteEditorId, setNoteEditorId] = useState<string | null>(null);
+  const [noteEditorDraft, setNoteEditorDraft] = useState("");
   const [formMsg, setFormMsg] = useState<string | null>(null);
   const [legacyImportMsg, setLegacyImportMsg] = useState<string | null>(null);
   const [legacyLibTick, setLegacyLibTick] = useState(0);
@@ -78,13 +83,15 @@ export function LibraryPageClient() {
       title,
       he,
       en: draftEn.trim() || undefined,
+      note: draftNote.trim() || undefined,
     });
     setDraftTitle("");
     setDraftHe("");
     setDraftEn("");
+    setDraftNote("");
     refreshSaved();
     setFormMsg("Saved.");
-  }, [draftTitle, draftHe, draftEn, refreshSaved]);
+  }, [draftTitle, draftHe, draftEn, draftNote, refreshSaved]);
 
   return (
     <div className="space-y-8">
@@ -93,15 +100,46 @@ export function LibraryPageClient() {
       ) : null}
 
       <section className="surface-elevated p-4">
+        <label className="block">
+          <span className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+            Search library
+          </span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter passages, saved words, and links…"
+            autoComplete="off"
+            className="input-inset mt-2 w-full px-3 py-2.5 text-sm"
+          />
+        </label>
+        <p className="mt-2 text-xs text-ink-muted">
+          One search box filters everything below: your passages, bookmarked
+          lemmas, and curated links.
+        </p>
+      </section>
+
+      <section className="surface-elevated p-4">
         <p className="font-label text-[10px] uppercase tracking-[0.18em] text-sage">
           Your saved passages
         </p>
         <p className="mt-1 text-xs text-ink-muted">
-          Stored in this browser. If an older Hebrew study page left saved
-          passages in this browser, you can import them below. To back up or
-          move only these saves, use{" "}
+          Stored in this browser. Practice with saved lines from{" "}
+          <Link href="/reading" className="text-sage underline hover:text-sage/90">
+            Reading
+          </Link>{" "}
+          or{" "}
+          <Link href="/study" className="text-sage underline hover:text-sage/90">
+            Study
+          </Link>
+          ; track course work on{" "}
+          <Link href="/progress" className="text-sage underline hover:text-sage/90">
+            Progress
+          </Link>
+          . If an older Hebrew study page left saves here, import below. To back
+          up or move only these saves, use{" "}
           <Link
-            href="/developer#dev-library-json"
+            href="/developer/tools#dev-library-json"
             className="text-sage underline hover:text-sage/90"
           >
             Advanced → Developer → Library saves JSON
@@ -176,12 +214,24 @@ export function LibraryPageClient() {
           </div>
           <div>
             <label className="font-label text-[9px] uppercase tracking-wide text-ink-muted">
-              English / notes (optional)
+              English / translation (optional)
             </label>
             <textarea
               value={draftEn}
               onChange={(e) => setDraftEn(e.target.value)}
-              placeholder="Translation or source link…"
+              placeholder="Gloss or short translation…"
+              rows={2}
+              className="input-inset mt-1 w-full px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="font-label text-[9px] uppercase tracking-wide text-ink-muted">
+              Your note (optional)
+            </label>
+            <textarea
+              value={draftNote}
+              onChange={(e) => setDraftNote(e.target.value)}
+              placeholder="Private memo — source, deck, reminder…"
               rows={2}
               className="input-inset mt-1 w-full px-3 py-2 text-sm"
             />
@@ -214,19 +264,41 @@ export function LibraryPageClient() {
                 className="rounded-xl border border-white/40 bg-parchment-deep/30 p-3 shadow-elevated"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-label text-[11px] uppercase tracking-wide text-sage">
-                    {x.title}
+                  <span className="min-w-0 font-label text-[11px] uppercase tracking-wide text-sage">
+                    <span className="block">{x.title}</span>
+                    <span className="mt-0.5 block font-body text-[9px] font-normal normal-case tracking-normal text-ink-faint">
+                      Saved{" "}
+                      {new Date(x.createdAt).toLocaleDateString(undefined, {
+                        dateStyle: "medium",
+                      })}
+                    </span>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      removeLibrarySaved(x.id);
-                      refreshSaved();
-                    }}
-                    className="shrink-0 rounded-md px-2 py-1 font-label text-[9px] uppercase tracking-wide text-rust hover:bg-rust/10"
-                  >
-                    Remove
-                  </button>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNoteEditorId(x.id);
+                        setNoteEditorDraft(x.note ?? "");
+                      }}
+                      className="rounded-md px-2 py-1 font-label text-[9px] uppercase tracking-wide text-sage hover:bg-sage/10"
+                    >
+                      {noteEditorId === x.id ? "Editing…" : "Edit note"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeLibrarySaved(x.id);
+                        if (noteEditorId === x.id) {
+                          setNoteEditorId(null);
+                          setNoteEditorDraft("");
+                        }
+                        refreshSaved();
+                      }}
+                      className="rounded-md px-2 py-1 font-label text-[9px] uppercase tracking-wide text-rust hover:bg-rust/10"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
                 <Hebrew
                   as="p"
@@ -239,28 +311,57 @@ export function LibraryPageClient() {
                     {x.en}
                   </p>
                 ) : null}
+                {x.note && noteEditorId !== x.id ? (
+                  <p className="mt-2 border-t border-ink/10 pt-2 text-[11px] italic text-ink-faint">
+                    Note: {x.note}
+                  </p>
+                ) : null}
+                {noteEditorId === x.id ? (
+                  <div className="mt-2 border-t border-ink/10 pt-2">
+                    <textarea
+                      value={noteEditorDraft}
+                      onChange={(e) => setNoteEditorDraft(e.target.value)}
+                      placeholder="Private memo…"
+                      rows={2}
+                      className="input-inset w-full px-3 py-2 text-sm"
+                    />
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="btn-elevated-primary text-[10px]"
+                        onClick={() => {
+                          patchLibrarySaved(x.id, { note: noteEditorDraft });
+                          setNoteEditorId(null);
+                          setNoteEditorDraft("");
+                          refreshSaved();
+                        }}
+                      >
+                        Save note
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-elevated-secondary text-[10px]"
+                        onClick={() => {
+                          setNoteEditorId(null);
+                          setNoteEditorDraft("");
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
         )}
       </section>
 
+      <SavedWordsSection filter={query} />
+
       <section>
-        <label className="block">
-          <span className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-            Search links &amp; saved passages
-          </span>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filter by name, topic, keyword…"
-            autoComplete="off"
-            className="input-inset mt-2 w-full px-3 py-2.5 text-sm"
-          />
-        </label>
-        <p className="mt-2 text-sm text-ink-muted">
-          External sites open in a new tab. List view below matches your filter.
+        <p className="text-sm text-ink-muted">
+          External sites open in a new tab. The list matches your search above.
         </p>
         {filteredLinks.length === 0 ? (
           <p className="mt-4 rounded-xl border border-ink/10 bg-parchment-card/40 px-4 py-6 text-center text-sm text-ink-muted">

@@ -45,3 +45,5 @@ Do not open `file://` directly — the service worker and some features won't wo
 ## Next.js app (`web/`) on Vercel
 
 The **`web/`** folder is the Next.js migration target. Deploy with **Root Directory = `web`**. Environment variables and API data (corpus, auth allowlist template) are documented in **`docs/vercel-environment.md`**. Local template: **`web/.env.example`**.
+
+**CI:** GitHub Actions runs `lint`, `test`, and `build` in **`web/`** on pushes and pull requests to **`main`** (see `.github/workflows/ci.yml`).

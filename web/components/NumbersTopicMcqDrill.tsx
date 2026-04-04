@@ -142,6 +142,7 @@ export function NumbersTopicMcqDrill({ variant, onPracticeAnswer }: Props) {
         promptHe: round.correctHe,
         skills: ["recognition", "definition"],
         numbersHubEngageId: variant,
+        studyGameId: "num",
       });
     },
     [picked, round.correctHe, round.correctIndex, onPracticeAnswer, variant],

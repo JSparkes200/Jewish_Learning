@@ -59,7 +59,7 @@ export function LegacyParityPanel({ variant = "full" }: Props) {
           />
         </div>
         <Link
-          href="/developer#legacy-parity"
+          href="/developer/tools#legacy-parity"
           className="mt-4 inline-block font-label text-[10px] uppercase tracking-wide text-sage hover:underline"
         >
           Full breakdown →

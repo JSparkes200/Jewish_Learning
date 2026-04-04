@@ -1,0 +1,24 @@
+{
+  "name": "hebrew",
+  "version": "1.0.0",
+  "description": "Learn to speak and read Hebrew with vocabulary, grammar drills, and practice games.",
+  "main": "sw.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JSparkes200/Jewish_Learning.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/JSparkes200/Jewish_Learning/issues"
+  },
+  "homepage": "https://github.com/JSparkes200/Jewish_Learning#readme"
+}

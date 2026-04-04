@@ -134,6 +134,7 @@ export function ComprehensionDrill({
           <HebrewTapText
             text={passageDisplay}
             className="text-base text-ink sm:text-lg"
+            showSaveWord
           />
         </div>
         <p className="mt-4 border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">

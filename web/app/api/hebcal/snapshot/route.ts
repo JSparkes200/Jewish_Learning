@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimitIfExceeded } from "@/lib/api-rate-limit";
 import {
   fetchHebrewDateLine,
   fetchParshaSnapshot,
@@ -15,6 +16,9 @@ export const dynamic = "force-dynamic";
  * upstream) so callers still get parsha + Hebrew date offline.
  */
 export async function GET(req: NextRequest) {
+  const limited = await rateLimitIfExceeded(req, "hebcal");
+  if (limited) return limited;
+
   const gy = req.nextUrl.searchParams.get("gy");
   const gm = req.nextUrl.searchParams.get("gm");
   const gd = req.nextUrl.searchParams.get("gd");

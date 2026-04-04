@@ -14,6 +14,8 @@ export type SavedLibraryPassage = {
   he: string;
   /** Optional gloss / translation */
   en?: string;
+  /** Learner-only memo (source link, deck name, etc.) — not shown as primary gloss */
+  note?: string;
   createdAt: number;
 };
 
@@ -23,6 +25,7 @@ function passageFromRecord(o: Record<string, unknown>): SavedLibraryPassage | nu
   const he = typeof o.he === "string" ? o.he.trim() : "";
   if (!id || !title || !he) return null;
   const en = typeof o.en === "string" ? o.en.trim() : undefined;
+  const note = typeof o.note === "string" ? o.note.trim() : undefined;
   const createdAt =
     typeof o.createdAt === "number" && o.createdAt > 0
       ? o.createdAt
@@ -32,6 +35,7 @@ function passageFromRecord(o: Record<string, unknown>): SavedLibraryPassage | nu
     title,
     he,
     ...(en ? { en } : {}),
+    ...(note ? { note } : {}),
     createdAt,
   };
 }
@@ -72,6 +76,17 @@ export function stringifyLibrarySavedExport(): string {
     schemaVersion: LIBRARY_BACKUP_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     passages: loadLibrarySaved(),
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
+export function stringifyLibraryBackupFromPassages(
+  passages: SavedLibraryPassage[],
+): string {
+  const payload: LibraryExportFile = {
+    schemaVersion: LIBRARY_BACKUP_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    passages,
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -130,6 +145,7 @@ export function addLibrarySaved(entry: {
   title: string;
   he: string;
   en?: string;
+  note?: string;
 }): SavedLibraryPassage {
   const list = loadLibrarySaved();
   const item: SavedLibraryPassage = {
@@ -137,11 +153,37 @@ export function addLibrarySaved(entry: {
     title: entry.title.trim(),
     he: entry.he.trim(),
     ...(entry.en?.trim() ? { en: entry.en.trim() } : {}),
+    ...(entry.note?.trim() ? { note: entry.note.trim() } : {}),
     createdAt: Date.now(),
   };
   list.unshift(item);
   persist(list);
   return item;
+}
+
+export function patchLibrarySaved(
+  id: string,
+  patch: { en?: string; note?: string },
+): SavedLibraryPassage | null {
+  const list = loadLibrarySaved();
+  const i = list.findIndex((x) => x.id === id);
+  if (i < 0) return null;
+  const cur = list[i]!;
+  const updated: SavedLibraryPassage = { ...cur };
+  if (patch.en !== undefined) {
+    const t = patch.en.trim();
+    if (t) updated.en = t;
+    else delete updated.en;
+  }
+  if (patch.note !== undefined) {
+    const t = patch.note.trim();
+    if (t) updated.note = t;
+    else delete updated.note;
+  }
+  const out = [...list];
+  out[i] = updated;
+  persist(out);
+  return updated;
 }
 
 export function removeLibrarySaved(id: string): void {
@@ -156,10 +198,11 @@ export function clearLibrarySaved(): void {
 /**
  * Add passages by id; skips ids already present (idempotent merge / re-import).
  */
-export function mergePassagesIntoLibrarySaved(
+/** Pure merge by passage id (for CLI / server; no `localStorage`). */
+export function mergePassageArraysById(
+  current: SavedLibraryPassage[],
   newcomers: SavedLibraryPassage[],
-): { added: number; skipped: number } {
-  const current = loadLibrarySaved();
+): { merged: SavedLibraryPassage[]; added: number; skipped: number } {
   const existingIds = new Set(current.map((x) => x.id));
   let added = 0;
   let skipped = 0;
@@ -175,6 +218,17 @@ export function mergePassagesIntoLibrarySaved(
     added++;
   }
   merged.sort((a, b) => b.createdAt - a.createdAt);
+  return { merged, added, skipped };
+}
+
+export function mergePassagesIntoLibrarySaved(
+  newcomers: SavedLibraryPassage[],
+): { added: number; skipped: number } {
+  const current = loadLibrarySaved();
+  const { merged, added, skipped } = mergePassageArraysById(
+    current,
+    newcomers,
+  );
   persist(merged);
   return { added, skipped };
 }

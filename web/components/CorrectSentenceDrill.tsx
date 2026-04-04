@@ -2,7 +2,10 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
-import type { GradedPracticeContext } from "@/lib/learn-progress";
+import type {
+  DashboardGameId,
+  GradedPracticeContext,
+} from "@/lib/learn-progress";
 import type { CorrectSentencePack } from "@/lib/sentence-correctness";
 
 type Props = {
@@ -13,6 +16,7 @@ type Props = {
     context?: GradedPracticeContext,
   ) => void;
   endHint?: string;
+  studyGameId?: DashboardGameId;
 };
 
 export function CorrectSentenceDrill({
@@ -20,6 +24,7 @@ export function CorrectSentenceDrill({
   className = "",
   onPracticeAnswer,
   endHint,
+  studyGameId = "sent",
 }: Props) {
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -37,10 +42,11 @@ export function CorrectSentenceDrill({
       onPracticeAnswer?.(ok, {
         promptHe: item.promptHe,
         skills: ["production", "grammar", "definition"],
+        studyGameId,
       });
       if (ok) setCorrectCount((c) => c + 1);
     },
-    [item, picked, onPracticeAnswer],
+    [item, picked, onPracticeAnswer, studyGameId],
   );
 
   const next = useCallback(() => {

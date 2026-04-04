@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CourseMasteryList } from "@/components/CourseMasteryList";
 import { CourseProgressHero } from "@/components/CourseProgressHero";
+import { ProgressLegacyDashboard } from "@/components/ProgressLegacyDashboard";
 import {
   COURSE_LEVELS,
   getSectionsForLevel,
@@ -151,7 +152,7 @@ export function ProgressPageClient() {
           <strong className="text-ink">Vercel KV</strong> linked, you can push
           Learn progress to the server from{" "}
           <Link
-            href="/developer#dev-cloud-backup"
+            href="/developer/tools#dev-cloud-backup"
             className="text-sage underline hover:text-sage/90"
           >
             Advanced → Developer → Cloud backup
@@ -173,6 +174,9 @@ export function ProgressPageClient() {
         heading="Your snapshot"
         intro="Sections you marked done, your streak, and how often practice answers were correct — all from this device."
       />
+
+      <ProgressLegacyDashboard progress={progress} />
+
       {(progress.mcqAttempts ?? 0) === 0 ? (
         <p className="text-[11px] text-ink-muted">
           First drill pick starts your lifetime practice tally — open{" "}

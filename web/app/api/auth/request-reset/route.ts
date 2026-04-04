@@ -1,16 +1,21 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimitIfExceeded } from "@/lib/api-rate-limit";
-import { saveResetCodeHash } from "@/lib/pw-reset-store";
+import { authCorsHeaders, isAuthCorsBlocked } from "@/lib/auth-cors";
+import { deleteResetCodeHash, saveResetCodeHash } from "@/lib/pw-reset-store";
 import { sha256Hex } from "@/lib/sha256-hex";
 
-const corsHeaders: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const GENERIC_OK = {
+  ok: true,
+  message: "If an account matches, you will receive a code shortly.",
+} as const;
 
-export function OPTIONS() {
-  return new NextResponse(null, { headers: corsHeaders });
+export function OPTIONS(req: NextRequest) {
+  const h = authCorsHeaders(req);
+  if (isAuthCorsBlocked(req)) {
+    return new NextResponse(null, { status: 403, headers: h });
+  }
+  return new NextResponse(null, { headers: h });
 }
 
 function parseAllowlist(): Record<string, string> {
@@ -22,12 +27,26 @@ function parseAllowlist(): Record<string, string> {
   }
 }
 
+function demoResetCodeAllowed(): boolean {
+  if (process.env.DEMO_RESET_CODE !== "1") return false;
+  if (process.env.NODE_ENV === "production") return false;
+  return true;
+}
+
 export async function POST(req: NextRequest) {
+  const cors = authCorsHeaders(req);
+  if (isAuthCorsBlocked(req)) {
+    return new NextResponse(null, { status: 403, headers: cors });
+  }
+
   const limited = await rateLimitIfExceeded(req, "auth");
   if (limited) {
+    const retry = limited.headers.get("Retry-After");
+    const headers: Record<string, string> = { ...cors };
+    if (retry) headers["Retry-After"] = retry;
     return NextResponse.json(
       { error: "Too many requests. Try again shortly." },
-      { status: 429, headers: corsHeaders },
+      { status: 429, headers },
     );
   }
 
@@ -37,7 +56,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON" },
-      { status: 400, headers: corsHeaders },
+      { status: 400, headers: cors },
     );
   }
 
@@ -50,13 +69,8 @@ export async function POST(req: NextRequest) {
   const allow = parseAllowlist();
   const match = allow[u] === e;
 
-  const generic = {
-    ok: true,
-    message: "If an account matches, you will receive a code shortly.",
-  };
-
   if (!match) {
-    return NextResponse.json(generic, { headers: corsHeaders });
+    return NextResponse.json(GENERIC_OK, { headers: cors });
   }
 
   const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -68,7 +82,7 @@ export async function POST(req: NextRequest) {
 
   if (resendKey) {
     try {
-      await fetch("https://api.resend.com/emails", {
+      const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${resendKey}`,
@@ -81,21 +95,24 @@ export async function POST(req: NextRequest) {
           text: `Your one-time code is ${code}. It expires in 15 minutes.\n\nIf you did not request this, ignore this email.`,
         }),
       });
-    } catch {
-      /* non-fatal */
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        await deleteResetCodeHash(u);
+        Sentry.captureMessage("Resend API returned non-OK for password reset", {
+          level: "error",
+          extra: { status: res.status, body: errText.slice(0, 500) },
+        });
+      }
+    } catch (err) {
+      await deleteResetCodeHash(u);
+      Sentry.captureException(err);
     }
   }
 
-  const payload: Record<string, unknown> = {
-    ok: true,
-    message: resendKey
-      ? "Check your email for the code."
-      : "Code issued. Add RESEND_API_KEY on Vercel to send email (see docs).",
-  };
-
-  if (process.env.DEMO_RESET_CODE === "1") {
+  const payload: Record<string, unknown> = { ...GENERIC_OK };
+  if (demoResetCodeAllowed()) {
     payload._demoCode = code;
   }
 
-  return NextResponse.json(payload, { headers: corsHeaders });
+  return NextResponse.json(payload, { headers: cors });
 }

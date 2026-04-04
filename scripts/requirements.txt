@@ -1,0 +1,5 @@
+# LightRAG (HKUDS) + OpenAI helpers used by ingest.py
+# Install: py -3.12 -m pip install -r scripts/requirements.txt
+lightrag-hku>=1.4.0
+python-dotenv>=1.0.0
+openai>=1.0.0

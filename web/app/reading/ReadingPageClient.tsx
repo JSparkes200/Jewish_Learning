@@ -67,6 +67,15 @@ function ReadingHelpModal({ onClose }: { onClose: () => void }) {
           </Link>{" "}
           home). You can still open any hub link below anytime.
         </li>
+        <li>
+          <strong className="text-ink">Versus the old single-page app</strong> — Jewish
+          texts, tap-to-hear passages, and reading-style quizzes live here and in{" "}
+          <Link href="/library" className="text-sage underline hover:text-sage/90">
+            Library
+          </Link>{" "}
+          (saved snippets) plus comprehension sections inside Learn. Streak and drill
+          stats use the same progress store as the rest of this app.
+        </li>
       </ul>
       <button
         type="button"

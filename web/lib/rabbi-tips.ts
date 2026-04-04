@@ -141,10 +141,23 @@ export function getRabbiTip(pathname: string): RabbiTip {
       title: "Library",
       lines: [
         "Save Hebrew snippets at the top; you can import older passages stored in this browser from a previous study page.",
+        "Use translation for a gloss and the separate note field for private reminders (source, deck, etc.).",
         "Advanced → Developer → Library saves JSON downloads or merges your saves.",
         "External links open in a new tab; use search to filter both links and your saves.",
       ],
       cta: { label: "Back to Learn", href: "/learn" },
+    };
+  }
+  if (pathname.startsWith("/settings")) {
+    return {
+      title: "Settings",
+      lines: [
+        "Display name is local to this browser — useful for a little identity in the header.",
+        "There is no product username/password screen here by default; legacy HTML used ivrit_session and scoped keys.",
+        "Developer session (when configured) is for builders testing gates, not learner accounts.",
+        "Optional cloud backup uses an anonymous sync key — see Developer → Cloud backup when KV is enabled.",
+      ],
+      cta: { label: "Developer tools", href: "/developer" },
     };
   }
   if (pathname.startsWith("/progress")) {
@@ -156,17 +169,17 @@ export function getRabbiTip(pathname: string): RabbiTip {
         "Specialty badges list aims, cross-links (Reading, Study, Library…), and a Next: link per track when the bridge is cleared — tiers are MCQ checkpoints, not the whole skill picture.",
         "Backup or move devices: Advanced → Developer → JSON file (download / merge / replace). Optional cloud backup when your deploy supports it.",
       ],
-      cta: { label: "Developer tools", href: "/developer#dev-cloud-backup" },
+      cta: { label: "Developer tools", href: "/developer/tools#dev-cloud-backup" },
     };
   }
   if (pathname.startsWith("/developer")) {
     return {
       title: "Developer",
       lines: [
-        "When the server has DEVELOPER_USERNAME, DEVELOPER_EMAIL, and DEVELOPER_SESSION_SECRET set, sign in below with that pair to unlock all Learn gates in this browser (HttpOnly cookie).",
-        "Reset storage to test onboarding; modal demo exercises the shared shell.",
+        "Sign in on this page when the server has DEVELOPER_USERNAME, DEVELOPER_EMAIL, and DEVELOPER_SESSION_SECRET — that unlocks Learn gates in this browser (HttpOnly cookie).",
+        "Full backups, imports, corpus tools, and the modal demo live under Developer → Open developer tools (/developer/tools). In production, that route requires the same dev session when those env vars are set.",
         "JSON backup downloads Learn progress; merge unions completions and keeps the higher active level.",
-        "Library saves JSON: same page — download / merge / replace passages stored for this app.",
+        "Library saves JSON: download / merge / replace passages stored for this app.",
         "Cloud backup: push / restore with a sync key when your host has KV configured — see docs/cloud-progress.md in the repo.",
         "You can export data in a format an older single-page study file understands — merge carefully in that browser if you still use it.",
       ],

@@ -103,7 +103,7 @@ export function LearnPathOverviewModal({ onClose }: { onClose: () => void }) {
         </p>
         <p className="mt-1.5 text-[11px] leading-snug text-ink-muted">
           Long-form reading grows over time. On{" "}
-          <Link href="/developer" className="text-sage underline">
+          <Link href="/developer/tools" className="text-sage underline">
             Developer
           </Link>
           , the passage validator scores Hebrew drafts against the app
