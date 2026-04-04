@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
+import { RabbiCard } from "@/components/RabbiCard";
 import { SaveWordButton } from "@/components/SaveWordButton";
-import type { McqDrillPack } from "@/data/section-drill-types";
+import type { McqItem, McqDrillPack } from "@/data/section-drill-types";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
 import type {
   DashboardGameId,
@@ -12,9 +13,25 @@ import type {
   SkillMetricKey,
 } from "@/lib/learn-progress";
 import { buildInlineMcqChoices } from "@/lib/mcq-inline-choices";
+import type { RabbiLevel } from "@/lib/rabbi-types";
 
 function hasHebrew(s: string): boolean {
   return /[\u0590-\u05FF]/.test(s);
+}
+
+function mcqItemForRabbi(item: McqItem): { targetHe: string; meaningEn?: string } {
+  const ph = item.promptHe.trim();
+  const ce = item.correctEn.trim();
+  if (hasHebrew(ph)) {
+    return {
+      targetHe: ph,
+      meaningEn: hasHebrew(ce) ? undefined : ce,
+    };
+  }
+  return {
+    targetHe: ce,
+    meaningEn: ph || undefined,
+  };
 }
 
 type McqDrillProps = {
@@ -55,6 +72,8 @@ type McqDrillProps = {
    * Progress dashboard bucket (defaults to `mc` for course + study multiple choice).
    */
   studyGameId?: DashboardGameId;
+  /** When set, shows Ask the Rabbi for the current question (course sections). */
+  rabbiLevel?: RabbiLevel;
 };
 
 export function McqDrill({
@@ -67,6 +86,7 @@ export function McqDrill({
   onPackComplete,
   skillTags,
   studyGameId = "mc",
+  rabbiLevel,
 }: McqDrillProps) {
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -157,6 +177,11 @@ export function McqDrill({
 
   const choicesBusy =
     corpusMaxLevel !== undefined && (corpusLoading || options.length < 4);
+
+  const rabbiFocus = useMemo(
+    () => (item ? mcqItemForRabbi(item) : null),
+    [item],
+  );
 
   const done = index >= pack.items.length;
   const lastRight =
@@ -328,6 +353,17 @@ export function McqDrill({
           </div>
         )}
       </div>
+
+      {rabbiLevel && rabbiFocus?.targetHe ? (
+        <RabbiCard
+          key={item.id}
+          targetHe={rabbiFocus.targetHe}
+          meaningEn={rabbiFocus.meaningEn}
+          learnerLevel={rabbiLevel}
+          embedded
+          className="mt-4"
+        />
+      ) : null}
 
       {picked != null ? (
         <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">

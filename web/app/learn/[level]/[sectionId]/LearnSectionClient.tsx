@@ -45,6 +45,7 @@ import {
   buildPrepCardsFromMcqPack,
   sectionGrammarHint,
 } from "@/lib/drill-prep";
+import { courseLevelToRabbiLevel } from "@/lib/course-rabbi-level";
 
 type Props = { level: number; sectionId: string };
 
@@ -168,6 +169,7 @@ export function LearnSectionClient({ level, sectionId }: Props) {
   const storyGloss = Object.fromEntries(
     (mcqPack?.items ?? []).map((it) => [it.promptHe, it.correctEn]),
   );
+  const rabbiLevel = courseLevelToRabbiLevel(level);
 
   return (
     <div>
@@ -206,6 +208,7 @@ export function LearnSectionClient({ level, sectionId }: Props) {
                 pack={sentencePack}
                 className="mt-4"
                 onPracticeAnswer={onPracticeAnswer}
+                rabbiLevel={rabbiLevel}
               />
             ) : null}
           </DrillPrepGate>
@@ -243,11 +246,13 @@ export function LearnSectionClient({ level, sectionId }: Props) {
                   defaultShowNikkud={nikkudDefault}
                   skillTags={["recognition", "definition"]}
                   onPracticeAnswer={onPracticeAnswer}
+                  rabbiLevel={rabbiLevel}
                 />
                 {sentencePack ? (
                   <CorrectSentenceDrill
                     pack={sentencePack}
                     onPracticeAnswer={onPracticeAnswer}
+                    rabbiLevel={rabbiLevel}
                   />
                 ) : null}
               </>
@@ -284,11 +289,13 @@ export function LearnSectionClient({ level, sectionId }: Props) {
                     : ["recognition", "definition"]
               }
               onPracticeAnswer={onPracticeAnswer}
+              rabbiLevel={rabbiLevel}
             />
             {sentencePack ? (
               <CorrectSentenceDrill
                 pack={sentencePack}
                 onPracticeAnswer={onPracticeAnswer}
+                rabbiLevel={rabbiLevel}
               />
             ) : null}
           </DrillPrepGate>

@@ -2,11 +2,18 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
+import { RabbiCard } from "@/components/RabbiCard";
 import type {
   DashboardGameId,
   GradedPracticeContext,
 } from "@/lib/learn-progress";
+import type { RabbiLevel } from "@/lib/rabbi-types";
 import type { CorrectSentencePack } from "@/lib/sentence-correctness";
+
+function glossFromSentencePrompt(promptEn: string): string | undefined {
+  const m = promptEn.match(/"([^"]+)"/);
+  return m?.[1]?.trim() || undefined;
+}
 
 type Props = {
   pack: CorrectSentencePack;
@@ -17,6 +24,8 @@ type Props = {
   ) => void;
   endHint?: string;
   studyGameId?: DashboardGameId;
+  /** When set, shows Ask the Rabbi for the current cue (course sections). */
+  rabbiLevel?: RabbiLevel;
 };
 
 export function CorrectSentenceDrill({
@@ -25,6 +34,7 @@ export function CorrectSentenceDrill({
   onPracticeAnswer,
   endHint,
   studyGameId = "sent",
+  rabbiLevel,
 }: Props) {
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -55,6 +65,18 @@ export function CorrectSentenceDrill({
   }, []);
 
   const prompt = useMemo(() => item?.promptEn ?? "", [item]);
+
+  const rabbiTargetHe = useMemo(() => {
+    if (!item) return "";
+    const key = item.promptHe?.trim();
+    if (key) return key;
+    return item.optionsHe[item.correctIndex] ?? "";
+  }, [item]);
+
+  const rabbiMeaningEn = useMemo(
+    () => (item ? glossFromSentencePrompt(item.promptEn) : undefined),
+    [item],
+  );
 
   if (done) {
     return (
@@ -136,6 +158,17 @@ export function CorrectSentenceDrill({
           );
         })}
       </div>
+
+      {rabbiLevel && rabbiTargetHe ? (
+        <RabbiCard
+          key={item.id}
+          targetHe={rabbiTargetHe}
+          meaningEn={rabbiMeaningEn}
+          learnerLevel={rabbiLevel}
+          embedded
+          className="mt-4"
+        />
+      ) : null}
 
       {picked != null ? (
         <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
