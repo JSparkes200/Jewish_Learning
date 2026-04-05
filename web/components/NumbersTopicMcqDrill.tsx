@@ -12,6 +12,7 @@ import {
   TIME_PRON,
 } from "@/data/course-numbers-extra";
 import type { GradedPracticeContext } from "@/lib/learn-progress";
+import { LEARN_VOICE } from "@/lib/learn-user-voice";
 import { speakHebrew } from "@/lib/speech-hebrew";
 
 function shuffle<T>(arr: T[]): T[] {
@@ -55,7 +56,7 @@ function buildRound(variant: NumbersTopicVariant): Round {
     return {
       index,
       prompt: enOrdinalPosition(index),
-      subline: "Which Hebrew ordinal matches this position?",
+      subline: LEARN_VOICE.numbersOrdinalSubline,
       options,
       correctHe,
       correctIndex: options.indexOf(correctHe),
@@ -71,7 +72,7 @@ function buildRound(variant: NumbersTopicVariant): Round {
     return {
       index,
       prompt: DAYS_EN[index] ?? "",
-      subline: "Pick the Hebrew day name.",
+      subline: LEARN_VOICE.numbersDaysSubline,
       options,
       correctHe,
       correctIndex: options.indexOf(correctHe),
@@ -86,7 +87,7 @@ function buildRound(variant: NumbersTopicVariant): Round {
   return {
     index,
     prompt: TIME_EN[index] ?? "",
-    subline: "Pick the Hebrew time word.",
+    subline: LEARN_VOICE.numbersTimeSubline,
     options,
     correctHe,
     correctIndex: options.indexOf(correctHe),
@@ -217,7 +218,7 @@ export function NumbersTopicMcqDrill({ variant, onPracticeAnswer }: Props) {
       {showResult ? (
         <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
           {lastOk ? (
-            <p className="text-sage">Correct.</p>
+            <p className="text-sage">Yes — that fits.</p>
           ) : (
             <p className="text-ink-muted">
               Answer:{" "}

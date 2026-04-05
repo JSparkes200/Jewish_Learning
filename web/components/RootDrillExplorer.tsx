@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
 import { Hebrew } from "@/components/Hebrew";
 import {
   ROOT_TIER_LABELS,
@@ -10,6 +11,9 @@ import {
   type RootWordForm,
 } from "@/data/course-roots";
 import { getDynamicCourseRootFamiliesForLevel } from "@/lib/corpus-d-lookup";
+import { courseLevelToRabbiLevel } from "@/lib/course-rabbi-level";
+import { generateContent } from "@/lib/generate-content";
+import { LEARN_VOICE } from "@/lib/learn-user-voice";
 import type { GradedPracticeContext } from "@/lib/learn-progress";
 import {
   englishMcqOptionsForRootWord,
@@ -29,6 +33,10 @@ type Props = {
   onGradedPick: (correct: boolean, ctx: GradedPracticeContext) => void;
   /** Used as default / sync for lexicon cap (1–4). */
   activeLearnLevel?: number;
+  /** Inside LearnSectionClient — lighter chrome so one outer “app card” carries the lesson. */
+  courseSurface?: "panel" | "embed";
+  /** Shown on the browse screen when this step is followed by another (e.g. vocab MCQ). */
+  flowContinue?: { label: string; onContinue: () => void };
 };
 
 function vocabMasteredPct(
@@ -46,7 +54,10 @@ export function RootDrillExplorer({
   vocabLevels,
   onGradedPick,
   activeLearnLevel = 1,
+  courseSurface = "panel",
+  flowContinue,
 }: Props) {
+  const { setRabbiAskContext } = useAppShell();
   const cappedLearnLevel =
     activeLearnLevel >= 1 && activeLearnLevel <= 4 ? activeLearnLevel : 1;
 
@@ -73,6 +84,23 @@ export function RootDrillExplorer({
     correctIndex: number;
   } | null>(null);
   const [picked, setPicked] = useState<number | null>(null);
+
+  const rabbiLevelForRoots = courseLevelToRabbiLevel(
+    source === "lexicon" ? lexiconLevel : cappedLearnLevel,
+  );
+
+  useEffect(() => {
+    if (!drillRound) {
+      setRabbiAskContext(null);
+      return;
+    }
+    setRabbiAskContext({
+      targetHe: drillRound.word.h,
+      learnerLevel: rabbiLevelForRoots,
+      meaningEn: drillRound.word.e,
+    });
+    return () => setRabbiAskContext(null);
+  }, [drillRound, rabbiLevelForRoots, setRabbiAskContext]);
 
   const resetBrowseState = useCallback(() => {
     setStudyOpen(null);
@@ -126,6 +154,16 @@ export function RootDrillExplorer({
   const drillFamily =
     drillFamilyIndex != null ? families[drillFamilyIndex] : undefined;
 
+  const rootLearnContent = useMemo(() => {
+    if (!drillFamily || !drillRound) return null;
+    return generateContent({
+      promptHe: drillRound.word.h,
+      correctEn: drillRound.word.e,
+      translit: drillRound.word.p,
+      shoresh: drillFamily.root,
+    });
+  }, [drillFamily, drillRound]);
+
   if (drillFamilyIndex != null && drillFamily && drillRound) {
     const prog = rootDrill?.[drillFamily.root]?.[drillRound.word.h] ?? 0;
     const tierLab =
@@ -135,8 +173,12 @@ export function RootDrillExplorer({
           ? ROOT_TIER_LABELS[2]
           : ROOT_TIER_LABELS[3];
 
+    const drillWrap =
+      courseSurface === "embed"
+        ? "rounded-2xl border border-amber/25 bg-gradient-to-br from-amber/10 to-parchment-deep/30 p-4 sm:p-5"
+        : "rounded-3xl border-2 border-amber/35 bg-gradient-to-br from-amber/15 via-parchment-card/95 to-parchment-deep/40 p-5 shadow-[0_10px_36px_rgba(200,112,32,0.12)]";
     return (
-      <div className="rounded-2xl border border-amber/30 bg-amber/5 p-4">
+      <div className={drillWrap}>
         <button
           type="button"
           onClick={resetBrowseState}
@@ -144,12 +186,15 @@ export function RootDrillExplorer({
         >
           ← All roots
         </button>
-        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-ink-muted">
-          Root drill — <Hebrew className="text-ink">{drillFamily.root}</Hebrew>
+        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-amber/90">
+          You&apos;re drilling — <Hebrew className="text-ink">{drillFamily.root}</Hebrew>
         </p>
-        <p className="mt-1 text-xs text-ink-muted">{drillFamily.meaning}</p>
+        <p className="mt-1 text-xs text-ink-muted">
+          You&apos;ll use this root family to help new forms stick — core idea:{" "}
+          <span className="font-medium text-ink">{drillFamily.meaning}</span>.
+        </p>
         <p className="mt-2 font-label text-[9px] uppercase tracking-wide text-ink-faint">
-          {tierLab} · {prog}/3 solid for this form
+          {tierLab} · {prog}/3 times solid for this shape
         </p>
         <Hebrew
           as="p"
@@ -160,17 +205,38 @@ export function RootDrillExplorer({
         <p className="mt-2 text-center text-sm italic text-amber">
           {drillRound.word.p}
         </p>
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {rootLearnContent ? (
+          <div className="mt-4 space-y-2 rounded-2xl border border-amber/30 bg-parchment/80 px-4 py-3 shadow-inner">
+            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-amber">
+              {LEARN_VOICE.mnemonicEyebrow}
+            </p>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
+              {rootLearnContent.mnemonic}
+            </p>
+            {rootLearnContent.vibeLine ? (
+              <>
+                <p className="pt-1 font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
+                  {LEARN_VOICE.vibeEyebrow}
+                </p>
+                <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
+                  {rootLearnContent.vibeLine}
+                </p>
+              </>
+            ) : null}
+          </div>
+        ) : null}
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {drillRound.options.map((opt, j) => {
             const show = picked != null;
             const isCorrect = j === drillRound.correctIndex;
             const isSel = j === picked;
             let ring =
-              "ring-1 ring-ink/12 hover:bg-parchment-deep/50 hover:ring-ink/20";
+              "ring-2 ring-ink/10 hover:-translate-y-0.5 hover:bg-parchment-deep/55 hover:shadow-md hover:ring-amber/25";
             if (show) {
-              if (isCorrect) ring = "bg-sage/15 ring-2 ring-sage";
-              else if (isSel) ring = "bg-rust/10 ring-2 ring-rust/40 opacity-90";
-              else ring = "opacity-50 ring-1 ring-ink/8";
+              if (isCorrect) ring = "bg-sage/20 ring-2 ring-sage shadow-sm";
+              else if (isSel)
+                ring = "bg-rust/10 ring-2 ring-rust/35 opacity-90 shadow-sm";
+              else ring = "opacity-45 ring-1 ring-ink/8";
             }
             return (
               <button
@@ -178,7 +244,7 @@ export function RootDrillExplorer({
                 type="button"
                 disabled={picked != null}
                 onClick={() => onPickOption(j)}
-                className={`rounded-xl px-3 py-3 text-left text-sm text-ink transition ${ring}`}
+                className={`rounded-2xl px-4 py-3.5 text-left text-sm text-ink transition-all duration-200 ${ring}`}
               >
                 {opt}
               </button>
@@ -186,12 +252,12 @@ export function RootDrillExplorer({
           })}
         </div>
         {picked != null ? (
-          <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
+          <div className="mt-4 rounded-2xl border-2 border-ink/10 bg-parchment/90 p-4 text-sm shadow-inner">
             {picked === drillRound.correctIndex ? (
-              <p className="text-sage">Correct.</p>
+              <p className="text-sage">{LEARN_VOICE.mcqCorrect}</p>
             ) : (
               <p className="text-ink-muted">
-                The answer is{" "}
+                {LEARN_VOICE.mcqReveal}:{" "}
                 <strong className="text-ink">
                   {drillRound.options[drillRound.correctIndex]}
                 </strong>
@@ -201,7 +267,7 @@ export function RootDrillExplorer({
             <button
               type="button"
               onClick={() => startDrillRound(drillFamilyIndex)}
-              className="mt-3 rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+              className="mt-4 rounded-2xl bg-sage px-5 py-2.5 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
             >
               Next →
             </button>
@@ -211,9 +277,14 @@ export function RootDrillExplorer({
     );
   }
 
+  const browseWrap =
+    courseSurface === "embed"
+      ? "space-y-4"
+      : "rounded-3xl border-2 border-amber/25 bg-gradient-to-br from-parchment-card/95 to-amber/10 p-5 shadow-[0_8px_30px_rgba(200,112,32,0.08)]";
+
   return (
-    <div className="rounded-2xl border border-amber/25 bg-parchment-card/80 p-4">
-      <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+    <div className={browseWrap}>
+      <p className="font-label text-[10px] uppercase tracking-[0.2em] text-amber/90">
         Word roots — שׁוֹרָשִׁים
       </p>
       <Hebrew
@@ -222,17 +293,20 @@ export function RootDrillExplorer({
       >
         שׁוֹרָשִׁים
       </Hebrew>
-      <p className="mt-2 text-xs italic text-ink-muted">
-        Every Hebrew word grows from a 3-letter root. Below is the same graduated
-        drill as the legacy app: pick the English gloss for the form shown; each
-        form becomes solid after three correct answers.{" "}
-        <strong className="font-medium text-ink">
-          Lexicon
-        </strong>{" "}
-        builds families from dictionary{" "}
-        <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">D</code>{" "}
-        (two+ lemmas per shoresh), capped by level — like legacy{" "}
-        <code className="rounded bg-parchment-deep/50 px-1 text-[10px]">
+      <p className="mt-3 text-xs leading-relaxed text-ink-muted">
+        You&apos;re not memorizing random shapes — you&apos;re meeting three-letter
+        engines that power whole families of words. The root הלך isn&apos;t only
+        “walk”: it&apos;s the same DNA in הלכה (how you *walk* through Jewish
+        life) and הליכה (a stroll). You&apos;ll match each form to the English gloss
+        that fits — nail a shape three times and it shows solid in your tracker.{" "}
+        <strong className="font-medium text-ink">Lexicon</strong> mode pulls families
+        from dictionary{" "}
+        <code className="rounded-lg bg-parchment-deep/50 px-1.5 py-0.5 text-[10px]">
+          D
+        </code>{" "}
+        (two+ lemmas per shoresh), capped by the level you choose — same spirit as
+        legacy{" "}
+        <code className="rounded-lg bg-parchment-deep/50 px-1.5 py-0.5 text-[10px]">
           getRootsForLevel
         </code>
         .
@@ -426,6 +500,21 @@ export function RootDrillExplorer({
           );
         })}
       </ul>
+      {flowContinue ? (
+        <div className="mt-6 border-t border-ink/10 pt-4">
+          <p className="mb-3 text-xs text-ink-muted">
+            When you&apos;ve toured the families you care about, hop to the next beat —
+            you can always come back.
+          </p>
+          <button
+            type="button"
+            onClick={flowContinue.onContinue}
+            className="w-full rounded-2xl bg-sage px-5 py-3 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
+          >
+            {flowContinue.label}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

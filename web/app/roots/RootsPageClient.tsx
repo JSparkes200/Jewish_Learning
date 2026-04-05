@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { RootDrillExplorer } from "@/components/RootDrillExplorer";
+import { RootsCurriculumFlow } from "@/components/RootsCurriculumFlow";
 import {
   type GradedPracticeContext,
   LEARN_PROGRESS_EVENT,
@@ -17,6 +19,9 @@ import {
 } from "@/lib/learn-progress";
 
 export function RootsPageClient() {
+  const searchParams = useSearchParams();
+  const groupFromQuery = searchParams.get("group");
+
   const [progress, setProgress] = useState<LearnProgressState>(() =>
     createEmptyLearnProgressState(),
   );
@@ -30,6 +35,17 @@ export function RootsPageClient() {
     window.addEventListener(LEARN_PROGRESS_EVENT, sync);
     return () => window.removeEventListener(LEARN_PROGRESS_EVENT, sync);
   }, [sync]);
+
+  const applyCurriculum = useCallback(
+    (fn: (s: LearnProgressState) => LearnProgressState) => {
+      setProgress((p) => {
+        const n = fn(p);
+        saveLearnProgress(n);
+        return n;
+      });
+    },
+    [],
+  );
 
   const onGradedPick = useCallback(
     (correct: boolean, ctx?: GradedPracticeContext) => {
@@ -57,15 +73,31 @@ export function RootsPageClient() {
         <span className="text-ink">Roots</span>
       </nav>
       <p className="text-sm text-ink-muted">
-        Shoresh families and the same graduated drill as the Bet–Dalet roots
-        sections — open anytime from the main menu.
+        Work through shoresh families in small sets: read the forms, drill
+        glosses, pass a mixed test, then move on. Every four groups, a checkpoint
+        mixes tiers, roots, and vocabulary. Your place is saved with course
+        progress; use the list to revisit any set. Full explorer (including
+        lexicon mode) stays below.
       </p>
-      <RootDrillExplorer
-        rootDrill={progress.rootDrill}
-        vocabLevels={progress.vocabLevels}
-        activeLearnLevel={progress.activeLevel}
+      <RootsCurriculumFlow
+        learnProgress={progress}
         onGradedPick={onGradedPick}
+        applyCurriculum={applyCurriculum}
+        initialGroupId={groupFromQuery}
       />
+      <details className="rounded-2xl border border-amber/20 bg-parchment-card/40 p-4">
+        <summary className="cursor-pointer font-label text-[10px] uppercase tracking-[0.15em] text-amber/90">
+          Full root explorer (all families, lexicon mode)
+        </summary>
+        <div className="mt-4">
+          <RootDrillExplorer
+            rootDrill={progress.rootDrill}
+            vocabLevels={progress.vocabLevels}
+            activeLearnLevel={progress.activeLevel}
+            onGradedPick={onGradedPick}
+          />
+        </div>
+      </details>
     </div>
   );
 }

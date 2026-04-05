@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { RootsPageClient } from "./RootsPageClient";
 
 export const metadata = {
@@ -6,5 +7,13 @@ export const metadata = {
 };
 
 export default function RootsPage() {
-  return <RootsPageClient />;
+  return (
+    <Suspense
+      fallback={
+        <p className="text-sm text-ink-muted">Loading roots study…</p>
+      }
+    >
+      <RootsPageClient />
+    </Suspense>
+  );
 }

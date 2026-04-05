@@ -10,6 +10,12 @@ import {
   specialtyTierStorageKey,
 } from "@/data/specialty-tracks";
 import { getDeveloperModeBypass } from "@/lib/developer-mode";
+import type {
+  RootsCurriculumProgress,
+  RootsGroupProgress,
+} from "@/data/roots-curriculum";
+
+export type { RootsCurriculumProgress, RootsGroupProgress } from "@/data/roots-curriculum";
 
 /** Separate from legacy `ivrit_lr__*` until we unify auth + storage. */
 export const LEARN_PROGRESS_KEY = "hebrew-web-course-v1";
@@ -113,6 +119,10 @@ export type LearnProgressState = {
    * Per-mode correct/wrong tallies for Study-style games (legacy `learner.gt`).
    */
   studyGameStats?: Record<string, { correct: number; wrong: number }>;
+  /**
+   * Progressive roots hub: grouped intro → drill → test, plus block checkpoints.
+   */
+  rootsCurriculum?: RootsCurriculumProgress;
 };
 
 export type SkillMetricKey =
@@ -912,6 +922,131 @@ export function mergeRootDrillMaps(
 /**
  * On a correct roots drill pick, bump `rootDrill[rootKey][wordHe]` (capped).
  */
+const MAX_ROOTS_CURRICULUM_GROUP_KEYS = 24;
+
+function parseRootsCurriculumField(
+  raw: unknown,
+): RootsCurriculumProgress | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  const groupsRaw = o.groups;
+  const groups: Record<string, RootsGroupProgress> = {};
+  if (groupsRaw && typeof groupsRaw === "object") {
+    let n = 0;
+    for (const [k, v] of Object.entries(groupsRaw)) {
+      if (n >= MAX_ROOTS_CURRICULUM_GROUP_KEYS) break;
+      if (typeof k !== "string" || k.length > 64) continue;
+      if (!v || typeof v !== "object") continue;
+      const g = v as Record<string, unknown>;
+      const entry: RootsGroupProgress = {};
+      if (g.introSeen === true) entry.introSeen = true;
+      if (
+        typeof g.drillHits === "number" &&
+        Number.isFinite(g.drillHits) &&
+        g.drillHits >= 0 &&
+        g.drillHits < 10_000
+      ) {
+        entry.drillHits = Math.floor(g.drillHits);
+      }
+      if (g.testPassed === true) entry.testPassed = true;
+      if (Object.keys(entry).length > 0) {
+        groups[k] = entry;
+        n++;
+      }
+    }
+  }
+  let checkpointsPassed: number[] | undefined;
+  const cpRaw = o.checkpointsPassed;
+  if (Array.isArray(cpRaw)) {
+    const cp = cpRaw
+      .filter((x) => typeof x === "number" && x >= 0 && x < 32)
+      .map((x) => Math.floor(x as number));
+    const uniq = [...new Set(cp)].sort((a, b) => a - b);
+    if (uniq.length) checkpointsPassed = uniq;
+  }
+  if (Object.keys(groups).length === 0 && !checkpointsPassed?.length) {
+    return undefined;
+  }
+  return { groups, ...(checkpointsPassed ? { checkpointsPassed } : {}) };
+}
+
+/** Mark group intro complete (unlocks drill). */
+export function markRootsGroupIntroSeen(
+  state: LearnProgressState,
+  groupId: string,
+): LearnProgressState {
+  const gid = groupId.trim();
+  if (!gid) return state;
+  const rc = state.rootsCurriculum ?? { groups: {} };
+  const prev = rc.groups[gid] ?? {};
+  if (prev.introSeen) return state;
+  return {
+    ...state,
+    rootsCurriculum: {
+      ...rc,
+      groups: { ...rc.groups, [gid]: { ...prev, introSeen: true } },
+    },
+  };
+}
+
+/** Count a correct curriculum drill pick toward unlocking the group test. */
+export function bumpRootsCurriculumDrillHit(
+  state: LearnProgressState,
+  groupId: string,
+  correct: boolean,
+): LearnProgressState {
+  if (!correct) return state;
+  const gid = groupId.trim();
+  if (!gid) return state;
+  const rc = state.rootsCurriculum ?? { groups: {} };
+  const prev = rc.groups[gid] ?? {};
+  if (prev.testPassed) return state;
+  const nextHits = Math.min(99, (prev.drillHits ?? 0) + 1);
+  return {
+    ...state,
+    rootsCurriculum: {
+      ...rc,
+      groups: { ...rc.groups, [gid]: { ...prev, drillHits: nextHits } },
+    },
+  };
+}
+
+export function passRootsGroupTest(
+  state: LearnProgressState,
+  groupId: string,
+): LearnProgressState {
+  const gid = groupId.trim();
+  if (!gid) return state;
+  const rc = state.rootsCurriculum ?? { groups: {} };
+  const prev = rc.groups[gid] ?? {};
+  if (prev.testPassed) return state;
+  return {
+    ...state,
+    rootsCurriculum: {
+      ...rc,
+      groups: { ...rc.groups, [gid]: { ...prev, testPassed: true } },
+    },
+  };
+}
+
+export function passRootsCheckpoint(
+  state: LearnProgressState,
+  checkpointIndex: number,
+): LearnProgressState {
+  if (checkpointIndex < 0 || checkpointIndex > 31 || !Number.isFinite(checkpointIndex)) {
+    return state;
+  }
+  const rc = state.rootsCurriculum ?? { groups: {} };
+  const cur = [...(rc.checkpointsPassed ?? [])];
+  if (cur.includes(checkpointIndex)) return state;
+  cur.push(checkpointIndex);
+  cur.sort((a, b) => a - b);
+  return {
+    ...state,
+    rootsCurriculum: { ...rc, checkpointsPassed: cur },
+  };
+}
+
 export function recordRootDrillCorrect(
   state: LearnProgressState,
   rootKey: string,
@@ -1236,6 +1371,7 @@ export function loadLearnProgress(): LearnProgressState {
       lessonAnswerTotal = Math.min(LESSON_ANSWER_TOTAL_CAP, mcqAttempts);
     }
     const studyGameStats = parseStudyGameStats(p.studyGameStats);
+    const rootsCurriculum = parseRootsCurriculumField(p.rootsCurriculum);
 
     return {
       completedSections:
@@ -1276,6 +1412,7 @@ export function loadLearnProgress(): LearnProgressState {
         ? { lessonAnswerTotal }
         : {}),
       ...(studyGameStats ? { studyGameStats } : {}),
+      ...(rootsCurriculum ? { rootsCurriculum } : {}),
     };
   } catch {
     return { ...defaultState };

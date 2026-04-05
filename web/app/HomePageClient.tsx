@@ -77,14 +77,15 @@ export function HomePageClient() {
           mcqAttempts={attempts}
           mcqCorrect={correct}
           heading="Your progress"
-          intro="Course sections, streak, and practice accuracy — all saved in this browser."
+          intro="Sections you’ve finished, the streak you’re building, and how your practice answers are landing — it all stays in this browser until you move it."
           continueHref={nextUp.href}
           continueLabel={`${nextUp.label} →`}
         />
         <p className="mx-auto mt-3 max-w-md text-center text-[10px] text-ink-faint">
-          No account yet — progress stays on this device. To move it, use{" "}
+          You don’t need an account — your path lives on this device. When you’re ready to
+          move or back up, open{" "}
           <strong className="font-medium text-ink-muted/90">Advanced → Developer</strong>{" "}
-          for backup options.
+          for exports and merge tools.
         </p>
       </div>
     </div>

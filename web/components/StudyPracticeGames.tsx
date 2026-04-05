@@ -17,6 +17,7 @@ import {
   shuffleArray,
 } from "@/lib/study-practice-pool";
 import type { GradedPracticeContext } from "@/lib/learn-progress";
+import { LEARN_VOICE, learnVoiceStudyTapWordBody } from "@/lib/learn-user-voice";
 import { buildCorrectSentencePackFromPool } from "@/lib/sentence-correctness";
 import { speakHebrew } from "@/lib/speech-hebrew";
 
@@ -40,7 +41,7 @@ const MODES: readonly Mode[] = [
   { id: "mc", emoji: "◈", label: "Multiple choice" },
   { id: "fill", emoji: "___", label: "Fill in blank" },
   { id: "tap", emoji: "◉", label: "Tap the word" },
-  { id: "sent", emoji: "✓", label: "Correct sentence" },
+  { id: "sent", emoji: "✓", label: "Natural sentences" },
   { id: "match", emoji: "⇄", label: "Match pairs" },
   { id: "trans", emoji: "→", label: "Translate" },
   { id: "img", emoji: "🖼", label: "Word & emoji" },
@@ -245,7 +246,7 @@ function StudyFillModalBody({
       {show ? (
         <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
           {ok ? (
-            <p className="text-sage">Correct.</p>
+            <p className="text-sage">Nice — that’s the one.</p>
           ) : (
             <p className="text-ink-muted">
               The line uses{" "}
@@ -348,10 +349,10 @@ function StudyTapModalBody({
         </button>
       </div>
       <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-        Study - tap the word
+        {LEARN_VOICE.studyTapWordEyebrow}
       </p>
       <p className="mt-1 text-xs text-ink-muted">
-        Pick the Hebrew that matches this gloss (level {level} pool).
+        {learnVoiceStudyTapWordBody(level)}
       </p>
       <div className="mt-4 rounded-xl border border-amber/25 bg-amber/5 p-4 text-center">
         <p className="text-[11px] uppercase tracking-[0.14em] text-ink-faint">
@@ -386,10 +387,10 @@ function StudyTapModalBody({
       {show ? (
         <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
           {ok ? (
-            <p className="text-sage">Correct.</p>
+            <p className="text-sage">Nice — that’s the one.</p>
           ) : (
             <p className="text-ink-muted">
-              Correct answer:{" "}
+              The match was{" "}
               <Hebrew className="inline text-lg text-ink">{target.h}</Hebrew>
             </p>
           )}
@@ -888,7 +889,7 @@ function StudyTransModalBody({
       ) : (
         <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
           {checked === "ok" ? (
-            <p className="text-sage">Correct.</p>
+            <p className="text-sage">Nice — that’s the one.</p>
           ) : (
             <p className="text-ink-muted">
               Expected:{" "}

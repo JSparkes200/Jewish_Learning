@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
 import { Hebrew } from "@/components/Hebrew";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
-import { RabbiCard } from "@/components/RabbiCard";
 import { SaveWordButton } from "@/components/SaveWordButton";
 import type { McqItem, McqDrillPack } from "@/data/section-drill-types";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
@@ -12,6 +12,8 @@ import type {
   GradedPracticeContext,
   SkillMetricKey,
 } from "@/lib/learn-progress";
+import { generateContent } from "@/lib/generate-content";
+import { LEARN_VOICE } from "@/lib/learn-user-voice";
 import { buildInlineMcqChoices } from "@/lib/mcq-inline-choices";
 import type { RabbiLevel } from "@/lib/rabbi-types";
 
@@ -74,6 +76,10 @@ type McqDrillProps = {
   studyGameId?: DashboardGameId;
   /** When set, shows Ask the Rabbi for the current question (course sections). */
   rabbiLevel?: RabbiLevel;
+  /** Nested inside LearnSectionClient shell — drop outer “card chrome”. */
+  courseSurface?: "panel" | "embed";
+  /** After this pack’s completion screen, advance to the next lesson step. */
+  flowContinue?: { label: string; onContinue: () => void };
 };
 
 export function McqDrill({
@@ -87,7 +93,10 @@ export function McqDrill({
   skillTags,
   studyGameId = "mc",
   rabbiLevel,
+  courseSurface = "panel",
+  flowContinue,
 }: McqDrillProps) {
+  const { setRabbiAskContext } = useAppShell();
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -183,6 +192,36 @@ export function McqDrill({
     [item],
   );
 
+  useEffect(() => {
+    if (!rabbiLevel || !rabbiFocus?.targetHe?.trim()) {
+      setRabbiAskContext(null);
+      return;
+    }
+    setRabbiAskContext({
+      targetHe: rabbiFocus.targetHe.trim(),
+      learnerLevel: rabbiLevel,
+      meaningEn: rabbiFocus.meaningEn,
+    });
+    return () => setRabbiAskContext(null);
+  }, [rabbiLevel, rabbiFocus, item?.id, setRabbiAskContext]);
+
+  const learnContent = useMemo(
+    () =>
+      item
+        ? generateContent({
+            promptHe: item.promptHe,
+            correctEn: item.correctEn,
+            translit: item.translit,
+            shoresh: item.shoresh,
+            mnemonic: item.mnemonic,
+            culturalNote: item.vibeNote,
+          })
+        : null,
+    [item],
+  );
+
+  const introText = pack.intro ?? LEARN_VOICE.mcqDefaultIntro;
+
   const done = index >= pack.items.length;
   const lastRight =
     picked != null && item != null && picked === item.correctEn;
@@ -216,56 +255,72 @@ export function McqDrill({
   }, []);
 
   if (done) {
+    const doneWrap =
+      courseSurface === "embed"
+        ? "rounded-2xl border border-sage/25 bg-gradient-to-br from-sage/12 to-parchment-deep/20 p-4 sm:p-5"
+        : "rounded-3xl border-2 border-sage/30 bg-gradient-to-br from-sage/15 via-parchment-card/90 to-sage/5 p-5 shadow-[0_10px_40px_rgba(74,104,48,0.12)]";
     return (
-      <div
-        className={`rounded-2xl border border-sage/25 bg-sage/5 p-4 ${className}`.trim()}
-      >
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-sage">
-          Mini-quiz complete
+      <div className={`${doneWrap} ${className}`.trim()}>
+        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-sage">
+          {LEARN_VOICE.mcqCompleteTitle}
         </p>
         <p className="mt-2 text-sm text-ink">
           You got{" "}
           <strong>
             {correctCount}/{pack.items.length}
           </strong>{" "}
-          right.
+          right — nice focus.
         </p>
         {endHint !== undefined ? (
           <p className="mt-2 text-sm text-ink-muted">{endHint}</p>
         ) : (
-          <p className="mt-2 text-sm text-ink">
-            Use <strong>Mark section complete</strong> below when you are ready
-            to continue the course path.
+          <p className="mt-2 text-sm text-ink-muted">
+            {LEARN_VOICE.mcqCompleteBody}
           </p>
         )}
-        <button
-          type="button"
-          onClick={() => {
-            packCompleteReportedRef.current = false;
-            setIndex(0);
-            setPicked(null);
-            setCorrectCount(0);
-          }}
-          className="mt-4 rounded-lg border border-ink/15 bg-parchment-card px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink hover:bg-parchment-deep/40"
-        >
-          Practice again
-        </button>
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              packCompleteReportedRef.current = false;
+              setIndex(0);
+              setPicked(null);
+              setCorrectCount(0);
+            }}
+            className="rounded-2xl border-2 border-sage/25 bg-parchment-card px-5 py-2.5 font-label text-[10px] uppercase tracking-wide text-ink shadow-sm transition hover:border-sage/40 hover:shadow-md"
+          >
+            {LEARN_VOICE.mcqPracticeAgain}
+          </button>
+          {flowContinue ? (
+            <button
+              type="button"
+              onClick={flowContinue.onContinue}
+              className="rounded-2xl bg-sage px-5 py-2.5 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
+            >
+              {flowContinue.label}
+            </button>
+          ) : null}
+        </div>
       </div>
     );
   }
 
+  const outerActive =
+    courseSurface === "embed"
+      ? `space-y-4 ${className}`.trim()
+      : `rounded-3xl border-2 border-ink/10 bg-gradient-to-br from-parchment-card/95 via-parchment-card/90 to-parchment-deep/40 p-5 shadow-[0_8px_32px_rgba(44,36,22,0.07)] ${className}`.trim();
+
   return (
-    <div
-      className={`rounded-2xl border border-ink/12 bg-parchment-card/90 p-4 ${className}`.trim()}
-    >
+    <div className={outerActive}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-            {pack.title}
+          <p className="font-label text-[10px] uppercase tracking-[0.2em] text-sage/90">
+            {LEARN_VOICE.mcqQuestionEyebrow}
           </p>
-          {pack.intro ? (
-            <p className="mt-1 text-xs text-ink-muted">{pack.intro}</p>
-          ) : null}
+          <p className="mt-1 text-base font-medium text-ink">{pack.title}</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+            {introText}
+          </p>
         </div>
         {hasHebrew(item.promptHe) ? (
           <NikkudExerciseToggle
@@ -277,10 +332,10 @@ export function McqDrill({
 
       <div className="mt-4 flex items-center justify-between gap-2 text-[10px] text-ink-faint">
         <span>
-          Question {index + 1} of {pack.items.length}
+          You&apos;re on {index + 1} of {pack.items.length}
         </span>
         <span>
-          Score {correctCount}/{pack.items.length}
+          Your score {correctCount}/{pack.items.length}
         </span>
       </div>
 
@@ -305,6 +360,27 @@ export function McqDrill({
         </p>
       )}
 
+      {learnContent ? (
+        <div className="mt-4 space-y-2 rounded-2xl border border-amber/30 bg-gradient-to-br from-amber/12 to-parchment-deep/30 px-4 py-3 shadow-inner">
+          <p className="font-label text-[9px] uppercase tracking-[0.2em] text-amber">
+            {LEARN_VOICE.mnemonicEyebrow}
+          </p>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
+            {learnContent.mnemonic}
+          </p>
+          {learnContent.vibeLine ? (
+            <>
+              <p className="pt-1 font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
+                {LEARN_VOICE.vibeEyebrow}
+              </p>
+              <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
+                {learnContent.vibeLine}
+              </p>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="relative mt-4 min-h-[120px]">
         {choicesBusy ? (
           <div
@@ -319,7 +395,7 @@ export function McqDrill({
               />
             ))}
             <p className="col-span-full text-center text-[11px] text-ink-faint">
-              Preparing choices…
+              {LEARN_VOICE.mcqLoadingChoices}
             </p>
           </div>
         ) : (
@@ -330,12 +406,12 @@ export function McqDrill({
               const isPicked = opt === picked;
               const rtl = hasHebrew(opt);
               let ring =
-                "ring-1 ring-ink/12 hover:bg-parchment-deep/50 hover:ring-ink/20";
+                "ring-2 ring-ink/10 hover:-translate-y-0.5 hover:bg-parchment-deep/60 hover:shadow-md hover:ring-sage/25";
               if (showResult) {
-                if (isCorrect) ring = "bg-sage/15 ring-2 ring-sage";
+                if (isCorrect) ring = "bg-sage/20 ring-2 ring-sage shadow-sm";
                 else if (isPicked)
-                  ring = "bg-rust/10 ring-2 ring-rust/40 opacity-90";
-                else ring = "opacity-50 ring-1 ring-ink/8";
+                  ring = "bg-rust/10 ring-2 ring-rust/35 opacity-90 shadow-sm";
+                else ring = "opacity-45 ring-1 ring-ink/8";
               }
               return (
                 <button
@@ -344,7 +420,7 @@ export function McqDrill({
                   dir={rtl ? "rtl" : "ltr"}
                   disabled={picked != null}
                   onClick={() => onPick(opt)}
-                  className={`rounded-xl px-3 py-3 text-sm text-ink transition ${rtl ? "text-right font-hebrew" : "text-left"} ${ring}`}
+                  className={`rounded-2xl px-4 py-3.5 text-sm text-ink transition-all duration-200 ${rtl ? "text-right font-hebrew" : "text-left"} ${ring}`}
                 >
                   {opt}
                 </button>
@@ -354,24 +430,13 @@ export function McqDrill({
         )}
       </div>
 
-      {rabbiLevel && rabbiFocus?.targetHe ? (
-        <RabbiCard
-          key={item.id}
-          targetHe={rabbiFocus.targetHe}
-          meaningEn={rabbiFocus.meaningEn}
-          learnerLevel={rabbiLevel}
-          embedded
-          className="mt-4"
-        />
-      ) : null}
-
       {picked != null ? (
-        <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
+        <div className="mt-4 rounded-2xl border-2 border-ink/10 bg-parchment/90 p-4 text-sm shadow-inner">
           {lastRight ? (
-            <p className="text-sage">Correct.</p>
+            <p className="text-sage">{LEARN_VOICE.mcqCorrect}</p>
           ) : (
             <p className="text-ink-muted">
-              The answer is{" "}
+              {LEARN_VOICE.mcqReveal}:{" "}
               <strong
                 className={`text-ink ${hasHebrew(item.correctEn) ? "font-hebrew" : ""}`}
                 dir={hasHebrew(item.correctEn) ? "rtl" : undefined}
@@ -384,9 +449,11 @@ export function McqDrill({
           <button
             type="button"
             onClick={next}
-            className="mt-3 rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+            className="mt-4 rounded-2xl bg-sage px-5 py-2.5 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
           >
-            {index + 1 >= pack.items.length ? "Finish" : "Next question"}
+            {index + 1 >= pack.items.length
+              ? LEARN_VOICE.mcqFinish
+              : LEARN_VOICE.mcqNext}
           </button>
         </div>
       ) : null}

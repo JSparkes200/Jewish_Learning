@@ -87,7 +87,7 @@ export function corpusLabel(n: number): string {
 
 /** Intro copy for the Learn home (foundation track). */
 export const FOUNDATION_TRACK_INTRO =
-  "Alef–Dalet is the foundation track: voweled reading, core grammar, and daily-life Hebrew. Drills center on a focused lemma set per level; the larger dictionary numbers are lookup scope, not a memorization target. After Dalet you’ll move to foundation exit checks, the bridge, and specialty badges.";
+  "Alef–Dalet is your foundation: voweled reading, the grammar spine, and Hebrew you might actually use in a day. Each level drills a tight circle of words; the big corpus counts describe how wide the dictionary net is — not a pile you must finish tonight. After Dalet you’ll step into foundation exit, the bridge, and the specialty badges beyond.";
 
 export type SectionMeta = {
   id: string;

@@ -15,7 +15,7 @@ function mcq(
 const PACKS: Record<string, McqDrillPack> = {
   "yid-1": mcq(
     "Greetings & cognates",
-    "Pick the best English gloss for the Yiddish in Hebrew letters.",
+    "You’ll read Yiddish in Hebrew letters and choose the English gloss that fits what you’d say in life.",
     [
       {
         id: "y1-1",
@@ -58,7 +58,7 @@ const PACKS: Record<string, McqDrillPack> = {
 
   "yid-2": mcq(
     "Pronouns & זײַן",
-    "איך בין, דו ביסט — present “to be” and pronouns.",
+    "איך בין, דו ביסט — you’re anchoring present “to be” and the pronouns that ride with it.",
     [
       {
         id: "y2-1",
@@ -101,7 +101,7 @@ const PACKS: Record<string, McqDrillPack> = {
 
   "yid-3": mcq(
     "Questions & negation",
-    "וואָס / וווּ / נישׁט",
+    "וואָס / וווּ / נישׁט — questions and the gentle art of saying “not.”",
     [
       {
         id: "y3-1",
@@ -144,7 +144,7 @@ const PACKS: Record<string, McqDrillPack> = {
 
   "yid-4": mcq(
     "Home & food",
-    "High-frequency nouns.",
+    "High-frequency nouns you’ll hear around the table and the kitchen.",
     [
       {
         id: "y4-1",
@@ -187,7 +187,7 @@ const PACKS: Record<string, McqDrillPack> = {
 
   "yid-5": mcq(
     "Review mix",
-    "Mixed items from the mini-course.",
+    "A mixed bag from the mini-course — you’re weaving everything together.",
     [
       {
         id: "y5-1",

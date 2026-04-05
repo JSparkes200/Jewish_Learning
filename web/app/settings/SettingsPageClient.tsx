@@ -28,9 +28,10 @@ export function SettingsPageClient() {
           Learner name
         </p>
         <p className="mt-1 text-xs text-ink-muted">
-          Shown under the Hebrew title in the header. Stored only in this browser (
+          This is the little name under עִבְרִית in the header — yours, on this
+          device only (
           <code className="text-[10px]">localStorage</code>
-          ). Not sent to a server account.
+          ). Nothing here creates a cloud account.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
@@ -67,8 +68,9 @@ export function SettingsPageClient() {
         </p>
         <ul className="mt-3 list-disc space-y-2 pl-4 text-sm text-ink-muted">
           <li>
-            <strong className="text-ink">Guest / local</strong> — Progress, library saves, and study data
-            live in this browser unless you use backup or cloud tools.
+            <strong className="text-ink">Guest / local</strong> — Your progress,
+            library saves, and study data stay in this browser until you export,
+            merge, or turn on optional cloud backup.
           </li>
           <li>
             <strong className="text-ink">Legacy HTML</strong> — The older single-page app used{" "}
@@ -80,9 +82,9 @@ export function SettingsPageClient() {
             .
           </li>
           <li>
-            <strong className="text-ink">Developer session</strong> — When your deploy sets server env vars
-            for dev login, signing in on Developer sets an HttpOnly cookie to bypass course gates for
-            testing. That is not end-user auth.
+            <strong className="text-ink">Developer session</strong> — When the server
+            has dev-login env vars, signing in on Developer drops an HttpOnly cookie so
+            builders can walk gates freely. Learners don’t need this for daily study.
           </li>
           <li>
             <strong className="text-ink">Cloud backup</strong> — Optional Learn progress sync uses an

@@ -13,6 +13,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { RabbiAskPayload } from "@/components/RabbiCard";
+import { RabbiAskModalBody } from "@/components/RabbiAskModalBody";
 import { RabbiTipBody } from "@/components/RabbiTipBody";
 import { getNextLearnUp } from "@/lib/learn-next-up";
 import { getRabbiTip } from "@/lib/rabbi-tips";
@@ -69,6 +71,8 @@ type AppShellContextValue = {
   nextUp: NextUpSuggestion | null;
   nextUpExpanded: boolean;
   toggleNextUpPanel: () => void;
+  /** Current Hebrew cue for header “Ask the Rabbi” (from drills, etc.). */
+  setRabbiAskContext: (p: RabbiAskPayload | null) => void;
 };
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -335,6 +339,9 @@ function ShellInner({ children }: { children: ReactNode }) {
   });
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [trialActive, setTrialActive] = useState(false);
+  const [rabbiAskPayload, setRabbiAskContext] = useState<RabbiAskPayload | null>(
+    null,
+  );
 
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -377,6 +384,7 @@ function ShellInner({ children }: { children: ReactNode }) {
       nextUp,
       nextUpExpanded,
       toggleNextUpPanel,
+      setRabbiAskContext,
     }),
     [
       openModal,
@@ -505,34 +513,50 @@ function ShellInner({ children }: { children: ReactNode }) {
               )}
             </div>
 
-            <button
-              type="button"
-              aria-label={
-                trialActive
-                  ? "Ask the Rabbi — trial includes AI access when available"
-                  : "Ask the Rabbi — tips for this screen"
-              }
-              title={
-                trialActive
-                  ? "Trial active: Rabbi tips now; full AI when connected"
-                  : undefined
-              }
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-sm font-semibold shadow-sm transition hover:bg-sage/10 ${
-                trialActive
-                  ? "border-rust/35 bg-rust/10 text-rust"
-                  : "border-sage/25 bg-parchment/90 text-sage"
-              }`}
-              onClick={() =>
-                openModal(
-                  <RabbiTipBody
-                    tip={getRabbiTip(pathname)}
-                    onClose={closeModal}
-                  />,
-                )
-              }
-            >
-              ?
-            </button>
+            <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  openModal(<RabbiAskModalBody payload={rabbiAskPayload} />)
+                }
+                className="text-right font-label text-[8px] uppercase leading-tight tracking-[0.14em] text-sage underline decoration-sage/40 underline-offset-2 transition hover:decoration-sage sm:max-w-[7rem] sm:text-[9px]"
+                title={
+                  rabbiAskPayload
+                    ? "Open Rabbi notes for the Hebrew on this screen"
+                    : "Rabbi notes — available when a lesson sets a Hebrew cue"
+                }
+              >
+                Ask the Rabbi
+              </button>
+              <button
+                type="button"
+                aria-label={
+                  trialActive
+                    ? "Quick tip — trial includes AI access when available"
+                    : "Quick tip for this screen"
+                }
+                title={
+                  trialActive
+                    ? "Trial active: Rabbi tips now; full AI when connected"
+                    : "Short tip for this page"
+                }
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm font-semibold shadow-sm transition hover:bg-sage/10 ${
+                  trialActive
+                    ? "border-rust/35 bg-rust/10 text-rust"
+                    : "border-sage/25 bg-parchment/90 text-sage"
+                }`}
+                onClick={() =>
+                  openModal(
+                    <RabbiTipBody
+                      tip={getRabbiTip(pathname)}
+                      onClose={closeModal}
+                    />,
+                  )
+                }
+              >
+                ?
+              </button>
+            </div>
           </div>
           <TrialCountdownBar />
         </header>

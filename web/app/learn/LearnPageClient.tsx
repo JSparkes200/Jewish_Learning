@@ -111,7 +111,7 @@ export function LearnPageClient() {
           type="button"
           onClick={openPathOverview}
           className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-ink/15 bg-parchment-deep/50 font-serif text-base font-semibold italic leading-none text-ink-muted shadow-sm transition hover:border-sage/40 hover:bg-sage/10 hover:text-ink"
-          aria-label="Full course path, goals, and how stages connect"
+          aria-label="Open map of the full course path and how each stage connects"
         >
           i
         </button>
@@ -126,8 +126,8 @@ export function LearnPageClient() {
             {FOUNDATION_TRACK_INTRO}
           </p>
           <p className="mt-1 text-[10px] text-ink-faint">
-            Swipe the carousel — each card opens details, unlock rules, and
-            links. Progress saves in this browser.
+            Swipe the carousel: each card opens its story, what unlocks next, and
+            where to tap next. Your progress saves in this browser.
           </p>
         </div>
       </div>
@@ -138,8 +138,8 @@ export function LearnPageClient() {
             Alphabet (optional)
           </p>
           <p className="mt-1 text-xs text-ink-muted">
-            New to the letters? Optional track — dismiss if you already read
-            Hebrew.
+            New to the letters? This track is optional — dismiss it if you already
+            read Hebrew comfortably.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Link
@@ -153,7 +153,7 @@ export function LearnPageClient() {
               onClick={dismissAlphabetBanner}
               className="rounded-lg border border-ink/15 px-3 py-1.5 font-label text-[9px] uppercase text-ink-muted hover:bg-parchment-deep/40"
             >
-              Dismiss
+              Not needed
             </button>
           </div>
         </div>
@@ -165,10 +165,11 @@ export function LearnPageClient() {
             Milestone
           </p>
           <p className="mt-1 text-sm font-medium text-ink">
-            Alef–Dalet subsections complete.
+            You’ve cleared every Alef–Dalet subsection — that’s a real milestone.
           </p>
           <p className="mt-1 text-xs text-ink-muted">
-            Next: foundation exit, bridge, specialty badges.
+            Next up: foundation exit, the bridge, and the specialty badges when
+            you’re ready.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Link

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ComprehensionDrill } from "@/components/ComprehensionDrill";
 import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
-import { DrillPrepGate } from "@/components/DrillPrepGate";
+import { DrillPrepPanel } from "@/components/DrillPrepPanel";
 import { LessonPrimerPanel } from "@/components/LessonPrimerPanel";
 import { HebrewTapText } from "@/components/HebrewTapText";
 import { McqDrill } from "@/components/McqDrill";
@@ -31,6 +31,7 @@ import {
   touchDailyStreak,
   type LearnProgressState,
 } from "@/lib/learn-progress";
+import { LEARN_VOICE } from "@/lib/learn-user-voice";
 import { useLearnProgressSync } from "@/lib/use-learn-progress-sync";
 import {
   buildStudyPracticePool,
@@ -49,6 +50,74 @@ import { courseLevelToRabbiLevel } from "@/lib/course-rabbi-level";
 
 type Props = { level: number; sectionId: string };
 
+type LessonPhase = "intro" | "prep" | "work";
+
+type ActivityKey = "comp" | "story" | "roots" | "nums" | "mcq" | "sent";
+
+type ActivityStep = { key: ActivityKey; label: string };
+
+function continueLabelForNextKey(nextKey: ActivityKey): string {
+  switch (nextKey) {
+    case "comp":
+      return LEARN_VOICE.sectionContinueReading;
+    case "story":
+      return LEARN_VOICE.sectionContinueStory;
+    case "mcq":
+      return LEARN_VOICE.sectionContinueVocab;
+    case "roots":
+      return LEARN_VOICE.sectionContinueRoots;
+    case "nums":
+      return LEARN_VOICE.sectionContinueNumbers;
+    case "sent":
+      return LEARN_VOICE.sectionContinueSentences;
+    default:
+      return "Continue";
+  }
+}
+
+function LearnSectionStepHeader({
+  stepIndex,
+  total,
+  label,
+  onBackStep,
+  onLessonOverview,
+}: {
+  stepIndex: number;
+  total: number;
+  label: string;
+  onBackStep: () => void;
+  onLessonOverview: () => void;
+}) {
+  return (
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 pb-4">
+      <div className="min-w-0">
+        {total > 1 ? (
+          <p className="font-label text-[9px] uppercase tracking-[0.2em] text-sage/80">
+            {LEARN_VOICE.sectionStepLabel(stepIndex + 1, total)}
+          </p>
+        ) : null}
+        <p className="mt-0.5 text-sm font-medium text-ink">{label}</p>
+      </div>
+      <div className="flex flex-shrink-0 flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onBackStep}
+          className="rounded-full border border-ink/12 px-3 py-1.5 font-label text-[9px] uppercase tracking-wide text-ink-muted transition hover:bg-parchment-deep/50"
+        >
+          {LEARN_VOICE.sectionStepBack}
+        </button>
+        <button
+          type="button"
+          onClick={onLessonOverview}
+          className="rounded-full border border-sage/30 px-3 py-1.5 font-label text-[9px] uppercase tracking-wide text-sage transition hover:bg-sage/10"
+        >
+          Lesson overview
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function LearnSectionClient({ level, sectionId }: Props) {
   const sections = useMemo(() => getSectionsForLevel(level), [level]);
   const sec = sections.find((s) => s.id === sectionId);
@@ -56,28 +125,17 @@ export function LearnSectionClient({ level, sectionId }: Props) {
   const nikkudDefault = sec ? sectionDefaultShowNikkud(sec) : true;
   const [storyShowNikkud, setStoryShowNikkud] = useState(nikkudDefault);
 
+  const [phase, setPhase] = useState<LessonPhase>("intro");
+  const [workIndex, setWorkIndex] = useState(0);
+
   useEffect(() => {
     setStoryShowNikkud(nikkudDefault);
   }, [sectionId, nikkudDefault]);
 
-  const unlocked = sec
-    ? sectionUnlocked(
-        level,
-        sections,
-        sec.id,
-        progress.completedSections,
-        progress.vocabLevels,
-      )
-    : false;
-  const lockHint = sec
-    ? sectionLockHint(
-        level,
-        sections,
-        sec.id,
-        progress.completedSections,
-        progress.vocabLevels,
-      )
-    : null;
+  useEffect(() => {
+    setPhase("intro");
+    setWorkIndex(0);
+  }, [sectionId]);
 
   const onPracticeAnswer = useCallback(
     (correct: boolean, ctx?: GradedPracticeContext) => {
@@ -114,20 +172,35 @@ export function LearnSectionClient({ level, sectionId }: Props) {
   if (!sec) {
     return (
       <p className="text-sm text-ink-muted">
-        Unknown section.{" "}
+        This section ID isn&apos;t on the map.{" "}
         <Link href={`/learn/${level}`} className="text-sage underline">
-          Back
+          Back to level {level}
         </Link>
       </p>
     );
   }
 
-  if (!unlocked) {
+  if (
+    !sectionUnlocked(
+      level,
+      sections,
+      sec.id,
+      progress.completedSections,
+      progress.vocabLevels,
+    )
+  ) {
+    const hint = sectionLockHint(
+      level,
+      sections,
+      sec.id,
+      progress.completedSections,
+      progress.vocabLevels,
+    );
     return (
       <div className="text-sm text-ink-muted">
         <p className="mb-2">
-          {lockHint ??
-            "This section is locked until you complete the previous one."}
+          {hint ??
+            "This section opens after you finish the one before it — your path stays in order."}
         </p>
         <Link href={`/learn/${level}`} className="text-sage underline">
           Level menu
@@ -149,7 +222,7 @@ export function LearnSectionClient({ level, sectionId }: Props) {
             kind: "mcq" as const,
             title: `${sec.label} - generated practice`,
             intro:
-              "Section-specific pack is still being curated. This generated drill keeps your course path and mastery tracking moving.",
+              "We’re still polishing a hand-built pack for this spot — meanwhile this set keeps your feet on the path and your stats honest.",
             items,
           };
         })()
@@ -171,57 +244,96 @@ export function LearnSectionClient({ level, sectionId }: Props) {
   );
   const rabbiLevel = courseLevelToRabbiLevel(level);
 
-  return (
-    <div>
-      <nav className="mb-6 flex flex-wrap gap-3 text-[10px] uppercase tracking-[0.15em]">
-        <Link href="/learn" className="text-sage hover:underline">
-          Learn
-        </Link>
-        <span className="text-ink-faint">/</span>
-        <Link href={`/learn/${level}`} className="text-sage hover:underline">
-          Level {level}
-        </Link>
-      </nav>
+  const activities = useMemo((): ActivityStep[] => {
+    const steps: ActivityStep[] = [];
+    if (comprehension) {
+      steps.push({ key: "comp", label: "Reading check" });
+      if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
+    } else if (isRead) {
+      steps.push({ key: "story", label: "Story" });
+      if (mcqPack) {
+        steps.push({ key: "mcq", label: "Meaning match" });
+        if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
+      }
+    } else if (mcqPack || generatedPack) {
+      if (sec.type === "roots") steps.push({ key: "roots", label: "Root families" });
+      if (sec.type === "numbers" && sectionId === "1-nums") {
+        steps.push({ key: "nums", label: "Numbers you hear" });
+      }
+      steps.push({ key: "mcq", label: "Vocabulary choices" });
+      if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
+    }
+    return steps;
+  }, [
+    comprehension,
+    generatedPack,
+    isRead,
+    mcqPack,
+    sec.type,
+    sectionId,
+    sentencePack,
+  ]);
 
-      <h1 className="mb-4 font-label text-xs uppercase tracking-wide text-ink">
-        {sec.label}
-      </h1>
+  const hasPrep = prepCards.length > 0;
+  const hasLessonTrack = activities.length > 0;
 
-      {lessonPrimer ? <LessonPrimerPanel primer={lessonPrimer} /> : null}
+  const goLessonOverview = useCallback(() => {
+    setPhase("intro");
+    setWorkIndex(0);
+  }, []);
 
-      {comprehension ? (
-        <div className="mb-6">
-          <DrillPrepGate
-            title={sec.label}
-            subtitle={prepSubtitle}
-            cards={prepCards}
-            ctaLabel="Start reading drills"
-          >
-            <ComprehensionDrill
-              passage={comprehension}
-              defaultShowNikkud={nikkudDefault}
-              skillTags={["comprehension", "grammar", "recognition", "definition"]}
-              onPracticeAnswer={onPracticeAnswer}
-            />
-            {sentencePack ? (
-              <CorrectSentenceDrill
-                pack={sentencePack}
-                className="mt-4"
-                onPracticeAnswer={onPracticeAnswer}
-                rabbiLevel={rabbiLevel}
-              />
-            ) : null}
-          </DrillPrepGate>
-        </div>
-      ) : isRead ? (
-        <div className="mb-6 space-y-6">
-          <DrillPrepGate
-            title={sec.label}
-            subtitle={prepSubtitle}
-            cards={prepCards}
-            ctaLabel="Start story drills"
-          >
-            <div className="rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
+  const goBackStep = useCallback(() => {
+    if (workIndex > 0) {
+      setWorkIndex((i) => i - 1);
+      return;
+    }
+    if (phase === "work") {
+      if (hasPrep) setPhase("prep");
+      else setPhase("intro");
+    }
+  }, [workIndex, phase, hasPrep]);
+
+  const flowForIndex = useCallback(
+    (i: number) => {
+      if (i >= activities.length - 1) return undefined;
+      const next = activities[i + 1]!;
+      return {
+        label: continueLabelForNextKey(next.key),
+        onContinue: () => setWorkIndex(i + 1),
+      };
+    },
+    [activities],
+  );
+
+  const mcqSource = mcqPack ?? generatedPack;
+
+  const renderWorkStep = () => {
+    const step = activities[workIndex];
+    if (!step) return null;
+    const fc = flowForIndex(workIndex);
+    const skillMcq =
+      sec.type === "roots"
+        ? (["grammar", "production", "definition"] as const)
+        : sec.type === "numbers"
+          ? (["recognition", "definition", "listening"] as const)
+          : (["recognition", "definition"] as const);
+
+    switch (step.key) {
+      case "comp":
+        return (
+          <ComprehensionDrill
+            passage={comprehension!}
+            defaultShowNikkud={nikkudDefault}
+            skillTags={["comprehension", "grammar", "recognition", "definition"]}
+            onPracticeAnswer={onPracticeAnswer}
+            courseSurface="embed"
+            flowContinue={fc}
+          />
+        );
+      case "story":
+        return (
+          <>
+            <div className="rounded-2xl border border-ink/10 bg-parchment-deep/20 p-4 sm:p-5">
               <div className="mb-3 flex justify-end">
                 <NikkudExerciseToggle
                   showNikkud={storyShowNikkud}
@@ -229,103 +341,232 @@ export function LearnSectionClient({ level, sectionId }: Props) {
                 />
               </div>
               <HebrewTapText
-                text={storyShowNikkud ? LEVEL_1_STORY.he : stripNikkud(LEVEL_1_STORY.he)}
+                text={
+                  storyShowNikkud ? LEVEL_1_STORY.he : stripNikkud(LEVEL_1_STORY.he)
+                }
                 className="text-lg text-ink"
                 glossByWord={storyGloss}
                 showSaveWord
               />
-              <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
+              <p className="mt-4 border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
                 {LEVEL_1_STORY.en}
               </p>
             </div>
-            {mcqPack ? (
-              <>
-                <McqDrill
-                  pack={mcqPack}
-                  corpusMaxLevel={level}
-                  defaultShowNikkud={nikkudDefault}
-                  skillTags={["recognition", "definition"]}
-                  onPracticeAnswer={onPracticeAnswer}
-                  rabbiLevel={rabbiLevel}
-                />
-                {sentencePack ? (
-                  <CorrectSentenceDrill
-                    pack={sentencePack}
-                    onPracticeAnswer={onPracticeAnswer}
-                    rabbiLevel={rabbiLevel}
-                  />
-                ) : null}
-              </>
+            {fc ? (
+              <div className="mt-6 border-t border-ink/10 pt-4">
+                <p className="mb-3 text-xs text-ink-muted">
+                  When you&apos;ve read it through at your pace, move on — you can
+                  always come back.
+                </p>
+                <button
+                  type="button"
+                  onClick={fc.onContinue}
+                  className="w-full rounded-2xl bg-sage px-5 py-3 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
+                >
+                  {fc.label}
+                </button>
+              </div>
             ) : null}
-          </DrillPrepGate>
-        </div>
-      ) : mcqPack || generatedPack ? (
-        <div className="mb-6 space-y-6">
-          <DrillPrepGate
-            title={sec.label}
-            subtitle={prepSubtitle}
-            cards={prepCards}
-            ctaLabel="Start lesson drills"
-          >
-            {sec.type === "roots" ? (
-              <RootDrillExplorer
-                rootDrill={progress.rootDrill}
-                vocabLevels={progress.vocabLevels}
-                onGradedPick={onPracticeAnswer}
-              />
-            ) : null}
-            {sec.type === "numbers" && sectionId === "1-nums" ? (
-              <NumbersListenDrill onPracticeAnswer={onPracticeAnswer} />
-            ) : null}
-            <McqDrill
-              pack={mcqPack ?? generatedPack!}
-              corpusMaxLevel={level}
-              defaultShowNikkud={nikkudDefault}
-              skillTags={
-                sec.type === "roots"
-                  ? ["grammar", "production", "definition"]
-                  : sec.type === "numbers"
-                    ? ["recognition", "definition", "listening"]
-                    : ["recognition", "definition"]
-              }
-              onPracticeAnswer={onPracticeAnswer}
-              rabbiLevel={rabbiLevel}
-            />
-            {sentencePack ? (
-              <CorrectSentenceDrill
-                pack={sentencePack}
-                onPracticeAnswer={onPracticeAnswer}
-                rabbiLevel={rabbiLevel}
-              />
-            ) : null}
-          </DrillPrepGate>
-        </div>
-      ) : (
-        <div className="mb-6 rounded-xl border border-amber/25 bg-amber/5 p-4 text-sm text-ink-muted">
-          <p className="mb-2 font-medium text-ink">More exercises coming</p>
-          <p>
-            This section does not have interactive drills in the app yet. You
-            can still{" "}
-            <strong className="text-ink">mark complete</strong> when you are
-            ready to move on in the course path.
-          </p>
-        </div>
-      )}
+          </>
+        );
+      case "roots":
+        return (
+          <RootDrillExplorer
+            rootDrill={progress.rootDrill}
+            vocabLevels={progress.vocabLevels}
+            onGradedPick={onPracticeAnswer}
+            activeLearnLevel={level}
+            courseSurface="embed"
+            flowContinue={fc}
+          />
+        );
+      case "nums":
+        return (
+          <NumbersListenDrill
+            onPracticeAnswer={onPracticeAnswer}
+            courseSurface="embed"
+            flowContinue={fc}
+          />
+        );
+      case "mcq":
+        return mcqSource ? (
+          <McqDrill
+            pack={mcqSource}
+            corpusMaxLevel={level}
+            defaultShowNikkud={nikkudDefault}
+            skillTags={[...skillMcq]}
+            onPracticeAnswer={onPracticeAnswer}
+            rabbiLevel={rabbiLevel}
+            courseSurface="embed"
+            flowContinue={fc}
+          />
+        ) : null;
+      case "sent":
+        return sentencePack ? (
+          <CorrectSentenceDrill
+            pack={sentencePack}
+            onPracticeAnswer={onPracticeAnswer}
+            rabbiLevel={rabbiLevel}
+            courseSurface="embed"
+            flowContinue={fc}
+          />
+        ) : null;
+      default:
+        return null;
+    }
+  };
 
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={markComplete}
-          className="rounded-xl bg-sage px-5 py-3 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
-        >
-          Mark section complete
-        </button>
-        <Link
-          href={`/learn/${level}`}
-          className="rounded-xl border border-ink/15 px-5 py-3 font-label text-[10px] uppercase tracking-wide text-ink-muted hover:bg-parchment-deep/50"
-        >
-          Back to level
-        </Link>
+  const prepCta =
+    comprehension != null
+      ? "Start reading drills"
+      : isRead
+        ? "Start story drills"
+        : "Start lesson drills";
+
+  const mainShell = (
+    <div className="rounded-[1.75rem] border-2 border-ink/8 bg-gradient-to-b from-parchment-card via-parchment-card/95 to-parchment-deep/25 p-1 shadow-[0_24px_60px_rgba(44,36,22,0.09)] sm:p-1.5">
+      <div className="rounded-[1.35rem] bg-parchment-card/85 px-4 py-5 sm:px-6 sm:py-7">
+        {phase === "intro" && hasLessonTrack ? (
+          <>
+            <p className="font-label text-[10px] uppercase tracking-[0.22em] text-sage/90">
+              {LEARN_VOICE.sectionIntroEyebrow}
+            </p>
+            <h1 className="mt-2 text-lg font-medium tracking-tight text-ink sm:text-xl">
+              {sec.label}
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-ink-muted">
+              {LEARN_VOICE.sectionIntroLead}
+            </p>
+            {lessonPrimer ? (
+              <div className="mt-4">
+                <LessonPrimerPanel primer={lessonPrimer} defaultOpen={false} />
+              </div>
+            ) : null}
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              {hasPrep ? (
+                <button
+                  type="button"
+                  onClick={() => setPhase("prep")}
+                  className="rounded-2xl border-2 border-sage/30 bg-parchment-deep/30 px-5 py-3 font-label text-[10px] uppercase tracking-wide text-ink shadow-sm transition hover:border-sage/45 hover:bg-parchment-deep/45"
+                >
+                  {LEARN_VOICE.sectionIntroStartWithWarmup}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setPhase("work");
+                  setWorkIndex(0);
+                }}
+                className="rounded-2xl bg-sage px-5 py-3 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
+              >
+                {hasPrep
+                  ? LEARN_VOICE.sectionIntroSkipWarmup
+                  : LEARN_VOICE.sectionIntroStartLesson}
+              </button>
+            </div>
+            {hasPrep ? (
+              <p className="mt-3 text-[11px] text-ink-faint">
+                Skip the warm-up whenever you already feel sharp — the pacing is
+                yours.
+              </p>
+            ) : null}
+          </>
+        ) : null}
+
+        {phase === "intro" && !hasLessonTrack ? (
+          <>
+            <p className="font-label text-[10px] uppercase tracking-[0.22em] text-amber/90">
+              {LEARN_VOICE.sectionIntroEyebrow}
+            </p>
+            <h1 className="mt-2 text-lg font-medium text-ink sm:text-xl">
+              {sec.label}
+            </h1>
+            <p className="mt-4 text-sm text-ink-muted">
+              Interactive drills for this slice aren&apos;t in the app yet — you can
+              still{" "}
+              <strong className="text-ink">mark complete</strong> when you&apos;ve
+              done the work elsewhere and you&apos;re ready to advance.
+            </p>
+          </>
+        ) : null}
+
+        {phase === "prep" && hasLessonTrack ? (
+          <>
+            <LearnSectionStepHeader
+              stepIndex={0}
+              total={Math.max(activities.length, 1)}
+              label="Warm-up peek"
+              onBackStep={() => setPhase("intro")}
+              onLessonOverview={goLessonOverview}
+            />
+            <DrillPrepPanel
+              title={sec.label}
+              subtitle={prepSubtitle}
+              cards={prepCards}
+              ctaLabel={prepCta}
+              onContinue={() => {
+                setPhase("work");
+                setWorkIndex(0);
+              }}
+            />
+          </>
+        ) : null}
+
+        {phase === "work" && hasLessonTrack ? (
+          <>
+            <LearnSectionStepHeader
+              stepIndex={workIndex}
+              total={activities.length}
+              label={activities[workIndex]?.label ?? ""}
+              onBackStep={goBackStep}
+              onLessonOverview={goLessonOverview}
+            />
+            {renderWorkStep()}
+            {workIndex >= activities.length - 1 ? (
+              <div className="mt-8 rounded-2xl border border-sage/20 bg-sage/5 px-4 py-3 text-sm text-ink-muted">
+                <p className="font-label text-[9px] uppercase tracking-[0.18em] text-sage">
+                  {LEARN_VOICE.sectionWrapEyebrow}
+                </p>
+                <p className="mt-1">{LEARN_VOICE.sectionWrapBody}</p>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-[72vh] bg-gradient-to-b from-parchment-deep/15 via-transparent to-parchment-deep/10 pb-16">
+      <div className="mx-auto w-full max-w-lg px-4 pt-6 sm:max-w-xl">
+        <nav className="mb-5 flex flex-wrap gap-3 text-[10px] uppercase tracking-[0.15em]">
+          <Link href="/learn" className="text-sage hover:underline">
+            Learn
+          </Link>
+          <span className="text-ink-faint">/</span>
+          <Link href={`/learn/${level}`} className="text-sage hover:underline">
+            Level {level}
+          </Link>
+        </nav>
+
+        {mainShell}
+
+        <div className="mt-8 flex flex-wrap gap-3 px-1">
+          <button
+            type="button"
+            onClick={markComplete}
+            className="rounded-2xl bg-sage px-5 py-3 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110"
+          >
+            Mark section complete
+          </button>
+          <Link
+            href={`/learn/${level}`}
+            className="rounded-2xl border-2 border-ink/12 px-5 py-3 font-label text-[10px] uppercase tracking-wide text-ink-muted transition hover:bg-parchment-deep/40"
+          >
+            Back to level
+          </Link>
+        </div>
       </div>
     </div>
   );

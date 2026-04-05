@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Hebrew — Yeshiva",
   description:
-    "Hebrew course (Alef–Dalet), drills, reading practice, library links, and saved progress.",
+    "A warm, structured Hebrew path (Alef–Dalet through bridge and beyond), with drills, reading, roots, and progress that stays yours in the browser.",
   appleWebApp: {
     capable: true,
     title: "Hebrew — Yeshiva",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Hebrew — Yeshiva",
     description:
-      "Structured Hebrew lessons, practice drills, reading, and review — save progress in your browser.",
+      "Leveled Hebrew lessons, playful drills, reading habits, and honest review — progress saved in your browser until you choose to move it.",
     type: "website",
     locale: "en_US",
     images: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "Hebrew — Yeshiva",
     description:
-      "Structured Hebrew lessons, drills, reading, and review — Yeshiva",
+      "Leveled Hebrew, living-language drills, and reading you can grow into — Yeshiva",
   },
 };
 

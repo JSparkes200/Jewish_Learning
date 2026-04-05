@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
 import { Hebrew } from "@/components/Hebrew";
-import { RabbiCard } from "@/components/RabbiCard";
+import { generateContent } from "@/lib/generate-content";
+import { LEARN_VOICE } from "@/lib/learn-user-voice";
 import type {
   DashboardGameId,
   GradedPracticeContext,
@@ -26,6 +28,8 @@ type Props = {
   studyGameId?: DashboardGameId;
   /** When set, shows Ask the Rabbi for the current cue (course sections). */
   rabbiLevel?: RabbiLevel;
+  courseSurface?: "panel" | "embed";
+  flowContinue?: { label: string; onContinue: () => void };
 };
 
 export function CorrectSentenceDrill({
@@ -35,7 +39,10 @@ export function CorrectSentenceDrill({
   endHint,
   studyGameId = "sent",
   rabbiLevel,
+  courseSurface = "panel",
+  flowContinue,
 }: Props) {
+  const { setRabbiAskContext } = useAppShell();
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -78,72 +85,151 @@ export function CorrectSentenceDrill({
     [item],
   );
 
+  const learnContent = useMemo(
+    () =>
+      item?.promptHe
+        ? generateContent({
+            promptHe: item.promptHe,
+            correctEn:
+              rabbiMeaningEn?.trim() ||
+              item.promptEn.slice(0, 160) ||
+              "this cue",
+            translit: item.translit,
+            shoresh: item.shoresh,
+            mnemonic: item.mnemonic,
+            culturalNote: item.vibeNote,
+          })
+        : null,
+    [item, rabbiMeaningEn],
+  );
+
+  useEffect(() => {
+    if (!rabbiLevel || !rabbiTargetHe.trim()) {
+      setRabbiAskContext(null);
+      return;
+    }
+    setRabbiAskContext({
+      targetHe: rabbiTargetHe.trim(),
+      learnerLevel: rabbiLevel,
+      meaningEn: rabbiMeaningEn,
+    });
+    return () => setRabbiAskContext(null);
+  }, [
+    rabbiLevel,
+    rabbiTargetHe,
+    rabbiMeaningEn,
+    item?.id,
+    setRabbiAskContext,
+  ]);
+
+  const introText = pack.intro ?? LEARN_VOICE.correctSentenceIntro;
+
   if (done) {
+    const doneWrap =
+      courseSurface === "embed"
+        ? "rounded-2xl border border-sage/25 bg-gradient-to-br from-sage/10 to-parchment-deep/25 p-4 sm:p-5"
+        : "rounded-3xl border-2 border-sage/30 bg-gradient-to-br from-sage/12 via-parchment-card/95 to-parchment-deep/40 p-5 shadow-[0_10px_40px_rgba(74,104,48,0.1)]";
     return (
-      <div
-        className={`rounded-2xl border border-sage/25 bg-sage/5 p-4 ${className}`.trim()}
-      >
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-sage">
-          Correct sentence complete
+      <div className={`${doneWrap} ${className}`.trim()}>
+        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-sage">
+          {LEARN_VOICE.correctSentenceCompleteTitle}
         </p>
         <p className="mt-2 text-sm text-ink">
           You got{" "}
           <strong>
             {correctCount}/{pack.items.length}
           </strong>{" "}
-          right.
+          right — your ear’s leveling up.
         </p>
         <p className="mt-2 text-sm text-ink-muted">
-          {endHint ?? "This mode trains production + grammar judgment."}
+          {endHint ??
+            "You’re training how real Hebrew sentences feel, not just word lists."}
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            setIndex(0);
-            setPicked(null);
-            setCorrectCount(0);
-          }}
-          className="mt-4 rounded-lg border border-ink/15 bg-parchment-card px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink hover:bg-parchment-deep/40"
-        >
-          Practice again
-        </button>
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              setIndex(0);
+              setPicked(null);
+              setCorrectCount(0);
+            }}
+            className="rounded-2xl border-2 border-sage/25 bg-parchment-card px-5 py-2.5 font-label text-[10px] uppercase tracking-wide text-ink shadow-sm transition hover:border-sage/40 hover:shadow-md"
+          >
+            {LEARN_VOICE.mcqPracticeAgain}
+          </button>
+          {flowContinue ? (
+            <button
+              type="button"
+              onClick={flowContinue.onContinue}
+              className="rounded-2xl bg-sage px-5 py-2.5 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
+            >
+              {flowContinue.label}
+            </button>
+          ) : null}
+        </div>
       </div>
     );
   }
 
+  const outerActive =
+    courseSurface === "embed"
+      ? `space-y-4 ${className}`.trim()
+      : `rounded-3xl border-2 border-ink/10 bg-gradient-to-br from-parchment-card/95 to-parchment-deep/35 p-5 shadow-[0_8px_32px_rgba(44,36,22,0.07)] ${className}`.trim();
+
   return (
-    <div
-      className={`rounded-2xl border border-ink/12 bg-parchment-card/90 p-4 ${className}`.trim()}
-    >
-      <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-        {pack.title}
+    <div className={outerActive}>
+      <p className="mt-1 text-sm font-medium text-ink">{pack.title}</p>
+      <p className="font-label text-[9px] uppercase tracking-[0.18em] text-sage/80">
+        {LEARN_VOICE.correctSentenceTitle}
       </p>
-      {pack.intro ? (
-        <p className="mt-1 text-xs text-ink-muted">{pack.intro}</p>
-      ) : null}
+      <p className="mt-1 text-xs leading-relaxed text-ink-muted">{introText}</p>
 
       <div className="mt-4 flex items-center justify-between text-[10px] text-ink-faint">
         <span>
-          Question {index + 1} of {pack.items.length}
+          Challenge {index + 1} of {pack.items.length}
         </span>
         <span>
-          Score {correctCount}/{pack.items.length}
+          Your score {correctCount}/{pack.items.length}
         </span>
       </div>
 
-      <p className="mt-4 text-sm font-medium text-ink">{prompt}</p>
+      <p className="mt-4 text-sm font-medium leading-relaxed text-ink">
+        {prompt}
+      </p>
 
-      <div className="mt-4 grid grid-cols-1 gap-2">
+      {learnContent ? (
+        <div className="mt-4 space-y-2 rounded-2xl border border-amber/30 bg-gradient-to-br from-amber/12 to-parchment-deep/30 px-4 py-3 shadow-inner">
+          <p className="font-label text-[9px] uppercase tracking-[0.2em] text-amber">
+            {LEARN_VOICE.mnemonicEyebrow}
+          </p>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
+            {learnContent.mnemonic}
+          </p>
+          {learnContent.vibeLine ? (
+            <>
+              <p className="pt-1 font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
+                {LEARN_VOICE.vibeEyebrow}
+              </p>
+              <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
+                {learnContent.vibeLine}
+              </p>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid grid-cols-1 gap-2.5">
         {item.optionsHe.map((opt, j) => {
           const show = picked != null;
           const isCorrect = j === item.correctIndex;
           const isPicked = j === picked;
           let ring =
-            "ring-1 ring-ink/12 hover:bg-parchment-deep/50 hover:ring-ink/20";
+            "ring-2 ring-ink/10 hover:-translate-y-0.5 hover:bg-parchment-deep/55 hover:shadow-md hover:ring-sage/20";
           if (show) {
-            if (isCorrect) ring = "bg-sage/15 ring-2 ring-sage";
-            else if (isPicked) ring = "bg-rust/10 ring-2 ring-rust/40 opacity-90";
-            else ring = "opacity-50 ring-1 ring-ink/8";
+            if (isCorrect) ring = "bg-sage/20 ring-2 ring-sage shadow-sm";
+            else if (isPicked)
+              ring = "bg-rust/10 ring-2 ring-rust/35 opacity-90 shadow-sm";
+            else ring = "opacity-45 ring-1 ring-ink/8";
           }
           return (
             <button
@@ -151,7 +237,7 @@ export function CorrectSentenceDrill({
               type="button"
               disabled={show}
               onClick={() => onPick(j)}
-              className={`rounded-xl px-3 py-3 text-right text-sm transition ${ring}`}
+              className={`rounded-2xl px-4 py-3.5 text-right text-sm transition-all duration-200 ${ring}`}
             >
               <Hebrew className="text-base text-ink">{opt}</Hebrew>
             </button>
@@ -159,32 +245,23 @@ export function CorrectSentenceDrill({
         })}
       </div>
 
-      {rabbiLevel && rabbiTargetHe ? (
-        <RabbiCard
-          key={item.id}
-          targetHe={rabbiTargetHe}
-          meaningEn={rabbiMeaningEn}
-          learnerLevel={rabbiLevel}
-          embedded
-          className="mt-4"
-        />
-      ) : null}
-
       {picked != null ? (
-        <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
+        <div className="mt-4 rounded-2xl border-2 border-ink/10 bg-parchment/90 p-4 text-sm shadow-inner">
           {isRight ? (
-            <p className="text-sage">Correct.</p>
+            <p className="text-sage">{LEARN_VOICE.mcqCorrect}</p>
           ) : (
             <p className="text-ink-muted">
-              Review sentence structure and meaning, then try the next one.
+              {LEARN_VOICE.correctSentenceEncourageWrong}
             </p>
           )}
           <button
             type="button"
             onClick={next}
-            className="mt-3 rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+            className="mt-4 rounded-2xl bg-sage px-5 py-2.5 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
           >
-            {index + 1 >= pack.items.length ? "Finish" : "Next question"}
+            {index + 1 >= pack.items.length
+              ? LEARN_VOICE.correctSentenceFinish
+              : LEARN_VOICE.correctSentenceNext}
           </button>
         </div>
       ) : null}

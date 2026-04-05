@@ -31,31 +31,47 @@ const level1Packs: Record<string, McqDrillPack> = {
   "1-1": {
     kind: "mcq",
     title: "Greetings — what does it mean?",
-    intro: "Pick the best English gloss for each Hebrew phrase.",
+    intro:
+      "You’ll wire everyday hellos to meanings you’d actually use — tap the gloss that matches the vibe of each phrase.",
     items: [
       {
         id: "g1",
         promptHe: "שָׁלוֹם",
         correctEn: "Hello / peace",
         distractorsEn: ["Good night", "Thank you", "Excuse me"],
+        translit: "shalom",
+        shoresh: "שלם",
+        vibeNote:
+          "In Hebrew, shalom comes from the root for completeness.\n\nThat’s why one word can greet someone, send them off, or wish them peace — it’s all about the deeper idea of being whole and connected.",
+        mnemonic:
+          "Shalom carries a whole cluster of meanings — calm, wholeness, the sense of everything settling into place.\n\nNow picture a quiet ocean at the end of the day. When the waves finally rest, you feel whole (שלם).\n\nThat’s the feeling tucked inside the word.",
       },
       {
         id: "g2",
         promptHe: "בֹּקֶר טוֹב",
         correctEn: "Good morning",
         distractorsEn: ["Good evening", "Good night", "See you soon"],
+        translit: "boker tov",
+        mnemonic:
+          "**Boker** is morning; imagine daylight unlatching the day — טוֹב tags it as a good one.",
       },
       {
         id: "g3",
         promptHe: "עֶרֶב טוֹב",
         correctEn: "Good evening",
         distractorsEn: ["Good morning", "Welcome", "How are you?"],
+        translit: "erev tov",
+        mnemonic:
+          "**Erev** like ‘even’ — evening’s literally when the day *evens* out.",
       },
       {
         id: "g4",
         promptHe: "לַיְלָה טוֹב",
         correctEn: "Good night",
         distractorsEn: ["Good morning", "Goodbye", "Please"],
+        translit: "layla tov",
+        mnemonic:
+          "**Layla** lands soft like ‘lull’ — tuck the night in with טוֹב.",
       },
       {
         id: "g5",

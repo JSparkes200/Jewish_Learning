@@ -7,6 +7,7 @@ import {
   ROMAN_0_TO_10,
 } from "@/data/course-numbers";
 import type { GradedPracticeContext } from "@/lib/learn-progress";
+import { LEARN_VOICE } from "@/lib/learn-user-voice";
 import { speakHebrew } from "@/lib/speech-hebrew";
 
 function shuffle<T>(arr: T[]): T[] {
@@ -47,9 +48,15 @@ type Props = {
     correct: boolean,
     context?: GradedPracticeContext,
   ) => void;
+  courseSurface?: "panel" | "embed";
+  flowContinue?: { label: string; onContinue: () => void };
 };
 
-export function NumbersListenDrill({ onPracticeAnswer }: Props) {
+export function NumbersListenDrill({
+  onPracticeAnswer,
+  courseSurface = "panel",
+  flowContinue,
+}: Props) {
   const [round, setRound] = useState(() => buildRound());
   const [picked, setPicked] = useState<number | null>(null);
 
@@ -82,31 +89,34 @@ export function NumbersListenDrill({ onPracticeAnswer }: Props) {
 
   const titleId = useId();
 
+  const wrap =
+    courseSurface === "embed"
+      ? "rounded-2xl border border-rust/20 bg-gradient-to-br from-rust/8 to-parchment-deep/20 p-4 sm:p-5"
+      : "rounded-3xl border-2 border-rust/25 bg-gradient-to-br from-rust/10 to-parchment-card/90 p-5 shadow-sm";
+
   return (
-    <div className="rounded-2xl border border-rust/25 bg-rust/5 p-4">
-      <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-        Listen &amp; pick
+    <div className={wrap}>
+      <p className="font-label text-[10px] uppercase tracking-[0.2em] text-rust/90">
+        {LEARN_VOICE.numbersListenEyebrow}
       </p>
-      <p className="mt-1 text-xs text-ink-muted">
-        Play the spoken number (0–10), then tap the Hebrew you heard. Matches
-        the legacy course numbers modal; uses your browser&apos;s Hebrew voice
-        when available.
+      <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+        {LEARN_VOICE.numbersListenBody}
       </p>
 
       <button
         type="button"
         onClick={replay}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-rust/30 bg-parchment-card/90 py-3 font-label text-[10px] uppercase tracking-wide text-ink hover:bg-parchment-deep/50"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-rust/25 bg-parchment-card/90 py-3 font-label text-[10px] uppercase tracking-wide text-ink shadow-sm transition hover:bg-parchment-deep/50 hover:shadow-md"
         aria-describedby={titleId}
       >
         <span className="text-lg" aria-hidden>
           🔊
         </span>
-        Play number
+        {LEARN_VOICE.numbersListenPlay}
       </button>
 
       <p id={titleId} className="sr-only">
-        Choose the Hebrew word for the number you hear
+        {LEARN_VOICE.numbersListenSr}
       </p>
 
       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -126,7 +136,7 @@ export function NumbersListenDrill({ onPracticeAnswer }: Props) {
               type="button"
               disabled={picked != null}
               onClick={() => onPick(j)}
-              className={`rounded-xl px-3 py-3 text-right transition ${ring}`}
+              className={`rounded-2xl px-3 py-3 text-right transition ${ring}`}
             >
               <Hebrew className="text-lg text-ink">{opt}</Hebrew>
             </button>
@@ -135,9 +145,9 @@ export function NumbersListenDrill({ onPracticeAnswer }: Props) {
       </div>
 
       {showResult ? (
-        <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
+        <div className="mt-4 rounded-2xl border border-ink/10 bg-parchment/80 p-3 text-sm">
           {lastOk ? (
-            <p className="text-sage">Correct.</p>
+            <p className="text-sage">Nice — that’s the one you heard.</p>
           ) : (
             <p className="text-ink-muted">
               The word was{" "}
@@ -148,9 +158,24 @@ export function NumbersListenDrill({ onPracticeAnswer }: Props) {
           <button
             type="button"
             onClick={nextRound}
-            className="mt-3 rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+            className="mt-3 rounded-2xl bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110"
           >
             Next number →
+          </button>
+        </div>
+      ) : null}
+      {flowContinue ? (
+        <div className="mt-6 border-t border-ink/10 pt-4">
+          <p className="mb-3 text-xs text-ink-muted">
+            When you&apos;ve had enough listening reps, you&apos;re ready for the next
+            beat.
+          </p>
+          <button
+            type="button"
+            onClick={flowContinue.onContinue}
+            className="w-full rounded-2xl bg-sage px-5 py-3 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110 hover:shadow-lg"
+          >
+            {flowContinue.label}
           </button>
         </div>
       ) : null}

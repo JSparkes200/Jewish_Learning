@@ -1,5 +1,9 @@
 import type { LegacyCorpusEntry } from "@/data/corpus-d";
 import type { McqDrillPack } from "@/data/section-drill-types";
+import {
+  LEARN_VOICE,
+  buildCorrectSentenceUserPrompt,
+} from "@/lib/learn-user-voice";
 import { pickCorpusRowsBiased } from "@/lib/study-practice-pool";
 
 export type CorrectSentenceItem = {
@@ -8,6 +12,10 @@ export type CorrectSentenceItem = {
   optionsHe: string[];
   correctIndex: number;
   promptHe?: string;
+  translit?: string;
+  mnemonic?: string;
+  vibeNote?: string;
+  shoresh?: string;
 };
 
 export type CorrectSentencePack = {
@@ -47,6 +55,12 @@ function makeItem(
   targetHe: string,
   targetEn: string,
   wrongA: string,
+  meta?: {
+    translit?: string;
+    vibeNote?: string;
+    mnemonic?: string;
+    shoresh?: string;
+  },
 ): CorrectSentenceItem {
   const correct = sentenceFrame(level, targetHe);
   const wrongSemantics = sentenceFrame(level, wrongA);
@@ -58,10 +72,14 @@ function makeItem(
   ]);
   return {
     id,
-    promptEn: `Pick the sentence that correctly uses: "${targetEn}".`,
+    promptEn: buildCorrectSentenceUserPrompt(targetEn),
     optionsHe: options,
     correctIndex: options.indexOf(correct),
     promptHe: targetHe,
+    translit: meta?.translit,
+    vibeNote: meta?.vibeNote,
+    mnemonic: meta?.mnemonic,
+    shoresh: meta?.shoresh,
   };
 }
 
@@ -79,13 +97,19 @@ export function buildCorrectSentencePackFromPool(
     const row = shuffled[i]!;
     const wrong = shuffled[(i + 1) % shuffled.length]!;
     if (!row.h?.trim() || !row.e?.trim()) continue;
-    items.push(makeItem(`pool-${i}`, level, row.h.trim(), row.e.trim(), wrong.h.trim()));
+    items.push(
+      makeItem(`pool-${i}`, level, row.h.trim(), row.e.trim(), wrong.h.trim(), {
+        translit: row.p?.trim() || undefined,
+        vibeNote: row.col?.trim() || undefined,
+        shoresh: row.shoresh?.trim() || undefined,
+      }),
+    );
   }
   if (!items.length) return null;
   return {
     kind: "correct_sentence",
-    title: "Correct sentence",
-    intro: "One sentence is correct for the English cue; three include word or grammar errors.",
+    title: LEARN_VOICE.correctSentenceTitle,
+    intro: LEARN_VOICE.correctSentenceIntro,
     items,
   };
 }
@@ -104,13 +128,20 @@ export function buildCorrectSentencePackFromMcq(
     const h = row.promptHe.trim();
     const e = row.correctEn.trim();
     if (!h || !e) continue;
-    items.push(makeItem(`sec-${row.id}-${i}`, level, h, e, wrong.promptHe.trim()));
+    items.push(
+      makeItem(`sec-${row.id}-${i}`, level, h, e, wrong.promptHe.trim(), {
+        translit: row.translit?.trim() || undefined,
+        vibeNote: row.vibeNote?.trim() || undefined,
+        mnemonic: row.mnemonic?.trim() || undefined,
+        shoresh: row.shoresh?.trim() || undefined,
+      }),
+    );
   }
   if (!items.length) return null;
   return {
     kind: "correct_sentence",
-    title: `${pack.title} — correct sentence`,
-    intro: "Use meaning + structure: choose the single well-formed sentence.",
+    title: `${pack.title} — ${LEARN_VOICE.correctSentenceTitle}`,
+    intro: LEARN_VOICE.correctSentenceIntro,
     items,
   };
 }

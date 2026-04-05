@@ -129,8 +129,9 @@ export function StudyPageClient() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-ink-muted">
-        Hub for review: open your next section, a level story quiz, or see how
-        your MCQ practice is adding up (saved in this browser).
+        Your review home: jump to the next open section, replay a level story, or
+        watch how your MCQ practice is stacking up — still saved only in this
+        browser until you move it.
       </p>
 
       <div className="rounded-2xl border border-ink/10 bg-parchment-card/50 p-4">
@@ -174,8 +175,9 @@ export function StudyPageClient() {
           Learning balance
         </p>
         <p className="mt-1 text-sm text-ink-muted">
-          Rabbi guidance and review suggestions use these internal skill metrics.
-          Rings show accuracy when you have attempts; keep all dimensions moving.
+          Tips and nudges read these quiet skill metrics. Each ring fills when you
+          have attempts; nudge every column over time so one muscle doesn’t carry
+          the whole lift.
         </p>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {SKILL_RING_ORDER.map((key, i) => {
@@ -210,12 +212,12 @@ export function StudyPageClient() {
           })}
         </div>
         <p className="mt-4 text-xs text-ink-muted">
-          Priority now:{" "}
+          Gentle priority right now:{" "}
           <strong className="text-ink">
             {weakSkills.map((k) => SKILL_METRIC_LABELS[k]).join(" + ")}
           </strong>
-          . Use Practice games and Focus sections above, then open the Rabbi for
-          targeted pacing notes.
+          . Play the games and focus rows above, then tap the Rabbi (?) for pacing
+          notes that match this screen.
         </p>
       </div>
 

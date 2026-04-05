@@ -16,7 +16,7 @@ export function CourseProgressHero({
   continueHref = "/learn",
   continueLabel = "Continue learning",
   heading = "Course snapshot",
-  intro = "Sections marked complete and your current streak. Tap through Learn or Study to move the ring.",
+  intro = "Sections you’ve marked complete and the streak you’re holding. Dip back into Learn or Study anytime to nudge the ring.",
 }: {
   sectionsDone: number;
   sectionsTotal: number;

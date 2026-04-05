@@ -23,6 +23,7 @@ import {
   touchReadingCarouselPassage,
   type LearnProgressState,
 } from "@/lib/learn-progress";
+import { LEARN_VOICE } from "@/lib/learn-user-voice";
 import { speakHebrew } from "@/lib/speech-hebrew";
 
 const PUNCT_RE = /[.,!?;:'"׃]/g;
@@ -508,7 +509,9 @@ function QuizBody({
           {isTq ? "Transliteration" : "Word choice"}
         </p>
         <p className="mt-1 text-sm text-ink-muted">
-          {isTq ? "Pick the pronunciation for the Hebrew." : "Pick the Hebrew that matches the English."}
+          {isTq
+            ? LEARN_VOICE.readingQuizTransliteration
+            : LEARN_VOICE.readingQuizWordChoice}
         </p>
       </div>
       <div className="space-y-4 p-4 text-center">

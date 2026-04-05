@@ -5,6 +5,7 @@ import { HebrewTapText } from "@/components/HebrewTapText";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
 import type { GradedPracticeContext, SkillMetricKey } from "@/lib/learn-progress";
+import { LEARN_VOICE } from "@/lib/learn-user-voice";
 import type {
   ComprehensionPassage,
   ComprehensionQuestion,
@@ -41,6 +42,8 @@ type Props = {
   ) => void;
   /** Skill dimensions this drill should train. */
   skillTags?: SkillMetricKey[];
+  courseSurface?: "panel" | "embed";
+  flowContinue?: { label: string; onContinue: () => void };
 };
 
 export function ComprehensionDrill({
@@ -49,6 +52,8 @@ export function ComprehensionDrill({
   defaultShowNikkud = true,
   onPracticeAnswer,
   skillTags = ["comprehension", "recognition", "definition"],
+  courseSurface = "panel",
+  flowContinue,
 }: Props) {
   const [qIndex, setQIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -89,38 +94,63 @@ export function ComprehensionDrill({
   }, []);
 
   if (done) {
+    const doneWrap =
+      courseSurface === "embed"
+        ? "rounded-2xl border border-sage/20 bg-gradient-to-br from-sage/10 to-parchment-deep/20 p-4"
+        : "rounded-3xl border-2 border-sage/25 bg-gradient-to-br from-sage/8 to-parchment-card/90 p-5 shadow-sm";
     return (
-      <div
-        className={`rounded-2xl border border-sage/25 bg-sage/5 p-4 ${className}`.trim()}
-      >
+      <div className={`${doneWrap} ${className}`.trim()}>
         <p className="font-label text-[10px] uppercase tracking-[0.18em] text-sage">
-          Comprehension complete
+          {LEARN_VOICE.comprehensionCompleteTitle}
         </p>
         <p className="mt-2 text-sm text-ink">
-          Score:{" "}
+          You got{" "}
           <strong>
             {correctCount}/{passage.questions.length}
-          </strong>
-          . Mark the section complete when you are ready.
+          </strong>{" "}
+          — solid work.
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            setQIndex(0);
-            setPicked(null);
-            setCorrectCount(0);
-          }}
-          className="mt-4 rounded-lg border border-ink/15 bg-parchment-card px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink hover:bg-parchment-deep/40"
-        >
-          Practice questions again
-        </button>
+        <p className="mt-2 text-sm text-ink-muted">
+          {LEARN_VOICE.comprehensionCompleteBody}
+        </p>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              setQIndex(0);
+              setPicked(null);
+              setCorrectCount(0);
+            }}
+            className="rounded-2xl border-2 border-sage/25 bg-parchment-card px-4 py-2.5 font-label text-[10px] uppercase tracking-wide text-ink shadow-sm transition hover:border-sage/40"
+          >
+            {LEARN_VOICE.comprehensionPracticeAgain}
+          </button>
+          {flowContinue ? (
+            <button
+              type="button"
+              onClick={flowContinue.onContinue}
+              className="rounded-2xl bg-sage px-5 py-2.5 font-label text-[10px] uppercase tracking-wide text-white shadow-md transition hover:brightness-110"
+            >
+              {flowContinue.label}
+            </button>
+          ) : null}
+        </div>
       </div>
     );
   }
 
+  const passageCard =
+    courseSurface === "embed"
+      ? "rounded-2xl border border-ink/10 bg-parchment-deep/20 p-4"
+      : "rounded-2xl border border-ink/12 bg-parchment-card/90 p-4";
+  const questionCard =
+    courseSurface === "embed"
+      ? "rounded-2xl border border-ink/10 bg-parchment-deep/15 p-4"
+      : "rounded-2xl border border-ink/12 bg-parchment-card/90 p-4";
+
   return (
-    <div className={`space-y-6 ${className}`.trim()}>
-      <div className="rounded-2xl border border-ink/12 bg-parchment-card/90 p-4">
+    <div className={`space-y-5 ${className}`.trim()}>
+      <div className={passageCard}>
         <div className="flex flex-wrap items-start justify-between gap-2">
           <p className="min-w-0 flex-1 font-label text-[9px] uppercase tracking-[0.15em] text-ink-muted">
             Source · {passage.source}
@@ -147,7 +177,7 @@ export function ComprehensionDrill({
         ) : null}
       </div>
 
-      <div className="rounded-2xl border border-ink/12 bg-parchment-card/90 p-4">
+      <div className={questionCard}>
         <div className="flex justify-between text-[10px] text-ink-faint">
           <span>
             Question {qIndex + 1} of {passage.questions.length}
@@ -188,7 +218,7 @@ export function ComprehensionDrill({
         {picked != null ? (
           <div className="mt-4 rounded-lg border border-ink/10 bg-parchment/80 p-3 text-sm">
             {lastRight ? (
-              <p className="text-sage">Correct.</p>
+              <p className="text-sage">Yes — that fits the passage.</p>
             ) : (
               <p className="text-ink-muted">{q.note}</p>
             )}

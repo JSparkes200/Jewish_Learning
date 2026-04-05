@@ -23,7 +23,7 @@ export const GRAMMAR_DRILLS: readonly GrammarDrillTopic[] = [
   {
     id: "g1",
     topic: "Gender Agreement",
-    prompt: "Choose the correct adjective to match the noun",
+    prompt: "You’re pairing the noun with the adjective a speaker would actually use — trust gender and number.",
     items: [
       {
         h: "כֶּלֶב ___",
@@ -58,7 +58,7 @@ export const GRAMMAR_DRILLS: readonly GrammarDrillTopic[] = [
   {
     id: "g2",
     topic: "Plural Formation",
-    prompt: "Choose the correct plural form",
+    prompt: "You’ll pick the plural shape Hebrew speakers expect for this noun.",
     items: [
       {
         h: "יֶלֶד → ___",
@@ -93,7 +93,7 @@ export const GRAMMAR_DRILLS: readonly GrammarDrillTopic[] = [
   {
     id: "g3",
     topic: "Past Tense — Pa'al",
-    prompt: "Choose the correct past tense form",
+    prompt: "You’re finishing the past-tense line — match the person and number in the sentence.",
     items: [
       {
         h: "הִיא ___ לַשּׁוּק",
@@ -128,7 +128,7 @@ export const GRAMMAR_DRILLS: readonly GrammarDrillTopic[] = [
   {
     id: "g4",
     topic: "Definite Article — הַ",
-    prompt: "Choose the correct definite form",
+    prompt: "You’re deciding when הַ appears, merges with a preposition, or stays quiet for “a” ideas.",
     items: [
       {
         h: "___ כֶּלֶב גָּדוֹל",
@@ -161,7 +161,7 @@ export const GRAMMAR_DRILLS: readonly GrammarDrillTopic[] = [
   {
     id: "g5",
     topic: "Possession — שֶׁל",
-    prompt: "Choose the correct possessive construction",
+    prompt: "You’re building a natural שֶׁל line — whose thing is this?",
     items: [
       {
         h: "___ הַכֶּלֶב שֶׁל דָּנִי",

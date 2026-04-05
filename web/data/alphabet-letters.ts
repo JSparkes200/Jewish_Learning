@@ -68,7 +68,7 @@ export const ALPHABET_FINAL_SOUND_PACK: McqDrillPack = {
   kind: "mcq",
   title: "Alphabet final — sounds",
   intro:
-    "Pick the best description of each letter’s usual sound (print Hebrew + final forms).",
+    "You’ll match each letter to how it usually sounds in print Hebrew and in final (sofit) form.",
   items: [
     {
       id: "afs-1",

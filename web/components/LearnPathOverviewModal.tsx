@@ -6,42 +6,42 @@ const STEPS = [
   {
     title: "Foundation (Alef–Dalet)",
     body:
-      "Leveled sections build reading, grammar, and vocabulary. Complete all four levels, then use Study and Library to reinforce — relearning is normal.",
+      "Leveled sections grow your reading, grammar, and vocabulary. Finish all four levels, then let Study and Library deepen what you’ve met — circling back is part of the work.",
     href: "/learn",
     cta: "Learn home",
   },
   {
     title: "Foundation exit",
     body:
-      "Three strands (reading, grammar, lexicon) prove integrated skill before advanced gates. You can revisit strands to refresh.",
+      "Three strands — reading, grammar, lexicon — show that your skills hang together before harder gates open. You can always revisit a strand to refresh.",
     href: "/learn/foundation-exit",
     cta: "Foundation exit",
   },
   {
     title: "Bridge",
     body:
-      "Short units plus a final checkpoint connect foundation skills to domain work. Passing unlocks specialty tiers.",
+      "Short units plus a final checkpoint carry foundation Hebrew into domain reading. Passing unlocks the specialty tiers.",
     href: "/learn/bridge",
     cta: "Bridge",
   },
   {
     title: "Specialty tracks",
     body:
-      "Modern Israeli domains (news, literature, spoken) and traditional text literacy (Talmudic / rabbinic Hebrew, Jewish Babylonian Aramaic). Each track runs Bronze → Silver → Gold; same lengths and pass rules. Badges stay in Progress — repeat drills anytime.",
+      "Modern Israeli Hebrew (news, literature, spoken) and traditional literacy (Talmudic / rabbinic Hebrew, Jewish Babylonian Aramaic). Each track runs Bronze → Silver → Gold with the same lengths and pass rules; badges live in Progress, and you can repeat drills anytime.",
     href: "/learn/tracks",
     cta: "Specialty tracks",
   },
   {
     title: "Yiddish (parallel)",
     body:
-      "Optional sister track with its own save slot. Fits learners who want Ashkenazi Jewish language alongside Hebrew.",
+      "Optional sister track with its own save slot — for learners who want Ashkenazi Jewish language alongside Hebrew without mixing progress files.",
     href: "/learn/yiddish",
     cta: "Yiddish",
   },
   {
     title: "Ongoing practice",
     body:
-      "Study suggests your next section; Reading, Roots, Numbers, and Library support breadth. Use Progress to see badges and keep one place for the long arc.",
+      "Study suggests your next section; Reading, Roots, Numbers, and Library widen what you hear and read. Progress stays the home for badges and the long arc.",
     href: "/study",
     cta: "Study",
   },
@@ -58,20 +58,20 @@ export function LearnPathOverviewModal({ onClose }: { onClose: () => void }) {
         Your path through the course
       </h2>
       <p className="mt-2 text-sm font-medium text-ink">
-        Goals and how each stage fits together
+        What you’re building, and how the stages fit
       </p>
       <p className="mt-2 text-[11px] text-ink-faint">
         Press{" "}
         <kbd className="rounded border border-ink/15 bg-parchment-deep/50 px-1.5 py-0.5 font-mono text-[10px]">
           Esc
         </kbd>{" "}
-        to close. Use the carousel on Learn to open any stage and see unlock
-        status.
+        to close. On Learn, swipe the carousel to open any stage and see what’s
+        unlocked.
       </p>
       <p className="mt-3 text-xs leading-relaxed text-ink-muted">
-        This app is built for a long journey: you will circle back to lessons,
-        reread, and re-drill. The spine below runs from foundation through
-        bridge, specialties, optional Yiddish, and daily tools.
+        Hebrew study is a long arc: you’ll return to lessons, reread, and re-drill.
+        The spine below runs foundation → bridge → specialties, with optional
+        Yiddish and daily tools alongside.
       </p>
 
       <ol className="relative mt-4 space-y-0 border-l-2 border-sage/25 pl-5">
@@ -102,12 +102,12 @@ export function LearnPathOverviewModal({ onClose }: { onClose: () => void }) {
           Authors &amp; longer passages
         </p>
         <p className="mt-1.5 text-[11px] leading-snug text-ink-muted">
-          Long-form reading grows over time. On{" "}
+          Long-form reading keeps growing. On{" "}
           <Link href="/developer/tools" className="text-sage underline">
             Developer
           </Link>
           , the passage validator scores Hebrew drafts against the app
-          dictionary.
+          dictionary so you can draft with confidence.
         </p>
       </div>
 

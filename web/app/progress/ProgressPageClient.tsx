@@ -19,6 +19,7 @@ import {
 } from "@/data/specialty-tracks";
 import { YIDDISH_SECTIONS } from "@/data/yiddish-course";
 import { STATIC_ROOT_FAMILIES } from "@/data/course-roots";
+import { ROOTS_GROUPS } from "@/data/roots-curriculum";
 import {
   LEARN_PROGRESS_EVENT,
   completionRatio,
@@ -423,6 +424,34 @@ export function ProgressPageClient() {
           {" "}
           / {rootDrillSummary.totalForms} forms solid (≥3 hits each)
         </p>
+        <p className="mt-3 font-label text-[9px] uppercase tracking-[0.12em] text-ink-faint">
+          Roots study groups
+        </p>
+        <ul className="mt-2 flex flex-col gap-1.5">
+          {ROOTS_GROUPS.map((g) => {
+            const st = progress.rootsCurriculum?.groups[g.id];
+            const label = st?.testPassed
+              ? "Done"
+              : st?.introSeen
+                ? "In progress"
+                : "Not started";
+            return (
+              <li key={g.id}>
+                <Link
+                  href={`/roots?group=${encodeURIComponent(g.id)}`}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-ink/8 bg-parchment-deep/20 px-2.5 py-1.5 text-[11px] text-ink hover:border-sage/30 hover:bg-parchment-deep/40"
+                >
+                  <span className="min-w-0 truncate">
+                    {g.title.replace(/^Group \d+ — /, "")}
+                  </span>
+                  <span className="shrink-0 text-[10px] text-ink-muted">
+                    {label}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
         <Link
           href="/roots"
           className="mt-3 inline-block text-[10px] text-sage hover:underline"

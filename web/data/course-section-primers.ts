@@ -233,7 +233,7 @@ const P: Record<string, SectionLessonPrimer> = {
       "Partitive “some” ideas often use כֹּל or quantity words you will meet in context.",
     ],
     ideas: [
-      "Blessings over food and seasonal holidays anchor this semantic field culturally.",
+      "In real life you hear these words most around food, nature, and holiday tables — blessings and seasonal cycles keep them in daily Jewish speech.",
     ],
   },
   "1-13": {

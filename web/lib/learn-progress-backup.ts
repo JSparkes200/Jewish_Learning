@@ -3,6 +3,10 @@
  */
 
 import { COURSE_LEVELS, getSectionsForLevel } from "@/data/course";
+import type {
+  RootsCurriculumProgress,
+  RootsGroupProgress,
+} from "@/data/roots-curriculum";
 import { ALPHABET_LETTER_IDS } from "@/data/alphabet-letters";
 import { BRIDGE_UNIT_IDS } from "@/data/bridge-course";
 import {
@@ -236,6 +240,43 @@ function mergeStreaks(
   return { current, longest, lastDay };
 }
 
+function mergeRootsCurriculumProgress(
+  base: RootsCurriculumProgress | undefined,
+  other: RootsCurriculumProgress | undefined,
+): RootsCurriculumProgress | undefined {
+  const hasAny =
+    (base?.groups && Object.keys(base.groups).length > 0) ||
+    (other?.groups && Object.keys(other.groups).length > 0) ||
+    (base?.checkpointsPassed?.length ?? 0) > 0 ||
+    (other?.checkpointsPassed?.length ?? 0) > 0;
+  if (!hasAny) return undefined;
+
+  const ids = new Set([
+    ...Object.keys(base?.groups ?? {}),
+    ...Object.keys(other?.groups ?? {}),
+  ]);
+  const groups: Record<string, RootsGroupProgress> = {};
+  for (const id of ids) {
+    const ga = base?.groups[id] ?? {};
+    const gb = other?.groups[id] ?? {};
+    const merged: RootsGroupProgress = {};
+    if (ga.introSeen || gb.introSeen) merged.introSeen = true;
+    const dh = Math.max(ga.drillHits ?? 0, gb.drillHits ?? 0);
+    if (dh > 0) merged.drillHits = dh;
+    if (ga.testPassed || gb.testPassed) merged.testPassed = true;
+    if (Object.keys(merged).length > 0) groups[id] = merged;
+  }
+  const cp = [
+    ...new Set([
+      ...(base?.checkpointsPassed ?? []),
+      ...(other?.checkpointsPassed ?? []),
+    ]),
+  ].sort((a, b) => a - b);
+  const out: RootsCurriculumProgress = { groups };
+  if (cp.length > 0) out.checkpointsPassed = cp;
+  return Object.keys(groups).length > 0 || cp.length > 0 ? out : undefined;
+}
+
 /** Union completions; active level = max; streak = sensible merge. */
 export function mergeLearnProgressStates(
   base: LearnProgressState,
@@ -419,6 +460,12 @@ export function mergeLearnProgressStates(
   if (Object.keys(mergedGames).length > 0) {
     out.studyGameStats = mergedGames;
   }
+
+  const mergedRootsCurr = mergeRootsCurriculumProgress(
+    base.rootsCurriculum,
+    other.rootsCurriculum,
+  );
+  if (mergedRootsCurr) out.rootsCurriculum = mergedRootsCurr;
 
   return out;
 }

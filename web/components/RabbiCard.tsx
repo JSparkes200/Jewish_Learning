@@ -1,20 +1,28 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { Hebrew } from "@/components/Hebrew";
 import type { RabbiLevel } from "@/lib/rabbi-types";
 
-export type RabbiCardProps = {
-  /** Headword or phrase (may include nikkud). */
+/** Payload registered from drills and passed into the shell modal. */
+export type RabbiAskPayload = {
   targetHe: string;
   learnerLevel: RabbiLevel;
   translit?: string;
   meaningEn?: string;
-  /** Pre-computed retrieval text (optional); skips server-side LightRAG subprocess */
   ragContext?: string;
+};
+
+export type RabbiCardProps = RabbiAskPayload & {
   className?: string;
   /** Use tighter padding when nested inside another card */
   embedded?: boolean;
+  /**
+   * `inline` — expand/collapse in place (lesson cards).
+   * `sheet` — used inside the app modal; fetches on open / when props change.
+   */
+  variant?: "inline" | "sheet";
 };
 
 type ApiOk = { markdown: string; retrieval: string };
@@ -28,6 +36,7 @@ export function RabbiCard({
   ragContext,
   className = "",
   embedded = false,
+  variant = "inline",
 }: RabbiCardProps) {
   const [open, setOpen] = useState(false);
   const [markdown, setMarkdown] = useState<string | null>(null);
@@ -67,36 +76,82 @@ export function RabbiCard({
     }
   }, [targetHe, learnerLevel, translit, meaningEn, ragContext]);
 
-  const pad = embedded ? "p-3" : "p-4";
+  useEffect(() => {
+    if (variant !== "sheet") return;
+    setMarkdown(null);
+    setError(null);
+    setOpen(false);
+    void ask();
+  }, [variant, targetHe, learnerLevel, translit, meaningEn, ragContext, ask]);
+
+  const pad = embedded ? "p-3.5" : "p-5";
+  const isSheet = variant === "sheet";
+  const showArticle = isSheet ? markdown != null : open && markdown != null;
+
+  const shellClass = isSheet
+    ? className.trim()
+    : `rounded-3xl border-2 border-sage/20 bg-gradient-to-br from-parchment-card/95 to-parchment-deep/35 shadow-sm ${pad} ${className}`.trim();
 
   return (
-    <div
-      className={`rounded-2xl border border-ink/12 bg-parchment-card/90 ${pad} ${className}`.trim()}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-sage">
-          Ask the Rabbi
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            if (!open && markdown == null && !loading) {
-              void ask();
-            } else {
-              setOpen((v) => !v);
-            }
-          }}
-          disabled={loading}
-          aria-expanded={open}
-          className="cursor-pointer rounded-xl border border-ink/12 bg-parchment-deep/30 px-3 py-2 font-label text-[10px] uppercase tracking-wide text-ink-muted transition hover:border-sage/35 hover:bg-parchment-deep/50 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-parchment-card disabled:cursor-wait disabled:opacity-60"
-        >
-          {loading ? "Thinking…" : open ? "Hide" : "Expand"}
-        </button>
-      </div>
+    <div className={shellClass}>
+      {isSheet ? (
+        <>
+          <p className="font-label text-[10px] uppercase tracking-[0.2em] text-sage">
+            Ask the Rabbi
+          </p>
+          <Hebrew
+            as="p"
+            className="mt-2 text-right text-xl font-medium leading-relaxed text-ink"
+          >
+            {targetHe}
+          </Hebrew>
+          {meaningEn ? (
+            <p className="mt-1 text-xs text-ink-muted">
+              You&apos;re exploring: <span className="text-ink">{meaningEn}</span>
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-label text-[10px] uppercase tracking-[0.18em] text-sage">
+            Ask the Rabbi
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (!open && markdown == null && !loading) {
+                void ask();
+              } else {
+                setOpen((v) => !v);
+              }
+            }}
+            disabled={loading}
+            aria-expanded={open}
+            className="cursor-pointer rounded-2xl border-2 border-sage/25 bg-parchment-deep/40 px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink-muted shadow-sm transition hover:border-sage/45 hover:bg-parchment-deep/60 hover:text-ink hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-parchment-card disabled:cursor-wait disabled:opacity-60"
+          >
+            {loading ? "Thinking…" : open ? "Hide" : "Expand"}
+          </button>
+        </div>
+      )}
 
       <p className="mt-2 text-xs text-ink-muted">
-        Language and culture notes only — not halachic or theological authority.
+        These are language and culture notes — warm context, not halachic or
+        theological rulings.
       </p>
+
+      {isSheet && loading && !markdown ? (
+        <div
+          className="mt-5 space-y-2 rounded-2xl border border-sage/15 bg-parchment-deep/30 p-4"
+          aria-busy="true"
+        >
+          <div className="h-3 w-[78%] animate-pulse rounded-full bg-parchment-deep/60" />
+          <div className="h-3 w-full animate-pulse rounded-full bg-parchment-deep/50" />
+          <div className="h-3 w-5/6 animate-pulse rounded-full bg-parchment-deep/50" />
+          <p className="pt-1 text-[11px] text-ink-faint">
+            Pulling notes that match your level and this headword…
+          </p>
+        </div>
+      ) : null}
 
       {error ? (
         <p className="mt-3 text-sm text-rust" role="alert">
@@ -104,14 +159,14 @@ export function RabbiCard({
         </p>
       ) : null}
 
-      {open && markdown ? (
+      {showArticle && markdown ? (
         <div className="mt-4 border-t border-sage/20 pt-4">
           {retrieval ? (
             <p className="mb-3 font-label text-[9px] uppercase tracking-wide text-ink-faint">
               Retrieval: {retrieval}
             </p>
           ) : null}
-          <article className="rabbi-md max-w-none text-ink font-hebrew" dir="auto">
+          <article className="rabbi-md max-w-none font-hebrew text-ink" dir="auto">
             <ReactMarkdown
               components={{
                 h2: ({ children }) => (

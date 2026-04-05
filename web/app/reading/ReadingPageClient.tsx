@@ -23,7 +23,7 @@ function ReadingHelpModal({ onClose }: { onClose: () => void }) {
         Reading &amp; comprehension
       </h2>
       <p className="mt-2 text-sm font-medium text-ink">
-        How progress is counted and where to practise
+        How your reading counts — and where to go deeper
       </p>
       <p className="mt-2 text-[11px] text-ink-faint">
         Press <kbd className="rounded border border-ink/15 bg-parchment-deep/50 px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>{" "}
@@ -31,50 +31,50 @@ function ReadingHelpModal({ onClose }: { onClose: () => void }) {
       </p>
       <ul className="mt-4 space-y-3 text-sm leading-relaxed text-ink-muted">
         <li>
-          <strong className="text-ink">Passage carousel</strong> — Cards appear
-          as you unlock them in the course (first story, then each level).
-          Jewish texts open one at a time: after you open one, the next appears.
-          Open the center card, tap words to hear them, and use{" "}
+          <strong className="text-ink">Passage carousel</strong> — Cards surface
+          as you earn them in the course (first story, then each level). Jewish
+          texts step in one at a time: open one, and the next appears when you’re
+          ready. Open the center card, tap words to hear them, and hit{" "}
           <strong className="text-ink">Start exercises</strong> when a passage
-          includes quizzes. Correct answers count toward your daily streak and
-          practice stats like other Learn drills.
+          offers quizzes. Right answers feed your streak and practice tallies the
+          same way Learn drills do.
         </li>
         <li>
           <strong className="text-ink">Longer comprehension</strong> — Full
-          Hebrew passages with multiple questions live in{" "}
+          Hebrew passages with several questions sit in{" "}
           <Link href="/learn" className="text-sage underline hover:text-sage/90">
             Learn
-          </Link>{" "}
-          as the sections marked comprehension in each level.
+          </Link>
+          , in the sections marked comprehension on each level.
         </li>
         <li>
-          <strong className="text-ink">Stories &amp; mini-quizzes</strong> — Use
-          the level rows below (Aleph guided read, level stories). They reinforce
-          vocabulary and count toward the same progress storage.
+          <strong className="text-ink">Stories &amp; mini-quizzes</strong> — The
+          rows below (Aleph guided read, level stories) give you friendly reps;
+          they reinforce vocabulary and write to the same progress file.
         </li>
         <li>
           <strong className="text-ink">Review</strong> —{" "}
           <Link href="/study" className="text-sage underline hover:text-sage/90">
             Study
           </Link>{" "}
-          suggests re-runs and ties into your active level.
+          suggests what to rerun and respects the active level you set on Learn.
         </li>
         <li>
-          <strong className="text-ink">Active level</strong> — The carousel
-          filters some passages by your active level (set on the{" "}
+          <strong className="text-ink">Active level</strong> — Some carousel rows
+          follow your active level from{" "}
           <Link href="/learn" className="text-sage underline hover:text-sage/90">
             Learn
-          </Link>{" "}
-          home). You can still open any hub link below anytime.
+          </Link>
+          ; hub links below stay open whenever you need them.
         </li>
         <li>
-          <strong className="text-ink">Versus the old single-page app</strong> — Jewish
-          texts, tap-to-hear passages, and reading-style quizzes live here and in{" "}
+          <strong className="text-ink">Compared with the legacy study page</strong> — Jewish
+          texts, tap-to-hear reading, and quiz-style checks now live here, in{" "}
           <Link href="/library" className="text-sage underline hover:text-sage/90">
             Library
           </Link>{" "}
-          (saved snippets) plus comprehension sections inside Learn. Streak and drill
-          stats use the same progress store as the rest of this app.
+          (saved lines), and in Learn’s comprehension sections. Streaks and drill
+          stats share one honest progress store across the app.
         </li>
       </ul>
       <button
