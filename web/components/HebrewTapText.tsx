@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import { SaveWordButton } from "@/components/SaveWordButton";
@@ -76,6 +77,14 @@ export function HebrewTapText({
               </div>
             ) : null}
           </>
+        ) : showSaveWord ? (
+          <span className="block text-[11px] leading-relaxed text-ink-faint">
+            Tap a word for audio, then bookmark it for your{" "}
+            <Link href="/library" className="text-sage underline hover:text-sage/90">
+              Library
+            </Link>
+            . Signing in keeps saves on your profile across devices.
+          </span>
         ) : (
           <span>Tap any word to hear audio.</span>
         )}

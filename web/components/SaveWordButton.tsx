@@ -7,6 +7,8 @@
  * rendered as React children/text — never interpret as HTML.
  */
 
+import { useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   isIdentitySaved,
@@ -61,6 +63,7 @@ export function SaveWordButton({
   variant = "default",
   className = "",
 }: SaveWordButtonProps) {
+  const { isLoaded: authLoaded, isSignedIn } = useAuth();
   const identity = useMemo(() => {
     const h = clampWordField(he);
     return {
@@ -129,21 +132,33 @@ export function SaveWordButton({
       return;
     }
     if (r.saved) {
-      setHint("Saved to Library");
+      setHint(
+        isSignedIn
+          ? "Saved to Library — synced to your account (when online)."
+          : "Saved on this device — open Library anytime here.",
+      );
       hintTimeoutRef.current = window.setTimeout(() => {
         hintTimeoutRef.current = null;
-        setHint((h) => (h === "Saved to Library" ? null : h));
-      }, 2200);
+        setHint((h) =>
+          h === "Saved to Library — synced to your account (when online)." ||
+          h === "Saved on this device — open Library anytime here."
+            ? null
+            : h,
+        );
+      }, 2800);
     }
-  }, [identity]);
+  }, [identity, isSignedIn]);
 
   if (!identity.he) return null;
 
   const label = saved ? "Remove word from saved list" : "Save word to Library list";
   const isCompact = variant === "compact";
 
+  const showGuestLibraryHint =
+    authLoaded && !isSignedIn && !saved && identity.he;
+
   return (
-    <div className={`inline-flex flex-col items-end gap-0.5 ${className}`.trim()}>
+    <div className={`inline-flex w-full max-w-[18rem] flex-col items-end gap-2 ${className}`.trim()}>
       <button
         type="button"
         onClick={onClick}
@@ -167,11 +182,50 @@ export function SaveWordButton({
       </button>
       {hint ? (
         <p
-          className="max-w-[14rem] text-right font-body text-[10px] text-sage"
+          className="w-full text-right font-body text-[10px] leading-snug text-sage"
           role="status"
           aria-live="polite"
         >
           {hint}
+        </p>
+      ) : null}
+      {showGuestLibraryHint ? (
+        <div
+          className="w-full rounded-2xl border border-sage/25 bg-gradient-to-br from-sage/8 to-parchment-deep/40 p-3 text-left shadow-sm"
+          role="note"
+        >
+          <p className="font-label text-[8px] uppercase tracking-[0.14em] text-sage/90">
+            Library and progress
+          </p>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
+            Save words to your{" "}
+            <strong className="font-medium text-ink">Library</strong> to track
+            what you&apos;re studying with this course. Create a free account so
+            bookmarks can sync across devices and stay with your profile.
+          </p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            <Link
+              href="/sign-up"
+              className="inline-flex items-center rounded-lg bg-sage px-3 py-1.5 font-label text-[8px] uppercase tracking-[0.12em] text-white transition hover:brightness-110"
+            >
+              Sign up free
+            </Link>
+            <Link
+              href="/sign-in"
+              className="inline-flex items-center rounded-lg border border-ink/15 bg-parchment-card/90 px-3 py-1.5 font-label text-[8px] uppercase tracking-[0.12em] text-ink-muted transition hover:border-sage/35 hover:text-ink"
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
+      ) : null}
+      {authLoaded && isSignedIn && saved ? (
+        <p className="w-full text-right text-[10px] leading-snug text-ink-faint">
+          View and edit saved words under{" "}
+          <Link href="/library" className="text-sage underline hover:text-sage/90">
+            Library
+          </Link>
+          .
         </p>
       ) : null}
     </div>

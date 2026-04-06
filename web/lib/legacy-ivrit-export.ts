@@ -1,6 +1,6 @@
 /**
  * Build `ivrit_lr` / `ivrit_lv` shaped payloads so users can paste progress
- * from this app into `hebrew-v8.2.html` localStorage (Developer → download).
+ * from this app into a legacy HTML app’s localStorage (Developer → download).
  */
 
 import {
@@ -16,7 +16,7 @@ import {
   type LearnStreak,
 } from "@/lib/learn-progress";
 
-/** Mirrors `mkL()` in hebrew-v8.2.html — required keys for a sane legacy learner. */
+/** Mirrors `mkL()` in the legacy HTML app — required keys for a sane legacy learner. */
 const GT_KEYS = [
   "mc",
   "fill",
@@ -210,7 +210,7 @@ export function buildIvritLegacyExportFile(
     targetStorageKey,
     ivrit_lr: learner,
     ivrit_lv: lv,
-    instructions: `Open hebrew-v8.2.html in this browser. DevTools → Application → Local Storage. Set key "${targetStorageKey}" to JSON.stringify(this.ivrit_lr). Set the level key (usually "${levelKeyHint}" for your legacy session) to String(this.ivrit_lv). Reload the HTML app. If you use a scoped legacy account, keys must match the legacy app (see targetStorageKey). Merge keeps legacy-only fields when present; Next completions, vocab, rootDrill, and streak are unioned or maxed.`,
+    instructions: `If you still run the archived legacy single-file HTML app in this browser: DevTools → Application → Local Storage. Set key "${targetStorageKey}" to JSON.stringify(this.ivrit_lr). Set the level key (usually "${levelKeyHint}" for your legacy session) to String(this.ivrit_lv). Reload that app. If you use a scoped legacy account, keys must match the legacy app (see targetStorageKey). Merge keeps legacy-only fields when present; Next completions, vocab, rootDrill, and streak are unioned or maxed.`,
   };
 }
 

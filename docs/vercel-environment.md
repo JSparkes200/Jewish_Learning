@@ -16,6 +16,11 @@ Open **Vercel → your project → Settings → Environment Variables**. Add eac
 
 | Variable | Required | Used by |
 | --- | --- | --- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Required (auth) | Clerk browser SDK (`ClerkProvider`, sign-in UI) |
+| `CLERK_SECRET_KEY` | Required (auth) | Clerk server / middleware (`middleware.ts`) |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Optional | Defaults `/sign-in` and `/sign-up` if unset |
+
+**Saved lemmas (Clerk):** The app mirrors a **size-capped** list into each user’s **`privateMetadata.hebrewWebSavedWordsV1`** via `GET`/`PUT /api/user/saved-lemmas` (full list remains in `localStorage`). Keep bookmarks reasonably short; very large lists return **413** from the PUT handler.
 | `NEXT_PUBLIC_SITE_URL` | Recommended | `app/layout.tsx` — `metadataBase`, Open Graph URLs (e.g. `https://your-app.vercel.app`) |
 | `NEXT_PUBLIC_SENTRY_DSN` | Optional | Sentry browser + server SDK (`instrumentation-client.ts`, `sentry.*.config.ts`) |
 | `SENTRY_DSN` | Optional | Server-only DSN override (defaults to `NEXT_PUBLIC_SENTRY_DSN`) |

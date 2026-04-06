@@ -2,6 +2,8 @@
 
 This document describes **visual and structural patterns** used across the Hebrew app’s study surfaces. It aligns with existing implementations so new screens feel native to the parchment / sage system.
 
+**Hooks in Learn routes:** see [react-hooks-patterns.md](./react-hooks-patterns.md) — keep `useMemo` / `useCallback` / `useEffect` above any early `return` (CI enforces `rules-of-hooks`).
+
 **Reference components**
 
 | Pattern | Primary implementation |

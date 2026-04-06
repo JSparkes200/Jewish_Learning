@@ -10,10 +10,10 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Welcome in",
       lines: [
-        "Your leveled path lives under Learn (Alef through Dalet); progress stays in this browser until you export it.",
+        "Clerk is the app account: sign in to use Learn, Reading, Study, and most routes (the alphabet track is the main try-before-signup slice).",
+        "Your leveled path lives under Learn (Alef through Dalet); progress stays in this browser and can pair with optional cloud backup from Developer.",
         "Roots is your shoresh hub; Numbers holds ordinals, days, and listening reps. Add the PWA if you like shortcuts on your home screen.",
-        "If you want your name under עִבְרִית in the header, you can set it locally in Settings (no cloud account required).",
-        "Study nudges you toward the next open section; Reading gathers stories and guided Aleph reads; Library is your door to curated sites.",
+        "Study nudges you toward the next open section; Reading gathers stories, Jewish texts (category strip + carousel), and guided Aleph reads; Library is your door to curated sites.",
       ],
       cta: { label: "Open Learn", href: "/learn" },
     };
@@ -106,6 +106,7 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Reading as a habit",
       lines: [
+        "Jewish texts: use the horizontal category chips (Torah, Mishnah, Talmud, …) to jump the carousel to the first unlocked passage in that track — the same idea as the old Texts tab in the legacy app.",
         "The carousel lists passages you’ve earned in the course; Jewish-text rows unlock one after another as you open each. Swipe or use arrows, then open the center card for the full piece.",
         "Below, quick rows jump to Aleph guided reading, each level’s story, and Library. The “i” circle explains progress and exercises; Esc closes that panel.",
         "Tap underlined words where you see them; some rows open notes (for example Sefaria) or a short quiz.",
@@ -152,10 +153,11 @@ export function getRabbiTip(pathname: string): RabbiTip {
     return {
       title: "Settings",
       lines: [
-        "Display name is only for this browser — a small hello in the header.",
-        "There’s no product username/password screen here by default; older HTML flows used ivrit_session and scoped keys.",
-        "Developer session (when your host configures it) is for builders testing gates, not learner accounts.",
-        "Optional cloud backup uses an anonymous sync key — see Developer → Cloud backup when KV is enabled on your deploy.",
+        "Account: Clerk handles sign-in, sign-out, and profile — use the avatar in the header or visit /sign-in.",
+        "Display name in Settings is still a local hello in the header if you want something different from your Clerk name.",
+        "Saved Hebrew words can mirror to your Clerk private metadata when signed in (size-capped); export from Developer stays the full offline backup.",
+        "Developer session (when your host configures it) is for builders testing gates, not everyday learners.",
+        "Optional anonymous cloud backup uses a sync key — see Developer → Cloud backup when KV is enabled on your deploy.",
       ],
       cta: { label: "Developer tools", href: "/developer" },
     };

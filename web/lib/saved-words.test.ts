@@ -3,12 +3,14 @@ import {
   MAX_SAVED_WORDS,
   MAX_WORD_FIELD_CHARS,
   SAVED_WORDS_STORAGE_KEY,
+  __resetSavedWordsClerkUserIdForTests,
   clampWordField,
   isIdentitySaved,
   loadSavedWords,
   removeSavedWordByIdentity,
   sanitizeSavedWordsFromJson,
   savedWordIdentityKey,
+  setSavedWordsClerkUserId,
   toggleSavedWordIdentity,
 } from "./saved-words";
 
@@ -49,6 +51,7 @@ afterEach(() => {
 describe("saved-words", () => {
   beforeEach(() => {
     installWindowWithStorage();
+    __resetSavedWordsClerkUserIdForTests();
   });
 
   it("clampWordField trims and caps length", () => {
@@ -103,5 +106,14 @@ describe("saved-words", () => {
     const parsed = JSON.parse(raw!) as unknown;
     const list = sanitizeSavedWordsFromJson(parsed);
     expect(list?.some((w) => w.he === "לילה")).toBe(true);
+  });
+
+  it("persists under Clerk-scoped key when user id is set", () => {
+    setSavedWordsClerkUserId("user_test_clerk");
+    toggleSavedWordIdentity({ he: "יום", en: "day" });
+    const scoped = `${SAVED_WORDS_STORAGE_KEY}:uid:user_test_clerk`;
+    const raw = window.localStorage.getItem(scoped);
+    expect(raw).toBeTruthy();
+    expect(window.localStorage.getItem(SAVED_WORDS_STORAGE_KEY)).toBeNull();
   });
 });

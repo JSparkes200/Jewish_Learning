@@ -32,4 +32,6 @@ export const rabbiBodySchema = z.object({
   meaningEn: z.string().max(2000).optional(),
   /** Optional pre-fetched LightRAG text (e.g. from CLI); skips server-side Python */
   ragContext: z.string().max(120_000).optional(),
+  /** Learner follow-up (legacy quick-asks / free text), appended to the user message. */
+  learnerQuestion: z.string().max(4000).optional(),
 });

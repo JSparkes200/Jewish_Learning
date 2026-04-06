@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppShell } from "@/components/AppShell";
 import { Hebrew } from "@/components/Hebrew";
+import { ReadingJewishTextsNav } from "@/components/ReadingJewishTextsNav";
 import { ReadingTapCarousel } from "@/components/ReadingTapCarousel";
+import { firstUnlockedJtKeyForCategory } from "@/lib/reading-jt-category-nav";
 import { READING_HUB_ENTRIES } from "@/data/reading-hub";
 import {
   LEARN_PROGRESS_EVENT,
@@ -68,13 +70,19 @@ function ReadingHelpModal({ onClose }: { onClose: () => void }) {
           ; hub links below stay open whenever you need them.
         </li>
         <li>
-          <strong className="text-ink">Compared with the legacy study page</strong> — Jewish
-          texts, tap-to-hear reading, and quiz-style checks now live here, in{" "}
+          <strong className="text-ink">Jewish texts</strong> — Use the category
+          strip above the carousel (Torah, Mishnah, Talmud, …) to jump the shelf
+          the way the legacy Texts tab did; the carousel still holds every
+          unlocked passage.
+        </li>
+        <li>
+          <strong className="text-ink">Compared with the legacy study page</strong>{" "}
+          — Tap-to-hear reading and quiz-style checks live here, in{" "}
           <Link href="/library" className="text-sage underline hover:text-sage/90">
             Library
           </Link>{" "}
           (saved lines), and in Learn’s comprehension sections. Streaks and drill
-          stats share one honest progress store across the app.
+          stats share one progress store across the app.
         </li>
       </ul>
       <button
@@ -93,6 +101,7 @@ export function ReadingPageClient() {
   const [progress, setProgress] = useState<LearnProgressState>(() =>
     createEmptyLearnProgressState(),
   );
+  const [jtCategory, setJtCategory] = useState<string | null>(null);
 
   const sync = useCallback(() => {
     setProgress(loadLearnProgress());
@@ -106,6 +115,11 @@ export function ReadingPageClient() {
 
   const active = progress.activeLevel;
 
+  const jtFocusKey = useMemo(() => {
+    if (!jtCategory) return null;
+    return firstUnlockedJtKeyForCategory(progress, jtCategory);
+  }, [jtCategory, progress]);
+
   const openReadingHelp = useCallback(() => {
     openModal(
       <ReadingHelpModal
@@ -118,7 +132,16 @@ export function ReadingPageClient() {
 
   return (
     <div className="mx-auto max-w-lg space-y-8">
-      <ReadingTapCarousel progress={progress} />
+      <ReadingJewishTextsNav
+        progress={progress}
+        selectedCategory={jtCategory}
+        onSelectCategory={setJtCategory}
+      />
+
+      <ReadingTapCarousel
+        progress={progress}
+        focusPassageKey={jtFocusKey}
+      />
 
       <div className="flex items-start gap-3">
         <button

@@ -71,8 +71,11 @@ type ModalPhase =
 
 export function ReadingTapCarousel({
   progress,
+  focusPassageKey,
 }: {
   progress: LearnProgressState;
+  /** Center carousel on this passage key (`jt-0`, `rd-…`, library id). */
+  focusPassageKey?: string | null;
 }) {
   const [saved, setSaved] = useState<SavedLibraryPassage[]>([]);
   const [modal, setModal] = useState<ModalPhase | null>(null);
@@ -248,6 +251,7 @@ export function ReadingTapCarousel({
         centerActionLabel="Open passage →"
         prevAriaLabel="Previous passage"
         nextAriaLabel="Next passage"
+        focusItemKey={focusPassageKey ?? null}
         emptySlot={
           coverItems.length === 0 ? (
             <>

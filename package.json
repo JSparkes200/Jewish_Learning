@@ -7,7 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:legacy-sw": "node web/node_modules/eslint/bin/eslint.js -c eslint.config.mjs sw.js"
   },
   "repository": {
     "type": "git",

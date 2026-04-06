@@ -1,10 +1,17 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"/><title>Generate Icons</title></head>
-<body style="font-family:sans-serif;padding:24px;">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Generate Icons</title>
+<style>
+  body { font-family: sans-serif; padding: 24px; }
+</style>
+</head>
+<body>
 <h1>Generate PWA Icons</h1>
 <p>Click to download icon-192.png and icon-512.png for the install banner.</p>
-<button onclick="gen(192)">Download icon-192.png</button>
-<button onclick="gen(512)">Download icon-512.png</button>
+<button type="button" onclick="gen(192)">Download icon-192.png</button>
+<button type="button" onclick="gen(512)">Download icon-512.png</button>
 <script>
 function gen(size){
   const c=document.createElement('canvas'); c.width=c.height=size;

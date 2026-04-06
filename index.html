@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<meta http-equiv="refresh" content="0;url=hebrew-v8.2.html"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>עִבְרִית — Real Hebrew</title>
-<script>location.replace('hebrew-v8.2.html');</script>
 </head>
-<body><p>Loading <a href="hebrew-v8.2.html">עִבְרִית</a>…</p></body>
+<body>
+<p>
+  The main app is the Next.js project in <code>web/</code>.
+  From the repo root: <code>cd web &amp;&amp; npm install &amp;&amp; npm run dev</code>.
+</p>
+<p>
+  Legacy dictionary data: <code>web/data/legacy-corpus-d.json</code> →
+  <code>web/data/corpus-d.ts</code> via <code>npm run extract:corpus-d</code> (run inside <code>web/</code>).
+</p>
+</body>
 </html>

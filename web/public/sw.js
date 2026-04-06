@@ -1,7 +1,7 @@
 /* Hebrew web — cache hashed Next static assets only (safe with App Router). */
 const CACHE = "hebrew-web-static-v1";
 
-self.addEventListener("install", (event) => {
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 

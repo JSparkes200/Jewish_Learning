@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CourseProgressHero } from "@/components/CourseProgressHero";
 import { HomeHubCarousel } from "@/components/HomeHubCarousel";
@@ -77,15 +78,17 @@ export function HomePageClient() {
           mcqAttempts={attempts}
           mcqCorrect={correct}
           heading="Your progress"
-          intro="Sections you’ve finished, the streak you’re building, and how your practice answers are landing — it all stays in this browser until you move it."
+          intro="Sections you’ve finished, the streak you’re building, and how your practice answers are landing — sign in to sync the course and saved lemmas across devices."
           continueHref={nextUp.href}
           continueLabel={`${nextUp.label} →`}
         />
         <p className="mx-auto mt-3 max-w-md text-center text-[10px] text-ink-faint">
-          You don’t need an account — your path lives on this device. When you’re ready to
-          move or back up, open{" "}
-          <strong className="font-medium text-ink-muted/90">Advanced → Developer</strong>{" "}
-          for exports and merge tools.
+          <Link href="/learn/alphabet" className="text-sage underline">
+            Try Alef–Bet (א–ד) without signing in
+          </Link>
+          . The full Alef–Dalet path, practice hubs, and progress tracking require an
+          account. For backups and merges, open{" "}
+          <strong className="font-medium text-ink-muted/90">Advanced → Developer</strong>.
         </p>
       </div>
     </div>

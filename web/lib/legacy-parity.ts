@@ -90,7 +90,9 @@ export const LEGACY_PARITY_ITEMS: readonly LegacyParityItem[] = [
   },
   {
     id: "rabbi",
-    label: "Rabbi tips / teaching context",
+    label: "Rabbi tips / Ask the Rabbi (AI + legacy quick prompts)",
+    detail:
+      "Route tips in rabbi-tips.ts; modal RabbiCard calls /api/rabbi with optional learner follow-up (Meaning/Root/Grammar/Example parity with legacy HTML). Word-detail enrichment is Clerk-gated.",
     weight: 4,
     status: "done",
   },

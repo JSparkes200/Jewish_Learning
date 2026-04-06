@@ -22,7 +22,7 @@ For the install banner to show icons, generate PNGs:
 
 1. Open `make-icons.html` in your browser.
 2. Click to download `icon-192.png` and `icon-512.png`.
-3. Place them in the repo root next to `hebrew-v8.2.html`.
+3. Place them in the repo root next to `index.html`.
 4. Commit and push.
 
 The app works without PNGs (uses SVG); PNGs improve install UX on some devices.
@@ -34,7 +34,7 @@ Serve over HTTP (required for service worker):
 ```bash
 # Python
 python -m http.server 8080
-# Open http://localhost:8080/hebrew-v8.2.html
+# Open http://localhost:8080/ (see `index.html`; primary UI is `web/` → `npm run dev`)
 
 # Node (npx)
 npx serve .

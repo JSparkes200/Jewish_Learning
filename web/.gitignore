@@ -30,3 +30,6 @@ Thumbs.db
 
 # typescript
 *.tsbuildinfo
+
+# clerk configuration (can include secrets)
+/.clerk/

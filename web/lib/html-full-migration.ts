@@ -98,7 +98,7 @@ export const HTML_FULL_MIGRATION_WORKSTREAMS: readonly HtmlMigrationWorkstream[]
       label: "Reading tab & read carousel",
       legacyRef: "`rReading`, `rRead`, JT/RD + library carousel",
       detail:
-        "`/reading` hub: Aleph 1-read, L1–L4 stories, Library, comp note; carousel = `JT` + level-filtered `RD` + library, tap words, notes/Sefaria on JT, `RD` tq/wq quizzes.",
+        "`/reading` hub: Aleph 1-read, L1–L4 stories, Library, comp note; carousel = `JT` + level-filtered `RD` + library; Jewish-text **category strip** (legacy Texts tab parity) jumps carousel by Torah/Mishnah/Talmud/etc.; tap words, notes/Sefaria on JT, `RD` tq/wq quizzes.",
       suggestedOrder: 5,
       weight: 8,
       status: "partial",
@@ -186,10 +186,10 @@ export const HTML_FULL_MIGRATION_WORKSTREAMS: readonly HtmlMigrationWorkstream[]
       label: "Grammar exercise sets (`GRAM`)",
       legacyRef: "`GRAM` exercises in HTML",
       detail:
-        "Legacy embedded `GRAM` sets in HTML; Next has grammar mode in Study (`grammar-drills.ts`) — parity with every legacy GRAM exercise not guaranteed.",
+        "Legacy `GRAM` topics g1–g5 are in `grammar-drills.ts`; g6–g15 intermediate; g16–g20 bridge to advanced (Pi'el/Hif'il/Nif'al, formal connectors, editorial discourse); g21–g28 advanced/fluent (press, halachic–journalistic adverbs, Talmudic/academic argument, text-study frame, deontics, editorial verbs, academic hedging, beit midrash fluency). QA: `hebrew-drill-quality.test.ts`, `grammar-g16-g20-parity.test.ts`, `grammar-g21-g28-parity.test.ts`, `grammar-pedagogy-rules.test.ts`, optional LanguageTool (`RUN_LANGUAGETOOL_HE=1`). See `hebrew-linguistic-sources.ts` for IAHLT UD / YAP / Nakdimon links.",
       suggestedOrder: 11,
       weight: 5,
-      status: "not_started",
+      status: "partial",
     },
     {
       id: "auth-accounts",
@@ -197,10 +197,10 @@ export const HTML_FULL_MIGRATION_WORKSTREAMS: readonly HtmlMigrationWorkstream[]
       label: "Auth, sessions, scoped storage",
       legacyRef: "`authIsLoggedIn`, `ivrit_session_v1`, scoped `ivrit_lr__user`",
       detail:
-        "Next app is local-first guest mode; optional KV `/api/progress` sync (Bearer sync key) is not accounts. Legacy usernames, login UI, and server-backed flows not replicated.",
+        "Clerk sign-in/sign-up + middleware protect Learn and most routes; saved lemmas API uses Clerk privateMetadata. Optional KV `/api/progress` (Bearer) remains for anonymous backup. Legacy HTML username/password flows are retired in favor of Clerk.",
       suggestedOrder: 9,
       weight: 8,
-      status: "not_started",
+      status: "partial",
     },
     {
       id: "rabbi-ai",
@@ -208,7 +208,7 @@ export const HTML_FULL_MIGRATION_WORKSTREAMS: readonly HtmlMigrationWorkstream[]
       label: "Ask the Rabbi (full)",
       legacyRef: "Rabbi modal, OpenAI / API, exercise context",
       detail:
-        "Next: route-based Rabbi tips. Missing: legacy word/sentence Rabbi with API keys, streaming, and HTML parity prompts.",
+        "Route tips + `/api/rabbi` (OpenAI + LightRAG optional); sheet modal with legacy invite line and quick follow-ups (Meaning / Root / Grammar / Example). Word-detail API enriches roots/Wikipedia when signed in. Missing: streaming, per-exercise float Rabbi from HTML.",
       suggestedOrder: 12,
       weight: 7,
       status: "partial",

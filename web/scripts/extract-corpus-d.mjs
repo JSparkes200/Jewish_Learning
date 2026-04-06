@@ -1,6 +1,14 @@
 /**
- * Extract `const D=[...]` from ../hebrew-v8.2.html → web/data/corpus-d.ts
- * Run from repo root: node web/scripts/extract-corpus-d.mjs
+ * Generate `web/data/corpus-d.ts` from `web/data/legacy-corpus-d.json`.
+ *
+ * The JSON file is the source of truth for the legacy dictionary D (replacing
+ * extraction from hebrew-v8.2.html).
+ *
+ * Regenerate TS from repo root:
+ *   node web/scripts/extract-corpus-d.mjs
+ *
+ * Refresh JSON from current TS (after hand-edits to corpus-d.ts):
+ *   cd web && npx tsx scripts/export-legacy-corpus-d-json.ts
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -8,30 +16,34 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
-const htmlPath = path.join(repoRoot, "hebrew-v8.2.html");
+const jsonPath = path.join(repoRoot, "web", "data", "legacy-corpus-d.json");
 const outPath = path.join(repoRoot, "web", "data", "corpus-d.ts");
 
-const lines = fs.readFileSync(htmlPath, "utf8").split(/\r?\n/);
-const startLine = 1998; // 1-based: const D=[
-const endLine = 7356; // 1-based: ];
-const startIdx = startLine - 1;
-const endIdx = endLine - 1;
-const open = lines[startIdx];
-if (!open?.trim().startsWith("const D=[")) {
-  throw new Error(`Expected const D=[ at line ${startLine}, got: ${open?.slice(0, 40)}`);
-}
-const close = lines[endIdx];
-if (close?.trim() !== "];") {
-  throw new Error(`Expected ]; at line ${endLine}, got: ${close}`);
+function j(s) {
+  return JSON.stringify(s);
 }
 
-const body = lines.slice(startIdx + 1, endIdx);
+/** One corpus row as a single-line TS literal (matches legacy HTML / corpus-d.ts order). */
+function entryToTs(o) {
+  const bits = [`h:${j(o.h)}`, `p:${j(o.p)}`, `e:${j(o.e)}`, `l:${o.l}`];
+  if (o.shoresh != null && o.shoresh !== "") bits.push(`shoresh:${j(o.shoresh)}`);
+  if (o.gram != null && o.gram !== "") bits.push(`gram:${j(o.gram)}`);
+  if (o.col != null && o.col !== "") bits.push(`col:${j(o.col)}`);
+  return `{${bits.join(",")}}`;
+}
+
+const raw = fs.readFileSync(jsonPath, "utf8");
+const rows = JSON.parse(raw);
+if (!Array.isArray(rows) || rows.length === 0) {
+  throw new Error(`Expected non-empty array in ${jsonPath}`);
+}
 
 const header = `/**
- * Legacy dictionary D from hebrew-v8.2.html (generated — do not hand-edit).
- * Format: { h, p, e, l, col?, gram?, shoresh? }
+ * Legacy dictionary D from web/data/legacy-corpus-d.json (generated — do not hand-edit).
+ * Format: { h, p, e, l, shoresh?, gram?, col? }
  *
  * Regenerate from repo root: node web/scripts/extract-corpus-d.mjs
+ * Refresh JSON from TS: cd web && npx tsx scripts/export-legacy-corpus-d-json.ts
  */
 
 export type LegacyCorpusEntry = {
@@ -39,17 +51,18 @@ export type LegacyCorpusEntry = {
   p: string;
   e: string;
   l: number;
-  col?: string;
-  gram?: string;
   shoresh?: string;
+  gram?: string;
+  col?: string;
 };
 
 export const LEGACY_CORPUS_D: readonly LegacyCorpusEntry[] = [
 `;
 
-const out = `${header}${body.join("\n")}\n];\n`;
+const body = rows.map(entryToTs).join(",\n");
+const out = `${header}${body}\n];\n`;
+
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, out, "utf8");
 
-const entryCount = (out.match(/\{h:/g) ?? []).length;
-console.log(`Wrote ${outPath} (${entryCount} {h:…} objects, ${Math.round(out.length / 1024)} KB)`);
+console.log(`Wrote ${outPath} (${rows.length} entries, ${Math.round(out.length / 1024)} KB)`);

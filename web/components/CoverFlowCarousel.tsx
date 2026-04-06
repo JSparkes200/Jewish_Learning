@@ -49,6 +49,8 @@ export function CoverFlowCarousel({
   variant = "full",
   /** Shown in the track when `items` is empty (carousel chrome stays visible). */
   emptySlot,
+  /** Snap the carousel so this item key is centered (e.g. Jewish-text category strip). */
+  focusItemKey,
 }: {
   items: readonly CoverFlowItem[];
   eyebrow?: string;
@@ -61,6 +63,7 @@ export function CoverFlowCarousel({
   nextAriaLabel?: string;
   variant?: "full" | "minimal";
   emptySlot?: ReactNode;
+  focusItemKey?: string | null;
 }) {
   const [center, setCenter] = useState(0);
   const n = items.length;
@@ -71,6 +74,12 @@ export function CoverFlowCarousel({
     if (n === 0) return;
     if (center >= n) setCenter(n - 1);
   }, [n, center]);
+
+  useEffect(() => {
+    if (n === 0 || !focusItemKey?.trim()) return;
+    const idx = items.findIndex((it) => it.key === focusItemKey);
+    if (idx >= 0) setCenter(idx);
+  }, [focusItemKey, items, n]);
 
   const go = useCallback(
     (dir: -1 | 1) => {

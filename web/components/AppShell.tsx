@@ -7,7 +7,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -36,6 +35,7 @@ import {
   isTrialActive,
   loadTrialSession,
 } from "@/lib/trial-session";
+import { ClerkHeaderAuth } from "@/components/ClerkHeaderAuth";
 import { DeveloperModeProvider } from "@/components/DeveloperModeProvider";
 import { Hebrew } from "./Hebrew";
 import { TrialCountdownBar } from "./TrialCountdownBar";
@@ -328,6 +328,9 @@ function NextUpBar({
   );
 }
 
+/** Stable id for the hamburger ↔ menu panel (avoids useId SSR/client drift with Clerk in the header). */
+const APP_SHELL_MAIN_NAV_MENU_ID = "app-shell-main-nav-menu";
+
 function ShellInner({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modal, setModal] = useState<ReactNode>(null);
@@ -344,7 +347,6 @@ function ShellInner({ children }: { children: ReactNode }) {
   );
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const menuId = useId();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -474,7 +476,7 @@ function ShellInner({ children }: { children: ReactNode }) {
                 type="button"
                 className="flex h-10 w-10 flex-col items-center justify-center rounded-lg border border-ink/15 bg-parchment/80 shadow-sm transition hover:bg-parchment-card"
                 aria-expanded={menuOpen}
-                aria-controls={menuId}
+                aria-controls={APP_SHELL_MAIN_NAV_MENU_ID}
                 aria-label={menuOpen ? "Close menu" : "Open menu"}
                 onClick={toggleMenu}
               >
@@ -482,7 +484,7 @@ function ShellInner({ children }: { children: ReactNode }) {
               </button>
               <NavMenu
                 open={menuOpen}
-                menuId={menuId}
+                menuId={APP_SHELL_MAIN_NAV_MENU_ID}
                 onNavigate={closeMenu}
               />
             </div>
@@ -514,6 +516,7 @@ function ShellInner({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+              <ClerkHeaderAuth />
               <button
                 type="button"
                 onClick={() =>

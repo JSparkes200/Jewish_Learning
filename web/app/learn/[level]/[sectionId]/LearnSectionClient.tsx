@@ -120,13 +120,178 @@ function LearnSectionStepHeader({
 
 export function LearnSectionClient({ level, sectionId }: Props) {
   const sections = useMemo(() => getSectionsForLevel(level), [level]);
-  const sec = sections.find((s) => s.id === sectionId);
+  const sec = useMemo(
+    () => sections.find((s) => s.id === sectionId),
+    [sections, sectionId],
+  );
   const [progress, setProgress] = useLearnProgressSync({ level, sectionId });
-  const nikkudDefault = sec ? sectionDefaultShowNikkud(sec) : true;
+  const nikkudDefault = useMemo(
+    () => (sec ? sectionDefaultShowNikkud(sec) : true),
+    [sec],
+  );
   const [storyShowNikkud, setStoryShowNikkud] = useState(nikkudDefault);
 
   const [phase, setPhase] = useState<LessonPhase>("intro");
   const [workIndex, setWorkIndex] = useState(0);
+
+  const unlocked = useMemo(() => {
+    if (!sec) return false;
+    return sectionUnlocked(
+      level,
+      sections,
+      sec.id,
+      progress.completedSections,
+      progress.vocabLevels,
+    );
+  }, [
+    sec,
+    level,
+    sections,
+    progress.completedSections,
+    progress.vocabLevels,
+  ]);
+
+  const lockHint = useMemo(() => {
+    if (!sec || unlocked) return null;
+    return sectionLockHint(
+      level,
+      sections,
+      sec.id,
+      progress.completedSections,
+      progress.vocabLevels,
+    );
+  }, [
+    sec,
+    unlocked,
+    level,
+    sections,
+    progress.completedSections,
+    progress.vocabLevels,
+  ]);
+
+  const comprehension = useMemo(
+    () => getComprehensionForSection(sectionId),
+    [sectionId],
+  );
+  const mcqPack = useMemo(
+    () => getMcqPackForSection(sectionId),
+    [sectionId],
+  );
+
+  const isRead = useMemo(
+    () => sec?.type === "read" && level === 1 && sectionId === "1-read",
+    [sec, level, sectionId],
+  );
+
+  const generatedPack = useMemo(() => {
+    if (!sec || mcqPack || comprehension) return null;
+    const pool = buildStudyPracticePool(level);
+    const items = pickMcqItemsFromPool(pool, 10, level);
+    if (!items.length) return null;
+    return {
+      kind: "mcq" as const,
+      title: `${sec.label} - generated practice`,
+      intro:
+        "We’re still polishing a hand-built pack for this spot — meanwhile this set keeps your feet on the path and your stats honest.",
+      items,
+    };
+  }, [sec, mcqPack, comprehension, level]);
+
+  const sentencePack = useMemo(() => {
+    const sourcePack = mcqPack ?? generatedPack;
+    if (sourcePack) return buildCorrectSentencePackFromMcq(sourcePack, level, 5);
+    const pool = buildStudyPracticePool(level);
+    return buildCorrectSentencePackFromPool(pool, level, 5);
+  }, [mcqPack, generatedPack, level]);
+
+  const prepCards = useMemo(() => {
+    const base = mcqPack ?? generatedPack;
+    const fromMcq = buildPrepCardsFromMcqPack(base, 6);
+    if (fromMcq.length > 0) return fromMcq;
+    return buildPrepCardsFromComprehension(comprehension, 4);
+  }, [mcqPack, generatedPack, comprehension]);
+
+  const prepSubtitle = useMemo(
+    () => sectionGrammarHint(level, sec?.type),
+    [level, sec],
+  );
+  const lessonPrimer = useMemo(
+    () => getSectionLessonPrimer(sectionId),
+    [sectionId],
+  );
+  const storyGloss = useMemo(
+    () =>
+      Object.fromEntries(
+        (mcqPack?.items ?? []).map((it) => [it.promptHe, it.correctEn]),
+      ),
+    [mcqPack],
+  );
+  const rabbiLevel = useMemo(
+    () => courseLevelToRabbiLevel(level),
+    [level],
+  );
+
+  const activities = useMemo((): ActivityStep[] => {
+    if (!sec) return [];
+    const steps: ActivityStep[] = [];
+    if (comprehension) {
+      steps.push({ key: "comp", label: "Reading check" });
+      if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
+    } else if (isRead) {
+      steps.push({ key: "story", label: "Story" });
+      if (mcqPack) {
+        steps.push({ key: "mcq", label: "Meaning match" });
+        if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
+      }
+    } else if (mcqPack || generatedPack) {
+      if (sec.type === "roots") steps.push({ key: "roots", label: "Root families" });
+      if (sec.type === "numbers" && sectionId === "1-nums") {
+        steps.push({ key: "nums", label: "Numbers you hear" });
+      }
+      steps.push({ key: "mcq", label: "Vocabulary choices" });
+      if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
+    }
+    return steps;
+  }, [
+    sec,
+    comprehension,
+    generatedPack,
+    isRead,
+    mcqPack,
+    sectionId,
+    sentencePack,
+  ]);
+
+  const hasPrep = prepCards.length > 0;
+  const hasLessonTrack = activities.length > 0;
+
+  const goLessonOverview = useCallback(() => {
+    setPhase("intro");
+    setWorkIndex(0);
+  }, []);
+
+  const goBackStep = useCallback(() => {
+    if (workIndex > 0) {
+      setWorkIndex((i) => i - 1);
+      return;
+    }
+    if (phase === "work") {
+      if (hasPrep) setPhase("prep");
+      else setPhase("intro");
+    }
+  }, [workIndex, phase, hasPrep]);
+
+  const flowForIndex = useCallback(
+    (i: number) => {
+      if (i >= activities.length - 1) return undefined;
+      const next = activities[i + 1]!;
+      return {
+        label: continueLabelForNextKey(next.key),
+        onContinue: () => setWorkIndex(i + 1),
+      };
+    },
+    [activities],
+  );
 
   useEffect(() => {
     setStoryShowNikkud(nikkudDefault);
@@ -180,26 +345,11 @@ export function LearnSectionClient({ level, sectionId }: Props) {
     );
   }
 
-  if (
-    !sectionUnlocked(
-      level,
-      sections,
-      sec.id,
-      progress.completedSections,
-      progress.vocabLevels,
-    )
-  ) {
-    const hint = sectionLockHint(
-      level,
-      sections,
-      sec.id,
-      progress.completedSections,
-      progress.vocabLevels,
-    );
+  if (!unlocked) {
     return (
       <div className="text-sm text-ink-muted">
         <p className="mb-2">
-          {hint ??
+          {lockHint ??
             "This section opens after you finish the one before it — your path stays in order."}
         </p>
         <Link href={`/learn/${level}`} className="text-sage underline">
@@ -208,102 +358,6 @@ export function LearnSectionClient({ level, sectionId }: Props) {
       </div>
     );
   }
-
-  const isRead = sec.type === "read" && level === 1 && sectionId === "1-read";
-  const comprehension = getComprehensionForSection(sectionId);
-  const mcqPack = getMcqPackForSection(sectionId);
-  const generatedPack =
-    !mcqPack && !comprehension
-      ? (() => {
-          const pool = buildStudyPracticePool(level);
-          const items = pickMcqItemsFromPool(pool, 10, level);
-          if (!items.length) return null;
-          return {
-            kind: "mcq" as const,
-            title: `${sec.label} - generated practice`,
-            intro:
-              "We’re still polishing a hand-built pack for this spot — meanwhile this set keeps your feet on the path and your stats honest.",
-            items,
-          };
-        })()
-      : null;
-  const sentencePack = (() => {
-    const sourcePack = mcqPack ?? generatedPack;
-    if (sourcePack) return buildCorrectSentencePackFromMcq(sourcePack, level, 5);
-    const pool = buildStudyPracticePool(level);
-    return buildCorrectSentencePackFromPool(pool, level, 5);
-  })();
-  const prepCards =
-    buildPrepCardsFromMcqPack(mcqPack ?? generatedPack, 6).length > 0
-      ? buildPrepCardsFromMcqPack(mcqPack ?? generatedPack, 6)
-      : buildPrepCardsFromComprehension(comprehension, 4);
-  const prepSubtitle = sectionGrammarHint(level, sec.type);
-  const lessonPrimer = getSectionLessonPrimer(sectionId);
-  const storyGloss = Object.fromEntries(
-    (mcqPack?.items ?? []).map((it) => [it.promptHe, it.correctEn]),
-  );
-  const rabbiLevel = courseLevelToRabbiLevel(level);
-
-  const activities = useMemo((): ActivityStep[] => {
-    const steps: ActivityStep[] = [];
-    if (comprehension) {
-      steps.push({ key: "comp", label: "Reading check" });
-      if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
-    } else if (isRead) {
-      steps.push({ key: "story", label: "Story" });
-      if (mcqPack) {
-        steps.push({ key: "mcq", label: "Meaning match" });
-        if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
-      }
-    } else if (mcqPack || generatedPack) {
-      if (sec.type === "roots") steps.push({ key: "roots", label: "Root families" });
-      if (sec.type === "numbers" && sectionId === "1-nums") {
-        steps.push({ key: "nums", label: "Numbers you hear" });
-      }
-      steps.push({ key: "mcq", label: "Vocabulary choices" });
-      if (sentencePack) steps.push({ key: "sent", label: "How real sentences sound" });
-    }
-    return steps;
-  }, [
-    comprehension,
-    generatedPack,
-    isRead,
-    mcqPack,
-    sec.type,
-    sectionId,
-    sentencePack,
-  ]);
-
-  const hasPrep = prepCards.length > 0;
-  const hasLessonTrack = activities.length > 0;
-
-  const goLessonOverview = useCallback(() => {
-    setPhase("intro");
-    setWorkIndex(0);
-  }, []);
-
-  const goBackStep = useCallback(() => {
-    if (workIndex > 0) {
-      setWorkIndex((i) => i - 1);
-      return;
-    }
-    if (phase === "work") {
-      if (hasPrep) setPhase("prep");
-      else setPhase("intro");
-    }
-  }, [workIndex, phase, hasPrep]);
-
-  const flowForIndex = useCallback(
-    (i: number) => {
-      if (i >= activities.length - 1) return undefined;
-      const next = activities[i + 1]!;
-      return {
-        label: continueLabelForNextKey(next.key),
-        onContinue: () => setWorkIndex(i + 1),
-      };
-    },
-    [activities],
-  );
 
   const mcqSource = mcqPack ?? generatedPack;
 

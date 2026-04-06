@@ -3,7 +3,7 @@ const CACHE = 'ivrit-v7';
 const base = self.location.pathname.replace(/sw\.js$/, '') || '/';
 
 self.addEventListener('install', e => {
-  const urls = ['index.html','hebrew-v8.2.html','manifest.json','icon.svg'].map(f=>base+f);
+  const urls = ['index.html','manifest.json','icon.svg'].map(f=>base+f);
   e.waitUntil(
     caches.open(CACHE).then(cache => Promise.allSettled(urls.map(u=>cache.add(u))))
   );

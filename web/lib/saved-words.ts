@@ -9,6 +9,65 @@
 
 export const SAVED_WORDS_STORAGE_KEY = "hebrew-web-saved-words-v1";
 
+/** Active Clerk user id (client-only); unset = guest bucket `SAVED_WORDS_STORAGE_KEY`. */
+let savedWordsClerkUserId: string | null = null;
+
+const SAVED_WORDS_GUEST_MIGRATED_PREFIX = "hebrew-web-saved-words-guest-migrated:";
+
+export function setSavedWordsClerkUserId(
+  userId: string | null | undefined,
+): void {
+  const next = userId?.trim() ? userId.trim() : null;
+  if (next === savedWordsClerkUserId) return;
+  savedWordsClerkUserId = next;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(SAVED_WORDS_EVENT));
+  }
+}
+
+/** @internal Tests reset scope between cases. */
+export function __resetSavedWordsClerkUserIdForTests(): void {
+  savedWordsClerkUserId = null;
+}
+
+function savedWordsLocalStorageKey(): string {
+  return savedWordsClerkUserId
+    ? `${SAVED_WORDS_STORAGE_KEY}:uid:${savedWordsClerkUserId}`
+    : SAVED_WORDS_STORAGE_KEY;
+}
+
+/**
+ * First sign-in: if the user bucket is empty but the guest list has rows, copy guest JSON once.
+ */
+export function maybeMigrateGuestSavedWordsToClerkUser(
+  clerkUserId: string,
+): void {
+  if (typeof window === "undefined") return;
+  const uid = clerkUserId.trim();
+  if (!uid) return;
+  const flag = SAVED_WORDS_GUEST_MIGRATED_PREFIX + uid;
+  if (localStorage.getItem(flag)) return;
+
+  const userKey = `${SAVED_WORDS_STORAGE_KEY}:uid:${uid}`;
+  if (localStorage.getItem(userKey)) {
+    localStorage.setItem(flag, "1");
+    return;
+  }
+
+  const guestRaw = localStorage.getItem(SAVED_WORDS_STORAGE_KEY);
+  if (!guestRaw || guestRaw === "[]") {
+    localStorage.setItem(flag, "1");
+    return;
+  }
+
+  try {
+    localStorage.setItem(userKey, guestRaw);
+  } catch {
+    /* quota */
+  }
+  localStorage.setItem(flag, "1");
+}
+
 /** Max entries kept (trimmed on load/save). */
 export const MAX_SAVED_WORDS = 400;
 
@@ -119,15 +178,16 @@ function capList(list: SavedWordEntry[]): SavedWordEntry[] {
 
 export function loadSavedWords(): SavedWordEntry[] {
   if (typeof window === "undefined") return [];
+  const storageKey = savedWordsLocalStorageKey();
   try {
-    const raw = localStorage.getItem(SAVED_WORDS_STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return [];
     const p = JSON.parse(raw) as unknown;
     const list = sanitizeSavedWordsFromJson(p) ?? [];
     const capped = capList(list);
     if (capped.length !== list.length) {
       try {
-        localStorage.setItem(SAVED_WORDS_STORAGE_KEY, JSON.stringify(capped));
+        localStorage.setItem(storageKey, JSON.stringify(capped));
       } catch {
         /* ignore */
       }
@@ -142,7 +202,7 @@ export function saveSavedWords(list: SavedWordEntry[]): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(
-      SAVED_WORDS_STORAGE_KEY,
+      savedWordsLocalStorageKey(),
       JSON.stringify(capList(list)),
     );
   } catch {

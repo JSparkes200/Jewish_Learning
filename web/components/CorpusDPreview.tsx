@@ -34,14 +34,13 @@ export function CorpusDPreview() {
       </p>
       <p className="mt-2 text-xs text-ink-muted">
         <strong className="text-ink">{LEGACY_CORPUS_D_LENGTH.toLocaleString()}</strong>{" "}
-        rows exported from{" "}
-        <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-          hebrew-v8.2.html
-        </code>{" "}
-        into{" "}
-        <code className="text-[11px]">web/data/corpus-d.ts</code>. Regenerate
-        from the <code className="text-[10px]">web/</code> folder:{" "}
-        <code className="text-[10px]">npm run extract:corpus-d</code>.
+        rows from{" "}
+        <code className="text-[11px]">web/data/legacy-corpus-d.json</code>{" "}
+        compiled into{" "}
+        <code className="text-[11px]">web/data/corpus-d.ts</code>.         Regenerate TS from repo root:{" "}
+        <code className="text-[10px]">node web/scripts/extract-corpus-d.mjs</code>
+        . Refresh JSON from TS (in <code className="text-[10px]">web/</code>):{" "}
+        <code className="text-[10px]">npm run export:legacy-corpus-d-json</code>.
       </p>
       <p className="mt-2 text-[11px] text-ink-faint">
         Level ≤1: {sampleStats.l1.toLocaleString()} lemmas · dict-derived roots

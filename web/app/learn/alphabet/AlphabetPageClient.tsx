@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
@@ -11,6 +12,11 @@ import {
   type AlphabetLetterMeta,
 } from "@/data/alphabet-letters";
 import { ALPHABET_TRACK_BLURB, ALPHABET_TRACK_TITLE } from "@/data/course-post-foundation";
+import { getDeveloperModeBypass } from "@/lib/developer-mode";
+import {
+  guestMayPracticeAlphabetLetter,
+  guestMayTakeAlphabetFinalExam,
+} from "@/lib/guest-alphabet";
 import {
   areAllAlphabetLettersTraced,
   completeAlphabetTrack,
@@ -70,6 +76,8 @@ function LetterPickerBlock({
 }
 
 export function AlphabetPageClient() {
+  const { isLoaded: authLoaded, isSignedIn } = useAuth();
+  const guestMode = authLoaded && !isSignedIn;
   const [progress, setProgress] = useLearnProgressSync({});
   const [activeLetterId, setActiveLetterId] = useState(ALPHABET_LETTERS[0].id);
   const [showFinal, setShowFinal] = useState(false);
@@ -93,6 +101,7 @@ export function AlphabetPageClient() {
   };
 
   const markLetterPracticed = (id: string) => {
+    if (!guestMayPracticeAlphabetLetter(id, !!isSignedIn)) return;
     setProgress((p) => {
       const next = setAlphabetLetterTraced(p, id, true);
       saveLearnProgress(next);
@@ -117,6 +126,9 @@ export function AlphabetPageClient() {
   };
 
   const activeLetter = getLetterById(activeLetterId);
+  const mayPracticeActiveLetter =
+    !activeLetter ||
+    guestMayPracticeAlphabetLetter(activeLetter.id, !!isSignedIn);
 
   const printLetters = useMemo(
     () => ALPHABET_LETTERS.filter((l) => l.section === "print"),
@@ -147,12 +159,21 @@ export function AlphabetPageClient() {
           You chose to skip the alphabet track. You can still open it anytime from
           Learn.
         </p>
-        <Link
-          href="/learn"
-          className="mt-4 inline-block text-sage underline"
-        >
-          Learn home →
-        </Link>
+        {isSignedIn ? (
+          <Link
+            href="/learn"
+            className="mt-4 inline-block text-sage underline"
+          >
+            Learn home →
+          </Link>
+        ) : (
+          <p className="mt-4 text-sm text-ink-muted">
+            <Link href="/sign-in" className="text-sage underline">
+              Sign in
+            </Link>{" "}
+            to open the full Alef–Dalet course and sync progress.
+          </p>
+        )}
       </div>
     );
   }
@@ -182,12 +203,21 @@ export function AlphabetPageClient() {
             Alphabet track marked complete. Continue to Alef–Dalet when you are
             ready.
           </p>
-          <Link
-            href="/learn"
-            className="mt-3 inline-block rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
-          >
-            Open Learn →
-          </Link>
+          {isSignedIn ? (
+            <Link
+              href="/learn"
+              className="mt-3 inline-block rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+            >
+              Open Learn →
+            </Link>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="mt-3 inline-block rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+            >
+              Sign in for the course →
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -214,6 +244,17 @@ export function AlphabetPageClient() {
         <p className="mt-2 text-sm text-ink-muted">{ALPHABET_TRACK_BLURB}</p>
       </header>
 
+      {guestMode ? (
+        <div className="mb-6 rounded-2xl border border-sage/25 bg-sage/5 p-4 text-xs leading-relaxed text-ink-muted">
+          <strong className="text-ink">Guest mode.</strong> Trace and mark the
+          first four print letters (א–ד). Open any letter to preview sounds.{" "}
+          <Link href="/sign-in" className="text-sage underline">
+            Sign in
+          </Link>{" "}
+          for the rest of the alphabet, the final exam, and the full course.
+        </div>
+      ) : null}
+
       <div className="mb-6 rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
         <p className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-muted">
           Status
@@ -233,13 +274,15 @@ export function AlphabetPageClient() {
           >
             I already read Hebrew — skip
           </button>
-          <button
-            type="button"
-            onClick={applySimulate}
-            className="rounded-lg border border-amber/30 px-4 py-2 font-label text-[9px] uppercase tracking-wide text-amber hover:bg-amber/10"
-          >
-            Simulate full completion (dev)
-          </button>
+          {getDeveloperModeBypass() || isSignedIn ? (
+            <button
+              type="button"
+              onClick={applySimulate}
+              className="rounded-lg border border-amber/30 px-4 py-2 font-label text-[9px] uppercase tracking-wide text-amber hover:bg-amber/10"
+            >
+              Simulate full completion (dev)
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -287,35 +330,74 @@ export function AlphabetPageClient() {
               <p className="mt-1 text-xs text-ink-muted">
                 Sound: {activeLetter.sound}
               </p>
-              <div className="mt-4">
-                <AlphabetTracePad
-                  key={activeLetterId}
-                  letter={activeLetter.char}
-                  onPass={() => markLetterPracticed(activeLetter.id)}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => markLetterPracticed(activeLetter.id)}
-                className="mt-4 rounded-lg border border-ink/15 px-4 py-2 font-label text-[9px] uppercase tracking-wide text-ink-muted hover:bg-parchment-deep/40"
-              >
-                Mark as practiced (no drawing)
-              </button>
+              {mayPracticeActiveLetter ? (
+                <>
+                  <div className="mt-4">
+                    <AlphabetTracePad
+                      key={activeLetterId}
+                      letter={activeLetter.char}
+                      onPass={() => markLetterPracticed(activeLetter.id)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => markLetterPracticed(activeLetter.id)}
+                    className="mt-4 rounded-lg border border-ink/15 px-4 py-2 font-label text-[9px] uppercase tracking-wide text-ink-muted hover:bg-parchment-deep/40"
+                  >
+                    Mark as practiced (no drawing)
+                  </button>
+                </>
+              ) : (
+                <div className="mt-4 rounded-xl border border-sage/20 bg-parchment-deep/40 p-4 text-sm text-ink-muted">
+                  <p>
+                    Guest previews stop after א–ד.{" "}
+                    <Link href="/sign-in" className="text-sage underline">
+                      Sign in
+                    </Link>{" "}
+                    to trace this letter and continue the full Alef–Bet track.
+                  </p>
+                </div>
+              )}
             </div>
           ) : null}
 
           {allLessonsDone ? (
             <div className="mt-8 rounded-2xl border border-sage/30 bg-sage/5 p-4 text-center">
-              <p className="text-sm font-medium text-ink">
-                All letters practiced — ready for the final exam.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowFinal(true)}
-                className="mt-3 rounded-xl bg-sage px-6 py-3 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
-              >
-                Start final exam
-              </button>
+              {guestMayTakeAlphabetFinalExam(!!isSignedIn) ? (
+                <>
+                  <p className="text-sm font-medium text-ink">
+                    All letters practiced — ready for the final exam.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowFinal(true)}
+                    className="mt-3 rounded-xl bg-sage px-6 py-3 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+                  >
+                    Start final exam
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-ink-muted">
+                    You&apos;ve reached the guest practice limit for tracing. Sign
+                    in to take the final exam and unlock the full course.
+                  </p>
+                  <div className="mt-3 flex flex-wrap justify-center gap-2">
+                    <Link
+                      href="/sign-in"
+                      className="inline-block rounded-xl bg-sage px-6 py-3 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+                    >
+                      Sign in
+                    </Link>
+                    <Link
+                      href="/sign-up"
+                      className="inline-block rounded-xl border border-sage/40 px-6 py-3 font-label text-[10px] uppercase tracking-wide text-sage hover:bg-sage/10"
+                    >
+                      Create account
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           ) : null}
         </section>

@@ -44,6 +44,7 @@ export function buildRabbiUserMessage(input: {
   translit?: string;
   meaningEn?: string;
   ragContext: string;
+  learnerQuestion?: string;
 }): string {
   let u = `**Learner level:** ${input.level}\n\n**Target Hebrew / phrase:** ${input.targetHe}\n\n`;
   if (input.translit) {
@@ -51,6 +52,10 @@ export function buildRabbiUserMessage(input: {
   }
   if (input.meaningEn) {
     u += `**English gloss (from card):** ${input.meaningEn}\n\n`;
+  }
+  const q = input.learnerQuestion?.trim();
+  if (q) {
+    u += `**Learner follow-up question:**\n${q}\n\n`;
   }
   u += "**LightRAG-retrieved context:**\n\n";
   u +=

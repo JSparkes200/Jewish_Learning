@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Frank_Ruhl_Libre, Source_Serif_4 } from "next/font/google";
+import { AppProviders } from "@/components/AppProviders";
 import { AppShell } from "@/components/AppShell";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import "./globals.css";
@@ -68,7 +69,9 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" className={`${fontHebrew.variable} ${fontUi.variable}`}>
       <body className="font-body bg-parchment-grain">
-        <AppShell>{children}</AppShell>
+        <AppProviders>
+          <AppShell>{children}</AppShell>
+        </AppProviders>
         <ServiceWorkerRegister />
       </body>
     </html>

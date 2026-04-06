@@ -44,8 +44,10 @@ export function SavedWordsSection({ filter }: { filter: string }) {
       </p>
       <p className="mt-1 text-xs text-ink-muted">
         Quick bookmarks (single lemmas), separate from full{" "}
-        <strong className="font-medium text-ink">passages</strong> above. Stored
-        only in this browser; included in{" "}
+        <strong className="font-medium text-ink">passages</strong> above. This
+        browser keeps the full list; when you&apos;re signed in, a capped copy
+        also syncs to your Clerk account (private metadata) for backup across
+        devices. Included in{" "}
         <strong className="font-medium text-ink">schema v3</strong> JSON backups.
       </p>
 

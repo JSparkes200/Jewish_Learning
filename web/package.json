@@ -9,14 +9,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:root-sw": "cd .. && node web/node_modules/eslint/bin/eslint.js -c eslint.config.mjs sw.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "extract:corpus-d": "node scripts/extract-corpus-d.mjs",
+    "export:legacy-corpus-d-json": "tsx scripts/export-legacy-corpus-d-json.ts",
     "validate:hebrew-passage": "tsx scripts/validate-hebrew-passage.ts",
     "merge:legacy-backup": "tsx scripts/merge-legacy-to-app-backup.ts",
     "export:knowledge": "tsx scripts/export-knowledge.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.0.8",
     "@hebcal/core": "^4.5.1",
     "@sentry/nextjs": "^10.47.0",
     "@upstash/ratelimit": "^2.0.8",

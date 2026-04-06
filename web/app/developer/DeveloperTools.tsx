@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CorpusDPreview } from "@/components/CorpusDPreview";
 import { DeveloperLexiconBrowse } from "@/components/DeveloperLexiconBrowse";
-import { DeveloperLegacyHtmlTools } from "@/components/DeveloperLegacyHtmlTools";
 import { PassageValidatorPanel } from "@/components/PassageValidatorPanel";
 import { DeveloperAuthPanel } from "./DeveloperAuthPanel";
 import { HtmlMigrationTracker } from "@/components/HtmlMigrationTracker";
@@ -200,7 +199,6 @@ export function DeveloperTools() {
       <PassageValidatorPanel />
       <CorpusDPreview />
       <DeveloperLexiconBrowse />
-      <DeveloperLegacyHtmlTools />
 
       <div className="rounded-xl border border-ink/12 border-t-rust/20 bg-parchment-card/80 p-4">
         <h3 className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
@@ -406,11 +404,8 @@ export function DeveloperTools() {
           Import from legacy HTML app
         </h3>
         <p className="mt-2 text-xs text-ink-muted">
-          If you studied in{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-            hebrew-v8.2.html
-          </code>{" "}
-          in this browser, section checkmarks live under{" "}
+          If you studied in the legacy single-page app in this browser, section
+          checkmarks live under{" "}
           <code className="text-[11px]">ivrit_lr</code> (or{" "}
           <code className="text-[11px]">ivrit_lr__&lt;user&gt;</code> when
           logged in there). Merge copies matching ids into{" "}
@@ -495,11 +490,7 @@ export function DeveloperTools() {
           Legacy Library passages (<code className="text-[11px]">ivrit_lib</code>)
         </h3>
         <p className="mt-2 text-xs text-ink-muted">
-          Passages saved in{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-            hebrew-v8.2.html
-          </code>{" "}
-          live under{" "}
+          Passages saved in the legacy single-page app live under{" "}
           <code className="text-[11px]">ivrit_lib</code>, or{" "}
           <code className="text-[11px]">ivrit_lib__&lt;user&gt;</code> when the
           legacy app had an active session (
@@ -681,8 +672,8 @@ export function DeveloperTools() {
         <p className="mt-2 text-xs text-ink-muted">
           Download a JSON file with <code className="text-[11px]">ivrit_lr</code>{" "}
           (learner object) and <code className="text-[11px]">ivrit_lv</code>{" "}
-          shaped like <code className="text-[11px]">hebrew-v8.2.html</code>{" "}
-          expects. If this browser still has legacy data, it is{" "}
+          shaped like the legacy HTML app expected. If this browser still has
+          legacy data, it is{" "}
           <strong className="text-ink">merged</strong> (union completions, max
           vocab <code className="text-[11px]">lv</code>, max root-drill hits,
           streak by latest UTC day). Otherwise you get a minimal learner shell

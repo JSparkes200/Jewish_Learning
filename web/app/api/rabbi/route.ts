@@ -48,7 +48,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const { targetHe, level, translit, meaningEn, ragContext } = parsed.data;
+  const { targetHe, level, translit, meaningEn, ragContext, learnerQuestion } =
+    parsed.data;
 
   let retrieval: "client" | "lightrag" | "skipped" | "empty" | "error" = "skipped";
   let ragText = ragContext?.trim() ?? "";
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
     translit,
     meaningEn,
     ragContext: ragText,
+    learnerQuestion,
   });
 
   try {

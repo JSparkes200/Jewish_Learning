@@ -4,6 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Hebrew } from "@/components/Hebrew";
 import type { RabbiLevel } from "@/lib/rabbi-types";
+import {
+  RABBI_QUICK_FOLLOW_UPS,
+  RABBI_STUDY_INVITE_EN,
+  RABBI_STUDY_INVITE_HE,
+} from "@/lib/rabbi-legacy-quicks";
+import type { WordDetailEnrichment } from "@/lib/word-detail-enrichment";
 
 /** Payload registered from drills and passed into the shell modal. */
 export type RabbiAskPayload = {
@@ -43,46 +49,101 @@ export function RabbiCard({
   const [retrieval, setRetrieval] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wordDetail, setWordDetail] = useState<WordDetailEnrichment | null>(
+    null,
+  );
+  const [wordDetailUnauthorized, setWordDetailUnauthorized] = useState(false);
+  const [followUpText, setFollowUpText] = useState("");
 
-  const ask = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/rabbi", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          targetHe,
-          level: learnerLevel,
-          translit,
-          meaningEn,
-          ragContext,
-        }),
-      });
-      const data = (await res.json()) as ApiOk | ApiErr;
-      if (!res.ok) {
-        setError("error" in data ? data.error : "Request failed");
-        return;
+  const runAsk = useCallback(
+    async (learnerQuestion?: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/rabbi", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            targetHe,
+            level: learnerLevel,
+            translit,
+            meaningEn,
+            ragContext,
+            learnerQuestion: learnerQuestion?.trim() || undefined,
+          }),
+        });
+        const data = (await res.json()) as ApiOk | ApiErr;
+        if (!res.ok) {
+          setError("error" in data ? data.error : "Request failed");
+          return;
+        }
+        if ("markdown" in data) {
+          setMarkdown(data.markdown);
+          setRetrieval(data.retrieval ?? null);
+        }
+        setOpen(true);
+      } catch {
+        setError("Network error");
+      } finally {
+        setLoading(false);
       }
-      if ("markdown" in data) {
-        setMarkdown(data.markdown);
-        setRetrieval(data.retrieval ?? null);
-      }
-      setOpen(true);
-    } catch {
-      setError("Network error");
-    } finally {
-      setLoading(false);
-    }
-  }, [targetHe, learnerLevel, translit, meaningEn, ragContext]);
+    },
+    [targetHe, learnerLevel, translit, meaningEn, ragContext],
+  );
 
   useEffect(() => {
     if (variant !== "sheet") return;
     setMarkdown(null);
     setError(null);
     setOpen(false);
-    void ask();
-  }, [variant, targetHe, learnerLevel, translit, meaningEn, ragContext, ask]);
+    setFollowUpText("");
+    void runAsk(undefined);
+  }, [variant, targetHe, learnerLevel, translit, meaningEn, ragContext, runAsk]);
+
+  useEffect(() => {
+    if (variant !== "sheet" || !targetHe.trim()) {
+      setWordDetail(null);
+      setWordDetailUnauthorized(false);
+      return;
+    }
+    let cancelled = false;
+    setWordDetail(null);
+    setWordDetailUnauthorized(false);
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/word-detail?he=${encodeURIComponent(targetHe.trim())}`,
+        );
+        if (res.status === 401) {
+          if (!cancelled) {
+            setWordDetail(null);
+            setWordDetailUnauthorized(true);
+          }
+          return;
+        }
+        if (!res.ok) {
+          if (!cancelled) {
+            setWordDetail(null);
+            setWordDetailUnauthorized(false);
+          }
+          return;
+        }
+        const data = (await res.json()) as WordDetailEnrichment;
+        if (!cancelled) {
+          setWordDetail(data);
+          setWordDetailUnauthorized(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setWordDetail(null);
+          setWordDetailUnauthorized(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [variant, targetHe]);
 
   const pad = embedded ? "p-3.5" : "p-5";
   const isSheet = variant === "sheet";
@@ -110,6 +171,70 @@ export function RabbiCard({
               You&apos;re exploring: <span className="text-ink">{meaningEn}</span>
             </p>
           ) : null}
+          <div className="mt-3 rounded-2xl border border-amber/25 bg-amber/5 px-3 py-2.5">
+            <Hebrew
+              as="p"
+              className="text-center text-base font-medium leading-relaxed text-ink"
+            >
+              {RABBI_STUDY_INVITE_HE}
+            </Hebrew>
+            <p className="mt-1 text-center text-[11px] text-ink-muted">
+              {RABBI_STUDY_INVITE_EN}
+            </p>
+          </div>
+          {wordDetail?.rootFamily || wordDetail?.wikiExtract ? (
+            <div className="mt-4 rounded-2xl border border-ink/10 bg-parchment-deep/35 p-3 text-left text-xs text-ink-muted">
+              <p className="font-label text-[9px] uppercase tracking-[0.15em] text-sage">
+                Dictionary context
+              </p>
+              {wordDetail.rootFamily ? (
+                <p className="mt-2">
+                  Root{" "}
+                  <span className="font-hebrew text-ink">
+                    {wordDetail.rootFamily.root}
+                  </span>
+                  {" — "}
+                  {wordDetail.rootFamily.meaning}
+                  {wordDetail.rootFamily.sentenceHe ? (
+                    <>
+                      <br />
+                      <span className="font-hebrew text-sm text-ink">
+                        {wordDetail.rootFamily.sentenceHe}
+                      </span>
+                    </>
+                  ) : null}
+                  {wordDetail.rootFamily.sentenceEn ? (
+                    <>
+                      <br />
+                      <span className="text-ink-faint">
+                        {wordDetail.rootFamily.sentenceEn}
+                      </span>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
+              {wordDetail.wikiExtract ? (
+                <p
+                  className={
+                    wordDetail.rootFamily ? "mt-2 border-t border-ink/10 pt-2" : "mt-2"
+                  }
+                >
+                  <span className="font-label text-[8px] uppercase tracking-wide text-ink-faint">
+                    Hebrew Wikipedia
+                    {wordDetail.wikiTitle ? ` · ${wordDetail.wikiTitle}` : ""}
+                  </span>
+                  <br />
+                  {wordDetail.wikiExtract}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {variant === "sheet" && wordDetailUnauthorized ? (
+            <p className="mt-2 text-[11px] text-ink-faint">
+              Sign in to load root-family notes and a short Hebrew Wikipedia intro
+              for this headword.
+            </p>
+          ) : null}
         </>
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -120,7 +245,7 @@ export function RabbiCard({
             type="button"
             onClick={() => {
               if (!open && markdown == null && !loading) {
-                void ask();
+                void runAsk(undefined);
               } else {
                 setOpen((v) => !v);
               }
@@ -194,11 +319,55 @@ export function RabbiCard({
           <div className="mt-4 flex justify-end">
             <button
               type="button"
-              onClick={() => void ask()}
+              onClick={() => {
+                setFollowUpText("");
+                void runAsk(undefined);
+              }}
               disabled={loading}
               className="cursor-pointer text-xs text-sage underline hover:text-sage/90 disabled:opacity-50"
             >
-              Refresh
+              Refresh overview
+            </button>
+          </div>
+          <div className="mt-6 border-t border-sage/20 pt-4">
+            <p className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-muted">
+              Ask in your own words
+            </p>
+            <p className="mt-1 text-[11px] text-ink-faint">
+              Same quick prompts as the legacy study app — or type below and tap
+              Guide me.
+            </p>
+            <textarea
+              id="rabbi-follow-up"
+              rows={3}
+              value={followUpText}
+              onChange={(e) => setFollowUpText(e.target.value)}
+              placeholder="e.g. What is the root? Why is this form used? Give me another example."
+              className="mt-2 w-full resize-y rounded-xl border border-ink/15 bg-parchment-deep/30 px-3 py-2 text-sm text-ink placeholder:text-ink-faint"
+            />
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {RABBI_QUICK_FOLLOW_UPS.map((q) => (
+                <button
+                  key={q.label}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => {
+                    setFollowUpText(q.prompt);
+                    void runAsk(q.prompt);
+                  }}
+                  className="rounded-xl border border-ink/12 bg-parchment-deep/40 px-2 py-2 font-label text-[8px] uppercase tracking-wide text-ink-muted transition hover:border-sage/35 hover:bg-sage/10 hover:text-ink disabled:opacity-50"
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              disabled={loading || !followUpText.trim()}
+              onClick={() => void runAsk(followUpText)}
+              className="btn-elevated-primary mt-3 w-full disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Teaching…" : "Guide me"}
             </button>
           </div>
         </div>

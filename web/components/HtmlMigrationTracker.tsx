@@ -85,11 +85,8 @@ export function HtmlMigrationTracker({ variant = "full" }: Props) {
           HTML → Next migration (full scope)
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-          This tracker maps major subsystems in{" "}
-          <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-            hebrew-v8.2.html
-          </code>{" "}
-          (routes, corpus, auth, tools). It is intentionally separate from the
+          This tracker maps major subsystems from the legacy HTML app (routes,
+          corpus, auth, tools). It is intentionally separate from the
           shorter{" "}
           <Link href="/developer/tools#legacy-parity" className="text-sage underline">
             product checklist
