@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CourseProgressHero } from "@/components/CourseProgressHero";
 import { HomeHubCarousel } from "@/components/HomeHubCarousel";
 import { HomeParshaHero } from "@/components/HomeParshaHero";
+import { WelcomeScrollHero } from "@/components/WelcomeScrollHero";
 import { COURSE_LEVELS, getSectionsForLevel } from "@/data/course";
 import { getNextLearnUp } from "@/lib/learn-next-up";
 import {
@@ -67,6 +68,7 @@ export function HomePageClient() {
 
   return (
     <div className="space-y-6">
+      <WelcomeScrollHero />
       <HomeHubCarousel />
       <HomeParshaHero />
 
