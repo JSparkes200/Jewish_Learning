@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { rabbiBodySchema } from "@/lib/api-schemas";
 import { rateLimitIfExceeded } from "@/lib/api-rate-limit";
@@ -24,6 +25,11 @@ export async function POST(req: Request) {
   const limited = await rateLimitIfExceeded(req, "rabbi");
   if (limited) {
     return limited;
+  }
+
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if (!process.env.OPENAI_API_KEY) {
