@@ -20,7 +20,12 @@ import {
   loadYiddishProgress,
 } from "@/lib/yiddish-progress";
 
-export function HomePageClient() {
+export function HomePageClient({
+  serverSignedIn = false,
+}: {
+  /** From `auth()` on the server so signed-in users do not rely on client hydration for hiding the welcome. */
+  serverSignedIn?: boolean;
+} = {}) {
   const [progress, setProgress] = useState<LearnProgressState>(() =>
     createEmptyLearnProgressState(),
   );
@@ -68,7 +73,7 @@ export function HomePageClient() {
 
   return (
     <div className="space-y-6">
-      <WelcomeScrollHero />
+      <WelcomeScrollHero serverSignedIn={serverSignedIn} />
       <HomeHubCarousel />
       <HomeParshaHero />
 

@@ -127,11 +127,11 @@ body {
   background-size: 8px 8px, 100% 100%;
 }
 
-/* Home welcome: staggered Hebrew (unroll uses grid + transition in component) */
-@keyframes welcome-fade-rise {
+/* Welcome scroll: optional subtle entrance (opacity always ends visible) */
+@keyframes welcome-scroll-soft-in {
   from {
-    opacity: 0;
-    transform: translateY(0.5rem);
+    opacity: 0.85;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -139,32 +139,12 @@ body {
   }
 }
 
-@keyframes welcome-fade-rtl {
-  from {
-    opacity: 0;
-    transform: translateX(0.75rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.welcome-shalom {
-  opacity: 0;
-  animation: welcome-fade-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.42s forwards;
-}
-
-.welcome-app-title {
-  opacity: 0;
-  animation: welcome-fade-rtl 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.88s forwards;
+.welcome-scroll-root {
+  animation: welcome-scroll-soft-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .welcome-shalom,
-  .welcome-app-title {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+  .welcome-scroll-root {
+    animation: none;
   }
 }

@@ -1,9 +1,11 @@
+import { auth } from "@clerk/nextjs/server";
 import { HomePageClient } from "./HomePageClient";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { userId } = await auth();
   return (
     <div className="mx-auto max-w-lg pb-20 pt-2">
-      <HomePageClient />
+      <HomePageClient serverSignedIn={Boolean(userId)} />
     </div>
   );
 }

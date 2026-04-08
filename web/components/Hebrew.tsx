@@ -6,14 +6,25 @@ type HebrewProps = {
   as?: HebrewTag;
   children: ReactNode;
   className?: string;
+  id?: string;
 };
 
 /**
  * RTL + Hebrew font for any snippet. Root document stays LTR.
  */
-export function Hebrew({ as: Tag = "span", children, className = "" }: HebrewProps) {
+export function Hebrew({
+  as: Tag = "span",
+  children,
+  className = "",
+  id,
+}: HebrewProps) {
   return (
-    <Tag dir="rtl" lang="he" className={`font-hebrew ${className}`.trim()}>
+    <Tag
+      id={id}
+      dir="rtl"
+      lang="he"
+      className={`font-hebrew ${className}`.trim()}
+    >
       {children}
     </Tag>
   );
