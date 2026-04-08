@@ -127,16 +127,7 @@ body {
   background-size: 8px 8px, 100% 100%;
 }
 
-/* Home welcome: scroll unroll + staggered Hebrew (see WelcomeScrollHero) */
-@keyframes welcome-unroll {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-
+/* Home welcome: staggered Hebrew (unroll uses grid + transition in component) */
 @keyframes welcome-fade-rise {
   from {
     opacity: 0;
@@ -159,11 +150,6 @@ body {
   }
 }
 
-.welcome-scroll-panel {
-  clip-path: inset(0 0 100% 0);
-  animation: welcome-unroll 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
 .welcome-shalom {
   opacity: 0;
   animation: welcome-fade-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.42s forwards;
@@ -175,12 +161,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .welcome-scroll-panel,
   .welcome-shalom,
   .welcome-app-title {
     animation: none !important;
     opacity: 1 !important;
-    clip-path: none !important;
     transform: none !important;
   }
 }
