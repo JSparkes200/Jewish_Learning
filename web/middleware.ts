@@ -2,6 +2,46 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+function clerkEnvDiagnostic(): string | null {
+  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
+  const sk = process.env.CLERK_SECRET_KEY?.trim();
+  if (!pk) {
+    return "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is missing or empty. Add it in Vercel (Production), redeploy, and ensure the project Root Directory is `web`.";
+  }
+  if (!sk) {
+    return "CLERK_SECRET_KEY is missing or empty. Add it in Vercel (Production) and redeploy.";
+  }
+  const pkOk = pk.startsWith("pk_test_") || pk.startsWith("pk_live_");
+  const skOk = sk.startsWith("sk_test_") || sk.startsWith("sk_live_");
+  if (!pkOk) {
+    return "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY must start with pk_test_ or pk_live_.";
+  }
+  if (!skOk) {
+    return "CLERK_SECRET_KEY must start with sk_test_ or sk_live_.";
+  }
+  const pkTest = pk.startsWith("pk_test_");
+  const skTest = sk.startsWith("sk_test_");
+  if (pkTest !== skTest) {
+    return "Clerk keys must match: use both test keys (pk_test_ + sk_test_) or both live keys (pk_live_ + sk_live_).";
+  }
+  return null;
+}
+
+function middlewareFailureResponse(message: string, hint?: string) {
+  const lines = [
+    "Middleware could not run Clerk authentication.",
+    "",
+    message,
+    "",
+    hint ??
+      "If this is Vercel: confirm env vars on the deployment, redeploy after changes, and check Root Directory = `web`. In Clerk, add your site URL under Domains / allowed origins.",
+  ];
+  return new NextResponse(lines.join("\n"), {
+    status: 503,
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+}
+
 /**
  * Default: require a Clerk session. Public exceptions:
  * - Home (landing)
@@ -37,32 +77,23 @@ export default async function middleware(
   request: NextRequest,
   event: NextFetchEvent,
 ) {
+  const envIssue = clerkEnvDiagnostic();
+  if (envIssue) {
+    console.error("[middleware] Clerk env:", envIssue);
+    return middlewareFailureResponse(envIssue);
+  }
+
   try {
     return await clerkAuthMiddleware(request, event);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    const looksLikeClerkConfig =
-      /publishableKey|publishable key|secret key|secretKey|dashboard\.clerk\.com/i.test(
-        message,
-      );
-    if (looksLikeClerkConfig) {
-      console.error("[middleware] Clerk configuration:", message);
-      return new NextResponse(
-        [
-          "Authentication is misconfigured for this deployment.",
-          "",
-          "Set CLERK_SECRET_KEY and NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in the host environment (e.g. Vercel → Project → Settings → Environment Variables), then redeploy.",
-          "",
-          `Details: ${message}`,
-        ].join("\n"),
-        {
-          status: 503,
-          headers: { "Content-Type": "text/plain; charset=utf-8" },
-        },
-      );
-    }
-    console.error("[middleware]", e);
-    throw e;
+    console.error("[middleware] Clerk error:", e);
+    // Never rethrow: Vercel only shows MIDDLEWARE_INVOCATION_FAILED for throws.
+    const handshakeHint =
+      message.includes("handshake") || message.includes("Handshake")
+        ? "Often fixed by Clerk dashboard URLs (exact production https URL, no trailing slash mismatch), or upgrading @clerk/nextjs. See Clerk → Configure → URLs."
+        : undefined;
+    return middlewareFailureResponse(`Details: ${message}`, handshakeHint);
   }
 }
 

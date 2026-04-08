@@ -19,7 +19,7 @@
     "export:knowledge": "tsx scripts/export-knowledge.ts"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.0.8",
+    "@clerk/nextjs": "^7.0.11",
     "@hebcal/core": "^4.5.1",
     "@sentry/nextjs": "^10.47.0",
     "@upstash/ratelimit": "^2.0.8",
