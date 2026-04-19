@@ -173,7 +173,6 @@ export function ProgressPageClient() {
         mcqAttempts={progress.mcqAttempts ?? 0}
         mcqCorrect={progress.mcqCorrect ?? 0}
         heading="Your snapshot"
-        intro="Sections you marked done, your streak, and how often practice answers were correct — all from this device."
       />
 
       <ProgressLegacyDashboard progress={progress} />

@@ -254,8 +254,5 @@ export function maxUnlockMasteredRequirementForLevel(
   return max;
 }
 
-/** Aleph story (legacy `LVS[0].story`) for read-the-story preview. */
-export const LEVEL_1_STORY = {
-  he: "דָּנִי הוּא יֶלֶד קָטָן. הוּא אוֹמֵר שָׁלוֹם לְכֻלָּם. שָׁלוֹם אִמָּא! שָׁלוֹם אַבָּא! כֻּלָּם אוֹהֲבִים אֶת דָּנִי.",
-  en: "Dani is a small boy. He says hello to everyone. Hello mom! Hello dad! Everyone loves Dani.",
-} as const;
+/** Aleph story (legacy `LVS[0].story`) — canonical copy in `learn-stories.ts`. */
+export { LEVEL_1_STORY } from "./learn-stories";

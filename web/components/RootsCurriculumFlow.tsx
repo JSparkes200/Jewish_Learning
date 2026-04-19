@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppShell } from "@/components/AppShell";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { Hebrew } from "@/components/Hebrew";
 import { ROOTS_GROUPS } from "@/data/roots-curriculum";
 import type { CourseRootFamily, RootWordForm } from "@/data/course-roots";
@@ -496,6 +497,9 @@ export function RootsCurriculumFlow({
         <p className="font-label text-[10px] uppercase tracking-[0.2em] text-amber/90">
           Drills ({drillHits}/{ROOTS_DRILL_HITS_TO_TEST} correct toward the test)
         </p>
+        <div className="mt-2 flex justify-end">
+          <ExerciseAskRabbiButton compact />
+        </div>
         <Hebrew
           as="p"
           className="mt-4 text-right text-3xl font-medium leading-relaxed text-ink"
@@ -593,6 +597,9 @@ export function RootsCurriculumFlow({
         <p className="font-label text-[10px] uppercase tracking-[0.2em] text-amber/90">
           Review drill
         </p>
+        <div className="mt-2 flex justify-end">
+          <ExerciseAskRabbiButton compact />
+        </div>
         <Hebrew
           as="p"
           className="mt-4 text-right text-3xl font-medium leading-relaxed text-ink"
@@ -725,10 +732,13 @@ export function RootsCurriculumFlow({
 
   const batteryCard = battery && batteryQuestion ? (
     <div className="rounded-3xl border-2 border-sage/35 bg-gradient-to-br from-sage/10 to-parchment-card/95 p-5 shadow-inner">
-      <p className="font-label text-[10px] uppercase tracking-[0.2em] text-sage">
-        {battery.kind === "checkpoint" ? "Checkpoint" : "Group test"} ·{" "}
-        {battery.i + 1}/{battery.questions.length}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-sage">
+          {battery.kind === "checkpoint" ? "Checkpoint" : "Group test"} ·{" "}
+          {battery.i + 1}/{battery.questions.length}
+        </p>
+        <ExerciseAskRabbiButton compact />
+      </div>
       <div className="mt-3">{renderBatteryPrompt(batteryQuestion)}</div>
       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {batteryQuestion.options.map((opt, j) => {

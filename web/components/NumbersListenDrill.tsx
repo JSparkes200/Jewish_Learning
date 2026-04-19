@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { Hebrew } from "@/components/Hebrew";
 import {
   CARDINAL_MASC_0_TO_10,
@@ -57,8 +59,18 @@ export function NumbersListenDrill({
   courseSurface = "panel",
   flowContinue,
 }: Props) {
+  const { setRabbiAskContext } = useAppShell();
   const [round, setRound] = useState(() => buildRound());
   const [picked, setPicked] = useState<number | null>(null);
+
+  useEffect(() => {
+    setRabbiAskContext({
+      targetHe: round.correctHe,
+      learnerLevel: "beginner",
+      meaningEn: `Hebrew cardinal for this round (digit ${round.roman})`,
+    });
+    return () => setRabbiAskContext(null);
+  }, [round.correctHe, round.roman, setRabbiAskContext]);
 
   const replay = useCallback(() => {
     speakHebrew(round.correctHe);
@@ -96,9 +108,12 @@ export function NumbersListenDrill({
 
   return (
     <div className={wrap}>
-      <p className="font-label text-[10px] uppercase tracking-[0.2em] text-rust/90">
-        {LEARN_VOICE.numbersListenEyebrow}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-rust/90">
+          {LEARN_VOICE.numbersListenEyebrow}
+        </p>
+        <ExerciseAskRabbiButton compact />
+      </div>
       <p className="mt-1 text-xs leading-relaxed text-ink-muted">
         {LEARN_VOICE.numbersListenBody}
       </p>

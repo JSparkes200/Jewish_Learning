@@ -6,9 +6,10 @@ import { VerticalGlassWheel } from "@/components/VerticalGlassWheel";
 import { HUB_SLIDES } from "@/data/hub-slides";
 
 /**
- * Home column hub — parchment mezuzah wheel, **open** by default on the main page.
+ * Floating header hub — replaces the hamburger outside the home page.
+ * Starts **collapsed** (cap only); tap ש to open the dial dropdown.
  */
-export function HomeHubCarousel() {
+export function HubHeaderMezuzah() {
   const router = useRouter();
 
   const items = useMemo(() => {
@@ -41,14 +42,12 @@ export function HomeHubCarousel() {
   );
 
   return (
-    <section className="flex w-full justify-center">
-      <VerticalGlassWheel
-        variant="column"
-        defaultBodyOpen
-        items={items}
-        onActivate={onActivate}
-        actionLabel="Open hub →"
-      />
-    </section>
+    <VerticalGlassWheel
+      variant="header"
+      defaultBodyOpen={false}
+      items={items}
+      onActivate={onActivate}
+      actionLabel="Open hub →"
+    />
   );
 }

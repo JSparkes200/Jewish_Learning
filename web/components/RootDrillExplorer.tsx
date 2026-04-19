@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppShell } from "@/components/AppShell";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { Hebrew } from "@/components/Hebrew";
 import {
   ROOT_TIER_LABELS,
@@ -196,6 +197,9 @@ export function RootDrillExplorer({
         <p className="mt-2 font-label text-[9px] uppercase tracking-wide text-ink-faint">
           {tierLab} · {prog}/3 times solid for this shape
         </p>
+        <div className="mt-2 flex justify-end">
+          <ExerciseAskRabbiButton compact />
+        </div>
         <Hebrew
           as="p"
           className="mt-4 text-right text-3xl font-medium leading-relaxed text-ink"

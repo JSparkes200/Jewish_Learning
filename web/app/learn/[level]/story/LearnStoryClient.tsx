@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
 import { DrillPrepGate } from "@/components/DrillPrepGate";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { HebrewTapText } from "@/components/HebrewTapText";
 import { McqDrill } from "@/components/McqDrill";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
@@ -26,10 +28,49 @@ import {
 } from "@/lib/drill-prep";
 import { buildCorrectSentencePackFromMcq } from "@/lib/sentence-correctness";
 import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
+import { courseLevelToRabbiLevel } from "@/lib/course-rabbi-level";
 
-type Props = { level: number; he: string; en: string };
+type Props = {
+  level: number;
+  he: string;
+  en: string;
+  syntaxNotes?: string[];
+  storyTitle?: string;
+  gradeBand?: string;
+};
 
-export function LearnStoryClient({ level, he, en }: Props) {
+function StoryPassageRabbiSync({
+  he,
+  en,
+  level,
+}: {
+  he: string;
+  en: string;
+  level: number;
+}) {
+  const { setRabbiAskContext } = useAppShell();
+  const rabbiLevel = courseLevelToRabbiLevel(level);
+  useEffect(() => {
+    const raw = he.trim();
+    const targetHe = raw.length > 720 ? `${raw.slice(0, 720)}…` : raw;
+    setRabbiAskContext({
+      targetHe,
+      learnerLevel: rabbiLevel,
+      meaningEn: en.length > 320 ? `${en.slice(0, 320)}…` : en,
+    });
+    return () => setRabbiAskContext(null);
+  }, [he, en, rabbiLevel, setRabbiAskContext]);
+  return null;
+}
+
+export function LearnStoryClient({
+  level,
+  he,
+  en,
+  syntaxNotes = [],
+  storyTitle,
+  gradeBand,
+}: Props) {
   const [progress] = useLearnProgressSync({ level });
   const streak = normalizeStreak(progress.streak);
   const attempts = progress.mcqAttempts ?? 0;
@@ -53,6 +94,8 @@ export function LearnStoryClient({ level, he, en }: Props) {
     (pack?.items ?? []).map((it) => [it.promptHe, it.correctEn]),
   );
 
+  const rabbiLevel = useMemo(() => courseLevelToRabbiLevel(level), [level]);
+
   const onPracticeAnswer = useCallback(
     (correct: boolean, ctx?: GradedPracticeContext) => {
       const cur = loadLearnProgress();
@@ -65,7 +108,7 @@ export function LearnStoryClient({ level, he, en }: Props) {
   );
 
   return (
-    <div>
+    <div className="bg-[radial-gradient(circle_at_50%_50%,rgba(44,36,22,1)_0%,rgba(255,255,255,1)_100%)] bg-clip-text text-transparent">
       <nav className="mb-6 flex flex-wrap gap-3 text-[10px] uppercase tracking-[0.15em]">
         <Link href="/learn" className="text-sage hover:underline">
           Learn
@@ -76,9 +119,21 @@ export function LearnStoryClient({ level, he, en }: Props) {
         </Link>
       </nav>
 
-      <h1 className="mb-4 font-label text-xs uppercase tracking-wide text-ink">
-        📖 Level {level} story
-      </h1>
+      <header className="mb-4">
+        <h1 className="font-label text-xs uppercase tracking-wide text-ink">
+          📖 Level {level} story
+          {storyTitle ? (
+            <span className="mt-1 block text-sm font-medium normal-case tracking-normal text-ink">
+              {storyTitle}
+            </span>
+          ) : null}
+        </h1>
+        {gradeBand ? (
+          <p className="mt-1 text-[11px] text-ink-faint shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15),0px_4px_12px_0px_rgba(0,0,0,0.15),0px_4px_12px_0px_rgba(0,0,0,0.15)]">
+            {gradeBand}
+          </p>
+        ) : null}
+      </header>
 
       <p className="mb-4 text-xs text-ink-muted">
         {attempts > 0 || streak.current > 0 ? (
@@ -105,7 +160,9 @@ export function LearnStoryClient({ level, he, en }: Props) {
         ctaLabel="Start story quiz"
       >
         <div className="mb-6 rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
-          <div className="mb-3 flex justify-end">
+          <StoryPassageRabbiSync he={he} en={en} level={level} />
+          <div className="mb-3 flex flex-wrap justify-end gap-2">
+            <ExerciseAskRabbiButton compact />
             <NikkudExerciseToggle
               showNikkud={storyShowNikkud}
               onToggle={() => setStoryShowNikkud((v) => !v)}
@@ -120,6 +177,21 @@ export function LearnStoryClient({ level, he, en }: Props) {
           <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
             {en}
           </p>
+          {syntaxNotes.length ? (
+            <div className="mt-4 rounded-xl border border-sage/20 bg-sage/5 px-3 py-3">
+              <p className="font-label text-[9px] uppercase tracking-[0.15em] text-sage">
+                Syntax in this passage
+              </p>
+              <ul className="mt-2 list-inside list-disc space-y-1.5 text-xs leading-relaxed text-ink-muted">
+                {syntaxNotes.map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[11px] text-ink-faint">
+                Tap Ask the Rabbi above for follow-up on any line.
+              </p>
+            </div>
+          ) : null}
         </div>
 
         {pack ? (
@@ -130,11 +202,13 @@ export function LearnStoryClient({ level, he, en }: Props) {
               defaultShowNikkud={nikkudDefault}
               skillTags={["comprehension", "recognition", "definition"]}
               onPracticeAnswer={onPracticeAnswer}
+              rabbiLevel={rabbiLevel}
             />
             {sentencePack ? (
               <CorrectSentenceDrill
                 pack={sentencePack}
                 onPracticeAnswer={onPracticeAnswer}
+                rabbiLevel={rabbiLevel}
               />
             ) : null}
           </div>

@@ -15,6 +15,7 @@
     "extract:corpus-d": "node scripts/extract-corpus-d.mjs",
     "export:legacy-corpus-d-json": "tsx scripts/export-legacy-corpus-d-json.ts",
     "validate:hebrew-passage": "tsx scripts/validate-hebrew-passage.ts",
+    "validate:corpus": "tsx scripts/validate-legacy-corpus.ts",
     "merge:legacy-backup": "tsx scripts/merge-legacy-to-app-backup.ts",
     "export:knowledge": "tsx scripts/export-knowledge.ts"
   },
@@ -24,6 +25,7 @@
     "@sentry/nextjs": "^10.47.0",
     "@upstash/ratelimit": "^2.0.8",
     "@vercel/kv": "^3.0.0",
+    "framer-motion": "^12.38.0",
     "next": "^15.1.7",
     "openai": "^6.33.0",
     "react": "^19.0.0",

@@ -36,6 +36,15 @@ const config: Config = {
         insetSoft:
           "inset 3px 3px 8px rgba(44, 36, 22, 0.1), inset -2px -2px 6px rgba(255, 255, 255, 0.45)",
       },
+      keyframes: {
+        glassShine: {
+          "0%": { transform: "translateX(-120%)" },
+          "100%": { transform: "translateX(320%)" },
+        },
+      },
+      animation: {
+        "glass-shine": "glassShine 3.4s ease-in-out infinite",
+      },
     },
   },
   plugins: [],

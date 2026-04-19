@@ -14,10 +14,10 @@ export function RabbiAskModalBody({
           Ask the Rabbi
         </p>
         <p className="leading-relaxed text-ink">
-          There isn&apos;t a Hebrew headword on screen yet. Open a course lesson with
-          multiple choice, sentence practice, or an active root drill — then tap
-          here again and the Rabbi will speak to the exact form you&apos;re holding
-          in mind.
+          There isn&apos;t a Hebrew cue registered yet. Use{" "}
+          <strong className="font-medium text-ink">Ask the Rabbi</strong> on the
+          exercise you&apos;re in (MCQ, sentences, listening, comprehension, roots,
+          or the story card) — then the sheet can target that Hebrew.
         </p>
       </div>
     );

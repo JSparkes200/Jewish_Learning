@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppShell } from "@/components/AppShell";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { Hebrew } from "@/components/Hebrew";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { SaveWordButton } from "@/components/SaveWordButton";
@@ -193,13 +194,13 @@ export function McqDrill({
   );
 
   useEffect(() => {
-    if (!rabbiLevel || !rabbiFocus?.targetHe?.trim()) {
+    if (!rabbiFocus?.targetHe?.trim()) {
       setRabbiAskContext(null);
       return;
     }
     setRabbiAskContext({
       targetHe: rabbiFocus.targetHe.trim(),
-      learnerLevel: rabbiLevel,
+      learnerLevel: rabbiLevel ?? "beginner",
       meaningEn: rabbiFocus.meaningEn,
     });
     return () => setRabbiAskContext(null);
@@ -322,12 +323,15 @@ export function McqDrill({
             {introText}
           </p>
         </div>
-        {hasHebrew(item.promptHe) ? (
-          <NikkudExerciseToggle
-            showNikkud={showNikkud}
-            onToggle={() => setShowNikkud((v) => !v)}
-          />
-        ) : null}
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <ExerciseAskRabbiButton compact />
+          {hasHebrew(item.promptHe) ? (
+            <NikkudExerciseToggle
+              showNikkud={showNikkud}
+              onToggle={() => setShowNikkud((v) => !v)}
+            />
+          ) : null}
+        </div>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2 text-[10px] text-ink-faint">

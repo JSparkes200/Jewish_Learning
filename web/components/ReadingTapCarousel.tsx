@@ -285,7 +285,7 @@ export function ReadingTapCarousel({
           }}
         >
           <div
-            className="flex max-h-[min(90dvh,720px)] w-full max-w-lg min-h-0 flex-col overflow-hidden rounded-2xl border border-ink/15 bg-parchment-card shadow-xl"
+            className="parchment-pane--modal flex max-h-[min(90dvh,720px)] w-full max-w-lg min-h-0 flex-col overflow-hidden rounded-2xl shadow-xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="reading-modal-title"

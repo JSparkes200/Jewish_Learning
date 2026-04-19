@@ -5,13 +5,11 @@ import { buildWordDetailEnrichment } from "@/lib/word-detail-enrichment";
 export const runtime = "nodejs";
 
 /**
- * Signed-in learners only — keeps Wikipedia traffic bounded to real accounts.
+ * Dictionary lookups are open, but Wikipedia extracts are for signed-in learners only
+ * to keep traffic bounded to real accounts.
  */
 export async function GET(req: Request) {
   const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   const { searchParams } = new URL(req.url);
   const he = searchParams.get("he")?.trim() ?? "";
@@ -22,6 +20,6 @@ export async function GET(req: Request) {
     );
   }
 
-  const enrichment = await buildWordDetailEnrichment(he);
+  const enrichment = await buildWordDetailEnrichment(he, !!userId);
   return NextResponse.json(enrichment);
 }

@@ -5,6 +5,10 @@
 
 import { STATIC_ROOT_FAMILIES } from "@/data/course-roots";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
+import {
+  analyzeHebrewConstruction,
+  type HebrewConstructionBreakdown,
+} from "@/lib/hebrew-morphology";
 
 export type WordDetailRootFamily = {
   root: string;
@@ -13,10 +17,19 @@ export type WordDetailRootFamily = {
   sentenceEn?: string;
 };
 
+export type SefariaLexiconEntry = {
+  headword: string;
+  parent_lexicon: string;
+  pronunciation?: string;
+  definition: string;
+};
+
 export type WordDetailEnrichment = {
   wikiTitle: string | null;
   wikiExtract: string | null;
   rootFamily: WordDetailRootFamily | null;
+  lexiconEntries: SefariaLexiconEntry[];
+  breakdown: HebrewConstructionBreakdown | null;
 };
 
 function findRootFamilyForHeadword(he: string): WordDetailRootFamily | null {
@@ -91,15 +104,56 @@ async function fetchHeWikiExtract(
   }
 }
 
+async function fetchSefariaLexicon(word: string): Promise<SefariaLexiconEntry[]> {
+  try {
+    const res = await fetch(`https://www.sefaria.org/api/words/${encodeURIComponent(word)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+
+    return data.map((entry: {
+      content?: { senses?: { definition?: string }[] };
+      headword?: string;
+      parent_lexicon?: string;
+      pronunciation?: string;
+    }) => {
+      let definition = "";
+      if (entry.content && Array.isArray(entry.content.senses) && entry.content.senses.length > 0) {
+        definition = entry.content.senses[0].definition || "";
+      }
+      return {
+        headword: entry.headword || word,
+        parent_lexicon: entry.parent_lexicon || "Unknown",
+        pronunciation: entry.pronunciation,
+        definition: definition.replace(/<[^>]*>?/gm, ''), // strip basic HTML tags
+      };
+    }).filter(e => e.definition);
+  } catch {
+    return [];
+  }
+}
+
 export async function buildWordDetailEnrichment(
   headword: string,
+  includeWiki: boolean = true,
 ): Promise<WordDetailEnrichment> {
   const trimmed = headword.trim();
   const rootFamily = trimmed ? findRootFamilyForHeadword(trimmed) : null;
-  const wiki = trimmed ? await fetchHeWikiExtract(trimmed) : { title: null, extract: null };
+  const wiki = trimmed && includeWiki ? await fetchHeWikiExtract(trimmed) : { title: null, extract: null };
+  const lexiconEntries = trimmed ? await fetchSefariaLexicon(trimmed) : [];
+
+  // If the word itself didn't land a direct dictionary hit, try to break it
+  // down into prefixes + stem so the learner sees why. Even when the direct
+  // lookup succeeds, we still run this for compounds like "אֶל־מֹשֶׁה".
+  const breakdown = trimmed
+    ? await analyzeHebrewConstruction(trimmed, fetchSefariaLexicon)
+    : null;
+
   return {
     wikiTitle: wiki.title,
     wikiExtract: wiki.extract,
     rootFamily,
+    lexiconEntries,
+    breakdown,
   };
 }

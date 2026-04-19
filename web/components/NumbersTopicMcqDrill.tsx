@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { Hebrew } from "@/components/Hebrew";
 import {
   DAYS_EN,
@@ -124,10 +126,20 @@ type Props = {
 };
 
 export function NumbersTopicMcqDrill({ variant, onPracticeAnswer }: Props) {
+  const { setRabbiAskContext } = useAppShell();
   const [round, setRound] = useState(() => buildRound(variant));
   const [picked, setPicked] = useState<number | null>(null);
 
   const meta = VARIANT_META[variant];
+
+  useEffect(() => {
+    setRabbiAskContext({
+      targetHe: round.correctHe,
+      learnerLevel: "beginner",
+      meaningEn: `${variant} drill — match the Hebrew you see`,
+    });
+    return () => setRabbiAskContext(null);
+  }, [round.correctHe, variant, setRabbiAskContext]);
 
   const nextRound = useCallback(() => {
     setRound(buildRound(variant));
@@ -173,12 +185,15 @@ export function NumbersTopicMcqDrill({ variant, onPracticeAnswer }: Props) {
       className={`rounded-2xl border p-4 ${meta.border} ${meta.bg}`}
       aria-labelledby={titleId}
     >
-      <p
-        id={titleId}
-        className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted"
-      >
-        {meta.title}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p
+          id={titleId}
+          className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted"
+        >
+          {meta.title}
+        </p>
+        <ExerciseAskRabbiButton compact />
+      </div>
       <p
         className={`mt-3 text-center font-serif text-3xl font-semibold text-rust ${
           variant === "ordinal" ? "" : "capitalize"

@@ -75,7 +75,7 @@ const P: Record<string, SectionLessonPrimer> = {
     ],
     grammar: [
       "Adjectives often follow the noun they describe and agree in gender and number — you will see agreement patterns grow in Bet.",
-      "לְ־ can mark “to” or “for” before a noun or name (e.g. goodnight wishes).",
+      "לְ־ as a prefix often means “to” or “for” on the word that follows (e.g. לְדָנִי “to Dani”). In לַיְלָה טוֹב “good night,” the ל is the first letter of לַיְלָה “night,” not that standalone preposition.",
     ],
     ideas: [
       "Jewish communities worldwide use these phrases in both secular and liturgical settings.",
@@ -160,7 +160,7 @@ const P: Record<string, SectionLessonPrimer> = {
     intro:
       "Family vocabulary is emotionally loaded and grammatically rich — possessives and “my / your” will attach to these nouns in Bet.",
     words: [
-      { he: "אָבָא / אִמָּא", en: "dad / mom" },
+      { he: "אַבָּא / אִמָּא", en: "dad / mom" },
       { he: "אָח / אָחוֹת", en: "brother / sister" },
       { he: "מִשְׁפָּחָה", en: "family" },
     ],

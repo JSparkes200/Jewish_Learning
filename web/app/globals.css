@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root {
+  /* Pixel size of one tile of /parchment-aged-vellum.png (no CSS stretching). */
+  --parchment-texture-intrinsic-w: 900px;
+  --parchment-texture-intrinsic-h: 600px;
   color-scheme: light;
   /* Soft “lift” on parchment — neumorphic-adjacent without dark shell */
   /* Warm lift only — avoid a white “bloom” along the top edge */
@@ -16,6 +19,12 @@
     inset 3px 3px 8px rgba(44, 36, 22, 0.1),
     inset -2px -2px 6px rgba(255, 255, 255, 0.45);
   --elev-glass-border: rgb(44 36 22 / 0.06);
+  /* “Windows” on the parchment photo — ink + vellum (opaque enough for craquelure bg) */
+  --pane-ink: rgb(44 36 22 / 0.16);
+  --pane-ink-deep: rgb(34 24 16 / 0.42);
+  --pane-edge-light: rgb(255 252 245 / 0.78);
+  --pane-fill-top: rgb(252 247 236 / 0.97);
+  --pane-fill-bot: rgb(242 232 214 / 0.95);
 }
 
 body {
@@ -23,19 +32,103 @@ body {
 }
 
 @layer components {
+  /**
+   * Raised sheet: lighter “window” lifted off the photo background —
+   * ruled border, warm vellum fill, soft paper edge highlight.
+   */
   .surface-elevated {
     border-radius: 1rem;
-    border: 1px solid rgb(44 36 22 / 0.08);
-    background: linear-gradient(
-      155deg,
-      rgb(248 242 228 / 0.97) 0%,
-      rgb(236 226 204 / 0.96) 100%
-    );
-    box-shadow: var(--elev-raised);
+    border: 1px solid var(--pane-ink);
+    /* Frosted vellum “window” so type stays crisp on busy parchment */
+    background:
+      radial-gradient(
+        circle at 1px 1px,
+        rgb(120 90 60 / 0.035) 1px,
+        transparent 0
+      ),
+      linear-gradient(
+        168deg,
+        var(--pane-fill-top) 0%,
+        var(--pane-fill-bot) 100%
+      );
+    background-size: 10px 10px, 100% 100%;
+    backdrop-filter: blur(6px) saturate(1.06);
+    -webkit-backdrop-filter: blur(6px) saturate(1.06);
+    box-shadow:
+      var(--elev-raised),
+      inset 0 1px 0 0 var(--pane-edge-light),
+      inset 0 0 0 1px rgb(44 36 22 / 0.05);
   }
 
   .surface-elevated:hover {
-    box-shadow: var(--elev-raised-hover);
+    box-shadow:
+      var(--elev-raised-hover),
+      inset 0 1px 0 0 var(--pane-edge-light),
+      inset 0 0 0 1px rgb(44 36 22 / 0.06);
+  }
+
+  /** Modal / sheet: heavier burnt-ink frame, more opaque vellum body. */
+  .parchment-pane--modal {
+    border: 2px solid rgb(52 38 26 / 0.28);
+    background:
+      radial-gradient(
+        ellipse 85% 55% at 50% 0%,
+        rgb(255 252 245 / 0.5) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        circle at 1px 1px,
+        rgb(90 70 48 / 0.045) 1px,
+        transparent 0
+      ),
+      linear-gradient(
+        175deg,
+        rgb(253 248 238 / 0.97) 0%,
+        rgb(244 234 216 / 0.96) 55%,
+        rgb(236 224 202 / 0.95) 100%
+      );
+    background-size: 100% 100%, 9px 9px, 100% 100%;
+    box-shadow:
+      0 22px 48px rgb(30 22 14 / 0.22),
+      0 0 0 1px rgb(255 250 240 / 0.35) inset,
+      0 0 0 2px rgb(44 36 22 / 0.08) inset;
+  }
+
+  /** Compact menu panel: tight double rule, warm cream (floating slip). */
+  .parchment-pane--menu {
+    border: 2px solid rgb(44 36 22 / 0.2);
+    background:
+      linear-gradient(
+        180deg,
+        rgb(252 246 232 / 0.97) 0%,
+        rgb(245 236 218 / 0.96) 100%
+      ),
+      repeating-linear-gradient(
+        -12deg,
+        transparent,
+        transparent 5px,
+        rgb(44 36 22 / 0.02) 5px,
+        rgb(44 36 22 / 0.02) 6px
+      );
+    backdrop-filter: blur(12px) saturate(1.05);
+    -webkit-backdrop-filter: blur(12px) saturate(1.05);
+    box-shadow:
+      0 14px 36px rgb(44 36 22 / 0.18),
+      inset 0 1px 0 0 rgb(255 252 245 / 0.65),
+      inset 0 0 0 1px rgb(44 36 22 / 0.06);
+  }
+
+  /** Sticky header strip: frosted vellum over the texture. */
+  .parchment-header-strip {
+    background: linear-gradient(
+      180deg,
+      rgb(252 246 236 / 0.88) 0%,
+      rgb(244 234 218 / 0.82) 100%
+    );
+    border-bottom: 1px solid rgb(44 36 22 / 0.12);
+    box-shadow:
+      0 1px 0 0 rgb(255 252 245 / 0.5) inset,
+      0 10px 28px rgb(44 36 22 / 0.08);
   }
 
   .btn-elevated-primary {
@@ -115,7 +208,7 @@ body {
   }
 }
 
-/* Subtle parchment grain (CSS-only, no asset) */
+/* Subtle parchment grain (CSS-only, no asset) — fallback / overlays */
 .bg-parchment-grain {
   background-image: radial-gradient(
       circle at 1px 1px,
@@ -127,7 +220,31 @@ body {
   background-size: 8px 8px, 100% 100%;
 }
 
-/* Welcome scroll: optional subtle entrance (opacity always ends visible) */
+/**
+ * Full-app backdrop: **only** the parchment PNG, tiled at 1:1 pixel size (no stretch).
+ * Repeats across the viewport like wallpaper. Update the two vars if you replace the file.
+ * For invisible seams at tile edges, use an image edited to be seamless (matching edges).
+ */
+.bg-parchment-app {
+  background-color: #c9b89a;
+  background-image: url("/parchment-aged-vellum.png");
+  background-size: var(--parchment-texture-intrinsic-w) var(--parchment-texture-intrinsic-h);
+  background-repeat: repeat;
+  background-position: 0 0;
+  background-attachment: scroll;
+}
+
+/** Main column: stack content above any full-width siblings; no wash over body bg. */
+.app-main-reading {
+  position: relative;
+}
+
+.app-main-reading > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Welcome scroll: compact card subtle entrance */
 @keyframes welcome-scroll-soft-in {
   from {
     opacity: 0.85;
@@ -139,12 +256,48 @@ body {
   }
 }
 
-.welcome-scroll-root {
+/* Landing: parchment unrolls from the top roll (clip reveals downward) */
+@keyframes welcome-scroll-unroll {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.welcome-scroll-root--inline {
   animation: welcome-scroll-soft-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.welcome-scroll-root--landing {
+  animation: none;
+}
+
+.welcome-scroll-unroll {
+  animation: welcome-scroll-unroll 1.15s cubic-bezier(0.33, 1, 0.32, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .welcome-scroll-root {
+  .welcome-scroll-root--inline {
     animation: none;
+  }
+
+  .welcome-scroll-unroll {
+    animation: none;
+    clip-path: none;
+  }
+}
+
+/* Parsha bilingual: English cell glow when Hebrew verse is hovered/focused */
+.parsha-verse-en {
+  transition:
+    box-shadow 0.35s ease,
+    background-color 0.35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parsha-verse-en {
+    transition: none;
   }
 }

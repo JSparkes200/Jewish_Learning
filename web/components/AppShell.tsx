@@ -37,26 +37,9 @@ import {
 } from "@/lib/trial-session";
 import { ClerkHeaderAuth } from "@/components/ClerkHeaderAuth";
 import { DeveloperModeProvider } from "@/components/DeveloperModeProvider";
+import { HubHeaderMezuzah } from "@/components/HubHeaderMezuzah";
 import { Hebrew } from "./Hebrew";
 import { TrialCountdownBar } from "./TrialCountdownBar";
-
-/** Top of menu: core journey. */
-const NAV_PRIMARY = [
-  { href: "/", label: "Home" },
-  { href: "/learn", label: "Learn" },
-  { href: "/progress", label: "Progress" },
-  { href: "/settings", label: "Settings" },
-] as const;
-
-/** Drills, reading, and parallel tracks. */
-const NAV_PRACTICE = [
-  { href: "/study", label: "Study" },
-  { href: "/reading", label: "Reading" },
-  { href: "/numbers", label: "Numbers" },
-  { href: "/roots", label: "Roots" },
-  { href: "/library", label: "Library" },
-  { href: "/learn/yiddish", label: "Yiddish" },
-] as const;
 
 export type NextUpSuggestion = {
   label: string;
@@ -71,8 +54,11 @@ type AppShellContextValue = {
   nextUp: NextUpSuggestion | null;
   nextUpExpanded: boolean;
   toggleNextUpPanel: () => void;
-  /** Current Hebrew cue for header “Ask the Rabbi” (from drills, etc.). */
+  /** Current Hebrew cue for Ask the Rabbi (from drills, story panels, etc.). */
   setRabbiAskContext: (p: RabbiAskPayload | null) => void;
+  rabbiAskPayload: RabbiAskPayload | null;
+  /** Opens the Rabbi sheet with the latest registered cue (or empty-state help). */
+  openAskRabbiModal: () => void;
 };
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -83,121 +69,6 @@ export function useAppShell() {
     throw new Error("useAppShell must be used inside AppShell");
   }
   return ctx;
-}
-
-function HamburgerIcon({ open }: { open: boolean }) {
-  return (
-    <span className="relative block h-3.5 w-5" aria-hidden>
-      <span
-        className={`absolute left-0 top-0 block h-0.5 w-5 rounded-full bg-ink/80 transition-transform duration-200 ${
-          open ? "translate-y-1.5 rotate-45" : ""
-        }`}
-      />
-      <span
-        className={`absolute left-0 top-1.5 block h-0.5 w-5 rounded-full bg-ink/80 transition-opacity duration-200 ${
-          open ? "opacity-0" : "opacity-100"
-        }`}
-      />
-      <span
-        className={`absolute left-0 top-3 block h-0.5 w-5 rounded-full bg-ink/80 transition-transform duration-200 ${
-          open ? "-translate-y-1.5 -rotate-45" : ""
-        }`}
-      />
-    </span>
-  );
-}
-
-function navLinkClass(active: boolean): string {
-  return `block w-full whitespace-nowrap rounded-lg px-4 py-3 text-left font-label text-xs font-semibold uppercase tracking-[0.14em] text-[#2c2416] shadow-sm transition-colors ${
-    active
-      ? "bg-[#dce8c8] text-[#2d4a1a] ring-1 ring-[#4a6830]/35"
-      : "bg-[#faf3e6] ring-1 ring-[#2c2416]/12 hover:bg-[#efe5d0] hover:text-[#1a1510]"
-  }`;
-}
-
-function isNavActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function NavMenu({
-  open,
-  menuId,
-  onNavigate,
-}: {
-  open: boolean;
-  menuId: string;
-  onNavigate: () => void;
-}) {
-  const pathname = usePathname();
-
-  const advancedNavItems = useMemo(() => {
-    if (process.env.NEXT_PUBLIC_HIDE_DEVELOPER_NAV === "true") return [];
-    return [{ href: "/developer", label: "Developer" }];
-  }, []);
-
-  if (!open) return null;
-
-  return (
-    <div
-      id={menuId}
-      className="absolute left-0 top-full z-[100] mt-1 w-max min-w-[9.5rem] rounded-xl border-2 border-ink/20 bg-[#f5ecd8] py-2 pl-2 pr-2 shadow-[0_12px_32px_rgba(44,36,22,0.18)]"
-    >
-      <nav className="w-max" aria-label="Main navigation">
-        <ul className="flex w-max flex-col gap-1">
-          {NAV_PRIMARY.map((item) => (
-            <li key={item.href} className="w-full">
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                className={navLinkClass(isNavActive(pathname, item.href))}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-          <li
-            className="px-4 pb-0 pt-2 font-label text-[9px] uppercase tracking-[0.2em] text-[#2c2416]/55"
-            aria-hidden
-          >
-            Practice &amp; resources
-          </li>
-          {NAV_PRACTICE.map((item) => (
-            <li key={item.href} className="w-full">
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                className={navLinkClass(isNavActive(pathname, item.href))}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-          {advancedNavItems.length > 0 ? (
-            <>
-              <li
-                className="px-4 pb-0 pt-2 font-label text-[9px] uppercase tracking-[0.2em] text-[#2c2416]/55"
-                aria-hidden
-              >
-                Advanced
-              </li>
-              {advancedNavItems.map((item) => (
-                <li key={item.href} className="w-full">
-                  <Link
-                    href={item.href}
-                    onClick={onNavigate}
-                    className={navLinkClass(isNavActive(pathname, item.href))}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </>
-          ) : null}
-        </ul>
-      </nav>
-    </div>
-  );
 }
 
 function ModalLayer({
@@ -237,7 +108,7 @@ function ModalLayer({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative flex max-h-[min(90dvh,720px)] w-full max-w-lg min-h-0 flex-col overflow-hidden rounded-2xl border border-ink/15 bg-parchment-card shadow-2xl"
+        className="parchment-pane--modal relative flex max-h-[min(90dvh,720px)] w-full max-w-lg min-h-0 flex-col overflow-hidden rounded-2xl shadow-2xl"
       >
         <button
           ref={closeRef}
@@ -328,11 +199,7 @@ function NextUpBar({
   );
 }
 
-/** Stable id for the hamburger ↔ menu panel (avoids useId SSR/client drift with Clerk in the header). */
-const APP_SHELL_MAIN_NAV_MENU_ID = "app-shell-main-nav-menu";
-
 function ShellInner({ children }: { children: ReactNode }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [modal, setModal] = useState<ReactNode>(null);
   const [nextUpExpanded, setNextUpExpanded] = useState(false);
   const [nextUp, setNextUpState] = useState<NextUpSuggestion | null>({
@@ -346,17 +213,17 @@ function ShellInner({ children }: { children: ReactNode }) {
     null,
   );
 
-  const rootRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
-
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
-  const toggleMenu = useCallback(() => setMenuOpen((v) => !v), []);
 
   const closeModal = useCallback(() => setModal(null), []);
   const openModal = useCallback((content: ReactNode) => {
     setModal(content);
   }, []);
+
+  const openAskRabbiModal = useCallback(() => {
+    openModal(<RabbiAskModalBody payload={rabbiAskPayload} />);
+  }, [openModal, rabbiAskPayload]);
 
   const setNextUp = useCallback((s: NextUpSuggestion | null) => {
     setNextUpState(s);
@@ -387,6 +254,8 @@ function ShellInner({ children }: { children: ReactNode }) {
       nextUpExpanded,
       toggleNextUpPanel,
       setRabbiAskContext,
+      rabbiAskPayload,
+      openAskRabbiModal,
     }),
     [
       openModal,
@@ -395,12 +264,11 @@ function ShellInner({ children }: { children: ReactNode }) {
       nextUp,
       nextUpExpanded,
       toggleNextUpPanel,
+      setRabbiAskContext,
+      rabbiAskPayload,
+      openAskRabbiModal,
     ],
   );
-
-  useEffect(() => {
-    closeMenu();
-  }, [pathname, closeMenu]);
 
   useEffect(() => {
     try {
@@ -446,60 +314,40 @@ function ShellInner({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(TRIAL_SESSION_EVENT, syncTrial);
   }, []);
 
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) closeMenu();
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeMenu();
-    };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen, closeMenu]);
-
+  const isHome = pathname === "/" || pathname === "";
   const showNextUp = pathname !== "/" && nextUp !== null;
   const mainBottomPad =
     modal ? "pb-12" : showNextUp ? (nextUpExpanded ? "pb-28" : "pb-20") : "pb-12";
 
   return (
     <AppShellContext.Provider value={ctx}>
-      <div ref={rootRef} className="min-h-dvh bg-parchment-grain text-ink">
-        <header className="sticky top-0 z-50 border-b border-ink/12 bg-parchment/88 shadow-sm backdrop-blur-md">
+      <div className="min-h-dvh text-ink">
+        <header className="parchment-header-strip sticky top-0 z-50 backdrop-blur-md backdrop-saturate-125">
           <div className="relative mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
             <div className="relative shrink-0">
-              <button
-                type="button"
-                className="flex h-10 w-10 flex-col items-center justify-center rounded-lg border border-ink/15 bg-parchment/80 shadow-sm transition hover:bg-parchment-card"
-                aria-expanded={menuOpen}
-                aria-controls={APP_SHELL_MAIN_NAV_MENU_ID}
-                aria-label={menuOpen ? "Close menu" : "Open menu"}
-                onClick={toggleMenu}
-              >
-                <HamburgerIcon open={menuOpen} />
-              </button>
-              <NavMenu
-                open={menuOpen}
-                menuId={APP_SHELL_MAIN_NAV_MENU_ID}
-                onNavigate={closeMenu}
-              />
+              {isHome ? (
+                <div
+                  className="w-[4.5rem] shrink-0 sm:w-20"
+                  aria-hidden
+                />
+              ) : (
+                <div className="relative -ml-1 pt-0.5">
+                  <HubHeaderMezuzah />
+                </div>
+              )}
             </div>
 
             <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-center">
               <Hebrew
                 as="span"
-                className="text-[11px] text-ink-faint opacity-90"
+                className="text-[14px] text-ink-faint opacity-90"
               >
                 עִבְרִית
               </Hebrew>
               {displayName ? (
                 <Link
                   href="/settings"
-                  className="max-w-[7rem] truncate font-label text-[9px] uppercase tracking-wide text-ink-muted underline decoration-ink/20 underline-offset-2 transition hover:text-sage hover:decoration-sage/40"
+                  className="max-w-[7rem] truncate font-label text-[12px] uppercase tracking-wide text-ink-muted underline decoration-ink/20 underline-offset-2 transition hover:text-sage hover:decoration-sage/40"
                   title={`${displayName} — open settings`}
                 >
                   {displayName}
@@ -507,7 +355,7 @@ function ShellInner({ children }: { children: ReactNode }) {
               ) : (
                 <Link
                   href="/settings"
-                  className="font-label text-[9px] uppercase tracking-wide text-ink-faint underline decoration-ink/15 underline-offset-2 transition hover:text-sage hover:decoration-sage/30"
+                  className="font-label text-[12px] uppercase tracking-wide text-ink-faint underline decoration-ink/15 underline-offset-2 transition hover:text-sage hover:decoration-sage/30"
                   title="Settings and local profile"
                 >
                   Account
@@ -517,20 +365,6 @@ function ShellInner({ children }: { children: ReactNode }) {
 
             <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-2">
               <ClerkHeaderAuth />
-              <button
-                type="button"
-                onClick={() =>
-                  openModal(<RabbiAskModalBody payload={rabbiAskPayload} />)
-                }
-                className="text-right font-label text-[8px] uppercase leading-tight tracking-[0.14em] text-sage underline decoration-sage/40 underline-offset-2 transition hover:decoration-sage sm:max-w-[7rem] sm:text-[9px]"
-                title={
-                  rabbiAskPayload
-                    ? "Open Rabbi notes for the Hebrew on this screen"
-                    : "Rabbi notes — available when a lesson sets a Hebrew cue"
-                }
-              >
-                Ask the Rabbi
-              </button>
               <button
                 type="button"
                 aria-label={
@@ -566,7 +400,7 @@ function ShellInner({ children }: { children: ReactNode }) {
 
         <DeveloperModeProvider>
           <main
-            className={`mx-auto w-full max-w-2xl px-4 pt-6 transition-[padding] ${mainBottomPad}`}
+            className={`app-main-reading mx-auto w-full max-w-2xl px-4 pt-6 transition-[padding] ${mainBottomPad}`}
           >
             {children}
           </main>

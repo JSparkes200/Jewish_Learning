@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Frank_Ruhl_Libre, Source_Serif_4 } from "next/font/google";
+import { Noto_Serif_Hebrew, Source_Serif_4 } from "next/font/google";
 import { AppProviders } from "@/components/AppProviders";
 import { AppShell } from "@/components/AppShell";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
@@ -8,8 +8,9 @@ import "./globals.css";
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-const fontHebrew = Frank_Ruhl_Libre({
-  subsets: ["latin", "hebrew"],
+const fontHebrew = Noto_Serif_Hebrew({
+  weight: ["300", "400", "500", "700"],
+  subsets: ["hebrew"],
   variable: "--font-hebrew",
   display: "swap",
 });
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f5ecd8",
+  themeColor: "#c9b896",
   /** Lets `env(safe-area-inset-*)` apply on notched devices / installed PWA. */
   viewportFit: "cover",
 };
@@ -68,7 +69,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" dir="ltr" className={`${fontHebrew.variable} ${fontUi.variable}`}>
-      <body className="font-body bg-parchment-grain">
+      <head>
+        <link
+          rel="preload"
+          href="/parchment-aged-vellum.png"
+          as="image"
+          type="image/png"
+        />
+      </head>
+      <body className="font-body bg-parchment-app">
         <AppProviders>
           <AppShell>{children}</AppShell>
         </AppProviders>

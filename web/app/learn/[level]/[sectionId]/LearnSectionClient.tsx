@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
 import { ComprehensionDrill } from "@/components/ComprehensionDrill";
 import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
 import { DrillPrepPanel } from "@/components/DrillPrepPanel";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { LessonPrimerPanel } from "@/components/LessonPrimerPanel";
 import { HebrewTapText } from "@/components/HebrewTapText";
 import { McqDrill } from "@/components/McqDrill";
@@ -47,6 +49,28 @@ import {
   sectionGrammarHint,
 } from "@/lib/drill-prep";
 import { courseLevelToRabbiLevel } from "@/lib/course-rabbi-level";
+import type { RabbiLevel } from "@/lib/rabbi-types";
+
+function AlephStoryRabbiSync({
+  he,
+  en,
+  rabbiLevel,
+}: {
+  he: string;
+  en: string;
+  rabbiLevel: RabbiLevel;
+}) {
+  const { setRabbiAskContext } = useAppShell();
+  useEffect(() => {
+    setRabbiAskContext({
+      targetHe: he,
+      learnerLevel: rabbiLevel,
+      meaningEn: en,
+    });
+    return () => setRabbiAskContext(null);
+  }, [he, en, rabbiLevel, setRabbiAskContext]);
+  return null;
+}
 
 type Props = { level: number; sectionId: string };
 
@@ -382,13 +406,20 @@ export function LearnSectionClient({ level, sectionId }: Props) {
             onPracticeAnswer={onPracticeAnswer}
             courseSurface="embed"
             flowContinue={fc}
+            rabbiLevel={rabbiLevel}
           />
         );
       case "story":
         return (
           <>
+            <AlephStoryRabbiSync
+              he={LEVEL_1_STORY.he}
+              en={LEVEL_1_STORY.en}
+              rabbiLevel={rabbiLevel}
+            />
             <div className="rounded-2xl border border-ink/10 bg-parchment-deep/20 p-4 sm:p-5">
-              <div className="mb-3 flex justify-end">
+              <div className="mb-3 flex flex-wrap justify-end gap-2">
+                <ExerciseAskRabbiButton compact />
                 <NikkudExerciseToggle
                   showNikkud={storyShowNikkud}
                   onToggle={() => setStoryShowNikkud((v) => !v)}

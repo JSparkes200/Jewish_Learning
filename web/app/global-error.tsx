@@ -15,7 +15,7 @@ export default function GlobalError({
 
   return (
     <html lang="en" dir="ltr">
-      <body className="font-body min-h-dvh bg-parchment-grain p-6 text-ink antialiased">
+      <body className="font-body min-h-dvh bg-parchment-app p-6 text-ink antialiased">
         <h1 className="text-lg font-semibold">Something slipped</h1>
         <p className="mt-2 text-sm text-ink-muted">
           Try a refresh — if it keeps happening, step away for a moment and come

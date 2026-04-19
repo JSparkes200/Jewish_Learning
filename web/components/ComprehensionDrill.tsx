@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAppShell } from "@/components/AppShell";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { HebrewTapText } from "@/components/HebrewTapText";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { stripNikkud } from "@/lib/hebrew-nikkud";
@@ -10,6 +12,7 @@ import type {
   ComprehensionPassage,
   ComprehensionQuestion,
 } from "@/data/course-comprehension";
+import type { RabbiLevel } from "@/lib/rabbi-types";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -44,6 +47,8 @@ type Props = {
   skillTags?: SkillMetricKey[];
   courseSurface?: "panel" | "embed";
   flowContinue?: { label: string; onContinue: () => void };
+  /** Registers the passage as the Rabbi cue; defaults to beginner when omitted. */
+  rabbiLevel?: RabbiLevel;
 };
 
 export function ComprehensionDrill({
@@ -54,7 +59,9 @@ export function ComprehensionDrill({
   skillTags = ["comprehension", "recognition", "definition"],
   courseSurface = "panel",
   flowContinue,
+  rabbiLevel,
 }: Props) {
+  const { setRabbiAskContext } = useAppShell();
   const [qIndex, setQIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -63,6 +70,28 @@ export function ComprehensionDrill({
   useEffect(() => {
     setShowNikkud(defaultShowNikkud);
   }, [defaultShowNikkud, passage.source]);
+
+  useEffect(() => {
+    const raw = passage.h.trim();
+    if (!raw) {
+      setRabbiAskContext(null);
+      return;
+    }
+    const targetHe = raw.length > 720 ? `${raw.slice(0, 720)}…` : raw;
+    setRabbiAskContext({
+      targetHe,
+      learnerLevel: rabbiLevel ?? "beginner",
+      meaningEn:
+        passage.e.length > 320 ? `${passage.e.slice(0, 320)}…` : passage.e,
+    });
+    return () => setRabbiAskContext(null);
+  }, [
+    passage.h,
+    passage.e,
+    rabbiLevel,
+    passage.source,
+    setRabbiAskContext,
+  ]);
 
   const q = passage.questions[qIndex];
   const { options, correctText } = useMemo(
@@ -155,10 +184,13 @@ export function ComprehensionDrill({
           <p className="min-w-0 flex-1 font-label text-[9px] uppercase tracking-[0.15em] text-ink-muted">
             Source · {passage.source}
           </p>
-          <NikkudExerciseToggle
-            showNikkud={showNikkud}
-            onToggle={() => setShowNikkud((v) => !v)}
-          />
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <ExerciseAskRabbiButton compact />
+            <NikkudExerciseToggle
+              showNikkud={showNikkud}
+              onToggle={() => setShowNikkud((v) => !v)}
+            />
+          </div>
         </div>
         <div className="mt-3">
           <HebrewTapText

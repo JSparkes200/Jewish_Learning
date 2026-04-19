@@ -1,4 +1,5 @@
-import { LEVEL_1_STORY, type SectionMeta } from "@/data/course";
+import type { SectionMeta } from "@/data/course";
+import { getCurriculumStory } from "@/data/learn-stories";
 import type { McqDrillPack } from "@/data/section-drill-types";
 
 /**
@@ -34,22 +35,6 @@ export function getLevelStoryShortcutInsertAfterIndex(
   const idx = sections.findIndex((s) => s.id === lastId);
   return idx >= 0 ? idx : null;
 }
-
-/** Level-wide “read the story” passages (legacy `LVS[].story`). */
-const STORIES_2_4: Record<number, { he: string; en: string }> = {
-  2: {
-    he: "אֶתְמוֹל הָלַכְתִּי לַשּׁוּק. קָנִיתִי לֶחֶם וּמַיִם. פָּגַשְׁתִּי חָבֵר וְדִבַּרְנוּ הַרְבֵּה. הַיּוֹם אֲנִי בַּבַּיִת.",
-    en: "Yesterday I went to the market. I bought bread and water. I met a friend and we talked a lot. Today I am at home.",
-  },
-  3: {
-    he: "בְּכָל שַׁבָּת אֲנַחְנוּ מִתְכַּנְּסִים יַחַד. אָבִי קוֹרֵא תּוֹרָה. אִמִּי מְבָרֶכֶת אֶת הַנֵּרוֹת. יֵשׁ שָׁלוֹם וְאַהֲבָה בַּבַּיִת.",
-    en: "Every Sabbath we gather together. My father reads Torah. My mother blesses the candles. There is peace and love in the home.",
-  },
-  4: {
-    he: "הַמֶּמְשָׁלָה הִצְהִירָה עַל תַּקְצִיב חָדָשׁ לְחִינּוּךְ. הָאוֹפּוֹזִיצְיָה טָעֲנָה שֶׁזֶּה סְתָם לֹא מַסְפִּיק. אֲבָל הַמַּצָּב, בְּעֶרֶךְ, הִשְׁתַּפֵּר.",
-    en: "The government declared a new education budget. The opposition claimed it's just not enough. But the situation has more or less improved.",
-  },
-};
 
 /** Mini-quiz after each level story (levels 2–4). Level 1 uses `1-read` in section-drills. */
 const STORY_MCQ_PACKS: Record<number, McqDrillPack> = {
@@ -189,8 +174,8 @@ export function getStoryMcqPack(level: number): McqDrillPack | null {
 }
 
 export function getStoryForLevel(level: number): { he: string; en: string } | null {
-  if (level === 1) {
-    return { he: LEVEL_1_STORY.he, en: LEVEL_1_STORY.en };
-  }
-  return STORIES_2_4[level] ?? null;
+  const s = getCurriculumStory(level);
+  return s ? { he: s.he, en: s.en } : null;
 }
+
+export { getStorySyntaxNotes } from "@/data/learn-stories";

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppShell } from "@/components/AppShell";
+import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { Hebrew } from "@/components/Hebrew";
 import { generateContent } from "@/lib/generate-content";
 import { LEARN_VOICE } from "@/lib/learn-user-voice";
@@ -104,13 +105,13 @@ export function CorrectSentenceDrill({
   );
 
   useEffect(() => {
-    if (!rabbiLevel || !rabbiTargetHe.trim()) {
+    if (!rabbiTargetHe.trim()) {
       setRabbiAskContext(null);
       return;
     }
     setRabbiAskContext({
       targetHe: rabbiTargetHe.trim(),
-      learnerLevel: rabbiLevel,
+      learnerLevel: rabbiLevel ?? "beginner",
       meaningEn: rabbiMeaningEn,
     });
     return () => setRabbiAskContext(null);
@@ -184,13 +185,16 @@ export function CorrectSentenceDrill({
       </p>
       <p className="mt-1 text-xs leading-relaxed text-ink-muted">{introText}</p>
 
-      <div className="mt-4 flex items-center justify-between text-[10px] text-ink-faint">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[10px] text-ink-faint">
         <span>
           Challenge {index + 1} of {pack.items.length}
         </span>
-        <span>
-          Your score {correctCount}/{pack.items.length}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExerciseAskRabbiButton compact />
+          <span>
+            Your score {correctCount}/{pack.items.length}
+          </span>
+        </div>
       </div>
 
       <p className="mt-4 text-sm font-medium leading-relaxed text-ink">
