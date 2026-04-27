@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { LEARN_HUB_PATH } from "@/lib/learn-progress";
 
 const STEPS = [
   {
     title: "Foundation (Alef–Dalet)",
     body:
       "Leveled sections grow your reading, grammar, and vocabulary. Finish all four levels, then let Study and Library deepen what you’ve met — circling back is part of the work.",
-    href: "/learn",
+    href: LEARN_HUB_PATH,
     cta: "Learn home",
   },
   {

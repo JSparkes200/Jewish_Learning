@@ -11,7 +11,7 @@ export const ALPHABET_TRACK_BLURB =
 export const BRIDGE_TRACK_TITLE = "Bridge";
 
 export const BRIDGE_TRACK_BLURB =
-  "After foundation exit (three strands at 90%), complete four short study units here, then pass the final checkpoint (~75%). That unlocks the path to specialty badges: mixed registers, longer unpointed text by default, and domain tracks.";
+  "After the foundation track, complete four short study units here, then pass the final checkpoint. That unlocks the path to specialty badges: mixed registers, longer unpointed text, and domain tracks.";
 
 /** End-check target for the bridge final quiz (product spec ~75%). */
 export const BRIDGE_PASS_TARGET_PCT = 0.75;

@@ -834,7 +834,7 @@ export function HomeParshaHero() {
                   ref={readingScrollRef}
                   onPointerMove={onReadingPanePointerMove}
                   onPointerLeave={onReadingPanePointerLeave}
-                  className="h-[300px] overflow-y-auto overscroll-y-contain px-3 pb-3 pt-2 [scrollbar-color:rgb(44_36_22/0.22)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-ink/22"
+                  className="h-[min(18.75rem,50svh)] min-h-[12rem] touch-pan-y overflow-y-auto overscroll-y-contain px-3 pb-3 pt-2 [scrollbar-color:rgb(44_36_22/0.22)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-ink/22"
                 >
                   <div className="divide-y divide-ink/[0.07]">
                     {passage.verses.map((verse, i) => {

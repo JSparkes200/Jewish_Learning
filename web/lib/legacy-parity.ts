@@ -112,7 +112,7 @@ export const LEGACY_PARITY_ITEMS: readonly LegacyParityItem[] = [
     id: "storage",
     label: "Storage bridge with legacy HTML",
     detail:
-      "Round-trip via Developer: merge ivrit_lr (scoped keys) → Next; ivrit export with targetStorageKey → HTML; JSON file backup; optional Vercel KV cloud backup (Bearer sync key, /api/progress) when KV is configured",
+      "Round-trip via Developer: merge ivrit_lr (scoped keys) → Next; ivrit export with targetStorageKey → HTML; JSON file backup; optional Vercel KV cloud backup (Clerk userId-keyed, /api/progress) when KV is configured",
     weight: 5,
     status: "done",
   },

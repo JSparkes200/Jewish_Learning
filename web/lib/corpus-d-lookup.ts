@@ -181,6 +181,16 @@ export function buildMcqEnglishChoices(
   corpusMaxLevel: number | undefined,
 ): string[] {
   const need = 3;
+  if (
+    item.choicesAreHebrew &&
+    item.correctHe?.trim() &&
+    (item.distractorsHe?.length ?? 0) >= need
+  ) {
+    return shuffleArray([
+      item.correctHe.trim(),
+      ...item.distractorsHe!.slice(0, need),
+    ]);
+  }
   const inlineOnly = () =>
     shuffleArray([item.correctEn, ...item.distractorsEn.slice(0, need)]);
 

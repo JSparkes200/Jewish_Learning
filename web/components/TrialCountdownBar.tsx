@@ -35,12 +35,12 @@ export function TrialCountdownBar() {
       aria-live="polite"
       aria-label={`Trial access ends in ${formatTrialCountdown(remainingMs)}`}
     >
-      <span className="font-label text-[10px] font-semibold uppercase tracking-[0.16em] text-rust">
-        Trial
+      <span className="font-label text-[11px] font-semibold uppercase tracking-[0.16em] text-rust">
+        Trial access
       </span>
-      <span className="mx-2 text-ink-muted">·</span>
-      <span className="font-mono text-xs font-semibold tabular-nums text-ink">
-        {formatTrialCountdown(remainingMs)} left
+      <span className="mx-2 text-ink-faint">·</span>
+      <span className="font-mono text-[11px] font-semibold tabular-nums text-ink">
+        {formatTrialCountdown(remainingMs)} remaining
       </span>
     </div>
   );

@@ -3,15 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppShell } from "@/components/AppShell";
-import { DrillPrepGate } from "@/components/DrillPrepGate";
 import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
-import { HebrewTapText } from "@/components/HebrewTapText";
+import { BilingualReadAloudPassage } from "@/components/BilingualReadAloudPassage";
 import { McqDrill } from "@/components/McqDrill";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { storyPageDefaultShowNikkud } from "@/data/course";
 import { getStoryMcqPack } from "@/data/course-stories";
 import { getMcqPackForSection } from "@/data/section-drills";
-import { stripNikkud } from "@/lib/hebrew-nikkud";
 import {
   type GradedPracticeContext,
   loadLearnProgress,
@@ -22,10 +20,6 @@ import {
   touchDailyStreak,
 } from "@/lib/learn-progress";
 import { useLearnProgressSync } from "@/lib/use-learn-progress-sync";
-import {
-  buildPrepCardsFromMcqPack,
-  sectionGrammarHint,
-} from "@/lib/drill-prep";
 import { buildCorrectSentencePackFromMcq } from "@/lib/sentence-correctness";
 import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
 import { courseLevelToRabbiLevel } from "@/lib/course-rabbi-level";
@@ -85,7 +79,6 @@ export function LearnStoryClient({
     if (level === 1) return getMcqPackForSection("1-read");
     return getStoryMcqPack(level);
   }, [level]);
-  const prepCards = buildPrepCardsFromMcqPack(pack, 6);
   const sentencePack = useMemo(
     () => (pack ? buildCorrectSentencePackFromMcq(pack, level, 4) : null),
     [pack, level],
@@ -153,67 +146,58 @@ export function LearnStoryClient({
         )}
       </p>
 
-      <DrillPrepGate
-        title={`Level ${level} story prep`}
-        subtitle={sectionGrammarHint(level, "comprehension")}
-        cards={prepCards}
-        ctaLabel="Start story quiz"
-      >
-        <div className="mb-6 rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
-          <StoryPassageRabbiSync he={he} en={en} level={level} />
-          <div className="mb-3 flex flex-wrap justify-end gap-2">
-            <ExerciseAskRabbiButton compact />
-            <NikkudExerciseToggle
-              showNikkud={storyShowNikkud}
-              onToggle={() => setStoryShowNikkud((v) => !v)}
-            />
-          </div>
-          <HebrewTapText
-            text={storyShowNikkud ? he : stripNikkud(he)}
-            className="text-lg text-ink"
-            glossByWord={storyGloss}
-            showSaveWord
+      <div className="mb-6 rounded-2xl border border-ink/12 bg-parchment-card/80 p-4">
+        <StoryPassageRabbiSync he={he} en={en} level={level} />
+        <div className="mb-3 flex flex-wrap justify-end gap-2">
+          <ExerciseAskRabbiButton compact />
+          <NikkudExerciseToggle
+            showNikkud={storyShowNikkud}
+            onToggle={() => setStoryShowNikkud((v) => !v)}
           />
-          <p className="border-t border-ink/10 pt-4 text-sm italic leading-relaxed text-ink-muted">
-            {en}
-          </p>
-          {syntaxNotes.length ? (
-            <div className="mt-4 rounded-xl border border-sage/20 bg-sage/5 px-3 py-3">
-              <p className="font-label text-[9px] uppercase tracking-[0.15em] text-sage">
-                Syntax in this passage
-              </p>
-              <ul className="mt-2 list-inside list-disc space-y-1.5 text-xs leading-relaxed text-ink-muted">
-                {syntaxNotes.map((line, i) => (
-                  <li key={i}>{line}</li>
-                ))}
-              </ul>
-              <p className="mt-2 text-[11px] text-ink-faint">
-                Tap Ask the Rabbi above for follow-up on any line.
-              </p>
-            </div>
-          ) : null}
         </div>
+        <BilingualReadAloudPassage
+          he={he}
+          en={en}
+          showNikkud={storyShowNikkud}
+          glossByWord={storyGloss}
+          showSaveWord
+        />
+        {syntaxNotes.length ? (
+          <div className="mt-4 rounded-xl border border-sage/20 bg-sage/5 px-3 py-3">
+            <p className="font-label text-[9px] uppercase tracking-[0.15em] text-sage">
+              Syntax in this passage
+            </p>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-xs leading-relaxed text-ink-muted">
+              {syntaxNotes.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[11px] text-ink-faint">
+              Tap Ask the Rabbi above for follow-up on any line.
+            </p>
+          </div>
+        ) : null}
+      </div>
 
-        {pack ? (
-          <div className="mb-6 space-y-4">
-            <McqDrill
-              pack={pack}
-              corpusMaxLevel={level}
-              defaultShowNikkud={nikkudDefault}
-              skillTags={["comprehension", "recognition", "definition"]}
+      {pack ? (
+        <div className="mb-6 space-y-4">
+          <McqDrill
+            pack={pack}
+            corpusMaxLevel={level}
+            defaultShowNikkud={nikkudDefault}
+            skillTags={["comprehension", "recognition", "definition"]}
+            onPracticeAnswer={onPracticeAnswer}
+            rabbiLevel={rabbiLevel}
+          />
+          {sentencePack ? (
+            <CorrectSentenceDrill
+              pack={sentencePack}
               onPracticeAnswer={onPracticeAnswer}
               rabbiLevel={rabbiLevel}
             />
-            {sentencePack ? (
-              <CorrectSentenceDrill
-                pack={sentencePack}
-                onPracticeAnswer={onPracticeAnswer}
-                rabbiLevel={rabbiLevel}
-              />
-            ) : null}
-          </div>
-        ) : null}
-      </DrillPrepGate>
+          ) : null}
+        </div>
+      ) : null}
 
       <p className="mb-4 text-xs text-ink-muted">
         This level-wide story matches the legacy <code className="rounded bg-parchment-deep/50 px-1">LVS</code> idea. The mini-quiz counts toward your daily streak and Hebrew MCQ prompts update vocabulary mastery for course gates. It does not mark subsections complete — use the section list for path progress.

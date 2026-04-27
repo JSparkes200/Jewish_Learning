@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppShell } from "@/components/AppShell";
 import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
+import { HebrewAudioControls } from "@/components/HebrewAudioControls";
 import { Hebrew } from "@/components/Hebrew";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
 import { SaveWordButton } from "@/components/SaveWordButton";
@@ -15,14 +16,42 @@ import type {
 } from "@/lib/learn-progress";
 import { generateContent } from "@/lib/generate-content";
 import { LEARN_VOICE } from "@/lib/learn-user-voice";
-import { buildInlineMcqChoices } from "@/lib/mcq-inline-choices";
+import {
+  buildInlineMcqChoices,
+  buildInlineMcqHebrewChoices,
+} from "@/lib/mcq-inline-choices";
 import type { RabbiLevel } from "@/lib/rabbi-types";
+import { useHebrewSpeech } from "@/hooks/useHebrewSpeech";
 
 function hasHebrew(s: string): boolean {
   return /[\u0590-\u05FF]/.test(s);
 }
 
+function itemCorrectSurface(item: McqItem): string {
+  if (item.choicesAreHebrew && item.correctHe?.trim()) return item.correctHe.trim();
+  return item.correctEn.trim();
+}
+
+/** Hebrew (or stripped) string to read for this item — matches on-screen nikkud setting. */
+function hebrewTtsText(item: McqItem, showNikkud: boolean): string | null {
+  if (item.choicesAreHebrew && item.correctHe?.trim()) {
+    const t = item.correctHe.trim();
+    return showNikkud ? t : stripNikkud(t);
+  }
+  const ph = item.promptHe.trim();
+  const ce = item.correctEn.trim();
+  if (hasHebrew(ph)) return showNikkud ? ph : stripNikkud(ph);
+  if (hasHebrew(ce)) return showNikkud ? ce : stripNikkud(ce);
+  return null;
+}
+
 function mcqItemForRabbi(item: McqItem): { targetHe: string; meaningEn?: string } {
+  if (item.choicesAreHebrew && item.correctHe?.trim()) {
+    return {
+      targetHe: item.correctHe.trim(),
+      meaningEn: item.promptEn?.trim() || undefined,
+    };
+  }
   const ph = item.promptHe.trim();
   const ce = item.correctEn.trim();
   if (hasHebrew(ph)) {
@@ -104,6 +133,26 @@ export function McqDrill({
   const [showNikkud, setShowNikkud] = useState(defaultShowNikkud);
   const packCompleteReportedRef = useRef(false);
 
+  const {
+    speak,
+    voices,
+    selectedVoice,
+    setSelectedVoice,
+    rate,
+    setRate,
+  } = useHebrewSpeech();
+
+  const packHasHebrew = useMemo(
+    () =>
+      pack.items.some(
+        (i) =>
+          hasHebrew(i.promptHe) ||
+          hasHebrew(i.correctEn) ||
+          hasHebrew(i.correctHe ?? ""),
+      ),
+    [pack.items],
+  );
+
   useEffect(() => {
     setShowNikkud(defaultShowNikkud);
   }, [defaultShowNikkud]);
@@ -116,11 +165,13 @@ export function McqDrill({
 
   const promptDisplay = useMemo(() => {
     if (!item) return "";
+    if (item.choicesAreHebrew && item.promptEn?.trim()) return item.promptEn.trim();
     return showNikkud ? item.promptHe : stripNikkud(item.promptHe);
   }, [item, showNikkud]);
 
   const inlineOptions = useMemo(() => {
     if (!item || corpusMaxLevel !== undefined) return null;
+    if (item.choicesAreHebrew) return buildInlineMcqHebrewChoices(item);
     return buildInlineMcqChoices(item);
   }, [item, corpusMaxLevel]);
 
@@ -164,7 +215,11 @@ export function McqDrill({
           ch.length !== 4 ||
           !ch.every((x) => typeof x === "string")
         ) {
-          setCorpusOptions(buildInlineMcqChoices(it));
+          setCorpusOptions(
+            it.choicesAreHebrew
+              ? buildInlineMcqHebrewChoices(it)
+              : buildInlineMcqChoices(it),
+          );
           return;
         }
         setCorpusOptions(ch);
@@ -172,7 +227,11 @@ export function McqDrill({
       .catch((e: unknown) => {
         if (e instanceof DOMException && e.name === "AbortError") return;
         if (e instanceof Error && e.name === "AbortError") return;
-        setCorpusOptions(buildInlineMcqChoices(it));
+        setCorpusOptions(
+          it.choicesAreHebrew
+            ? buildInlineMcqHebrewChoices(it)
+            : buildInlineMcqChoices(it),
+        );
       })
       .finally(() => {
         if (ac.signal.aborted) return;
@@ -210,22 +269,25 @@ export function McqDrill({
     () =>
       item
         ? generateContent({
-            promptHe: item.promptHe,
-            correctEn: item.correctEn,
+            promptHe: item.choicesAreHebrew
+              ? (item.correctHe ?? item.promptHe)
+              : item.promptHe,
+            correctEn: item.choicesAreHebrew
+              ? (item.promptEn ?? item.correctEn)
+              : item.correctEn,
             translit: item.translit,
             shoresh: item.shoresh,
-            mnemonic: item.mnemonic,
             culturalNote: item.vibeNote,
           })
         : null,
     [item],
   );
 
-  const introText = pack.intro ?? LEARN_VOICE.mcqDefaultIntro;
-
   const done = index >= pack.items.length;
   const lastRight =
-    picked != null && item != null && picked === item.correctEn;
+    picked != null &&
+    item != null &&
+    picked === itemCorrectSurface(item);
 
   useEffect(() => {
     if (!done || pack.items.length === 0 || !onPackComplete) return;
@@ -238,16 +300,33 @@ export function McqDrill({
     (choice: string) => {
       if (picked != null || !item || choicesBusy) return;
       setPicked(choice);
-      onPracticeAnswer?.(choice === item.correctEn, {
-        promptHe: item.promptHe,
+      const ok = choice === itemCorrectSurface(item);
+      onPracticeAnswer?.(ok, {
+        promptHe: item.choicesAreHebrew
+          ? (item.correctHe ?? item.promptHe)
+          : item.promptHe,
         skills: skillTags,
         studyGameId,
       });
-      if (choice === item.correctEn) {
+      if (ok) {
         setCorrectCount((c) => c + 1);
+        const tts = hebrewTtsText(item, showNikkud);
+        if (tts?.trim()) {
+          speak(tts.trim(), `mcq-correct-${item.id}-${index}`);
+        }
       }
     },
-    [item, picked, onPracticeAnswer, choicesBusy, skillTags, studyGameId],
+    [
+      item,
+      picked,
+      onPracticeAnswer,
+      choicesBusy,
+      skillTags,
+      studyGameId,
+      showNikkud,
+      speak,
+      index,
+    ],
   );
 
   const next = useCallback(() => {
@@ -319,13 +398,11 @@ export function McqDrill({
             {LEARN_VOICE.mcqQuestionEyebrow}
           </p>
           <p className="mt-1 text-base font-medium text-ink">{pack.title}</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-            {introText}
-          </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           <ExerciseAskRabbiButton compact />
-          {hasHebrew(item.promptHe) ? (
+          {hasHebrew(item.promptHe) ||
+          (item.choicesAreHebrew && hasHebrew(item.correctHe ?? "")) ? (
             <NikkudExerciseToggle
               showNikkud={showNikkud}
               onToggle={() => setShowNikkud((v) => !v)}
@@ -343,7 +420,27 @@ export function McqDrill({
         </span>
       </div>
 
-      {hasHebrew(item.promptHe) ? (
+      {packHasHebrew && voices.length > 0 && selectedVoice ? (
+        <div className="mt-3 -mx-1 overflow-hidden rounded-xl border border-ink/10">
+          <HebrewAudioControls
+            rate={rate}
+            setRate={setRate}
+            voices={voices}
+            selectedVoice={selectedVoice}
+            setSelectedVoice={setSelectedVoice}
+          />
+        </div>
+      ) : packHasHebrew ? (
+        <p className="mt-3 font-label text-[9px] text-amber-800/90">
+          Add a Hebrew voice in system settings to hear prompts and correct answers.
+        </p>
+      ) : null}
+
+      {item.choicesAreHebrew && item.promptEn?.trim() ? (
+        <p className="mt-4 text-lg font-medium leading-relaxed text-ink">
+          {promptDisplay}
+        </p>
+      ) : hasHebrew(item.promptHe) ? (
         <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
           <Hebrew
             as="p"
@@ -351,12 +448,34 @@ export function McqDrill({
           >
             {promptDisplay}
           </Hebrew>
-          <SaveWordButton
-            variant="compact"
-            he={item.promptHe}
-            en={hasHebrew(item.correctEn) ? undefined : item.correctEn}
-            className="shrink-0"
-          />
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {hebrewTtsText(item, showNikkud) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const t = hebrewTtsText(item, showNikkud);
+                  if (t?.trim()) speak(t.trim(), `mcq-prompt-${item.id}-${index}`);
+                }}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/12 text-ink-muted transition hover:border-sage/35 hover:bg-sage/5 hover:text-sage"
+                aria-label="Play Hebrew audio for this prompt"
+              >
+                <svg
+                  viewBox="0 0 20 20"
+                  className="h-3.5 w-3.5"
+                  fill="currentColor"
+                  aria-hidden
+                >
+                  <path d="M8 5v10l8-5-8-5z" />
+                </svg>
+              </button>
+            ) : null}
+            <SaveWordButton
+              variant="compact"
+              he={item.promptHe}
+              en={hasHebrew(item.correctEn) ? undefined : item.correctEn}
+              className="shrink-0"
+            />
+          </div>
         </div>
       ) : (
         <p className="mt-4 text-lg font-medium leading-relaxed text-ink">
@@ -364,24 +483,14 @@ export function McqDrill({
         </p>
       )}
 
-      {learnContent ? (
-        <div className="mt-4 space-y-2 rounded-2xl border border-amber/30 bg-gradient-to-br from-amber/12 to-parchment-deep/30 px-4 py-3 shadow-inner">
-          <p className="font-label text-[9px] uppercase tracking-[0.2em] text-amber">
-            {LEARN_VOICE.mnemonicEyebrow}
+      {learnContent?.vibeLine ? (
+        <div className="mt-4 space-y-2 rounded-2xl border border-sage/20 bg-gradient-to-br from-sage/5 to-parchment-deep/20 px-4 py-3 shadow-inner">
+          <p className="font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
+            {LEARN_VOICE.vibeEyebrow}
           </p>
-          <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
-            {learnContent.mnemonic}
+          <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
+            {learnContent.vibeLine}
           </p>
-          {learnContent.vibeLine ? (
-            <>
-              <p className="pt-1 font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
-                {LEARN_VOICE.vibeEyebrow}
-              </p>
-              <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
-                {learnContent.vibeLine}
-              </p>
-            </>
-          ) : null}
         </div>
       ) : null}
 
@@ -406,7 +515,7 @@ export function McqDrill({
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {options.map((opt) => {
               const showResult = picked != null;
-              const isCorrect = opt === item.correctEn;
+              const isCorrect = opt === itemCorrectSurface(item);
               const isPicked = opt === picked;
               const rtl = hasHebrew(opt);
               let ring =
@@ -442,10 +551,10 @@ export function McqDrill({
             <p className="text-ink-muted">
               {LEARN_VOICE.mcqReveal}:{" "}
               <strong
-                className={`text-ink ${hasHebrew(item.correctEn) ? "font-hebrew" : ""}`}
-                dir={hasHebrew(item.correctEn) ? "rtl" : undefined}
+                className={`text-ink ${hasHebrew(itemCorrectSurface(item)) ? "font-hebrew" : ""}`}
+                dir={hasHebrew(itemCorrectSurface(item)) ? "rtl" : undefined}
               >
-                {item.correctEn}
+                {itemCorrectSurface(item)}
               </strong>
               .
             </p>

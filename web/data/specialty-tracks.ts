@@ -134,6 +134,30 @@ export const SPECIALTY_TRACKS: readonly SpecialtyTrackMeta[] = [
     ),
   },
   {
+    id: "casual",
+    title: "Street & informal Hebrew",
+    blurb: "Texting tone, everyday slang, particles, and what Israelis really say (עִבְרִית בַּיּוֹמְיוֹמִית).",
+    domainHe: "עִבְרִית אֲנָשִׁיּוּתִית",
+    focus: "Colloquial lexicon, discourse markers, shortenings, and register—without mimicking a textbook.",
+    group: "modern_hebrew",
+    outcomes: [
+      "Recognize high-frequency colloquial chunks (סבבה, אחלה, יאללה, תכלס) and when they are appropriate.",
+      "Decode texting / spoken shortenings and fillers (וואלה, נו, בקיצור) in context, not in isolation.",
+      "Contrast informal choices with buttoned-up news or classroom Hebrew on purpose.",
+      "Notice mild vs harsh slang: friendly אחי vs crude insults (opt out of the latter in drills).",
+    ],
+    practiceLinks: [
+      { label: "Numbers — colloquial listen", href: "/numbers" },
+      { label: "Study", href: "/study" },
+      { label: "Learn — Bet colloquial", href: "/learn/2" },
+    ],
+    tierGoals: tierGoals(
+      "Core street lexicon: approval, speed, indifference, surprise—short phrases you hear at work and with friends.",
+      "Deeper: discourse markers, hedges, and internet-era shortenings; reading ‘between the words’ in chat.",
+      "Fluency layer: multi-word routines, teasing register, and knowing when to dial back to neutral Hebrew.",
+    ),
+  },
+  {
     id: "talmudic",
     title: "Talmudic / rabbinic Hebrew",
     blurb:

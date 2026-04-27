@@ -509,13 +509,13 @@ export function RootsCurriculumFlow({
         <p className="mt-2 text-center text-sm italic text-amber">
           {drillRound.word.p}
         </p>
-        {rootLearnContent ? (
-          <div className="mt-4 space-y-2 rounded-2xl border border-amber/30 bg-parchment/80 px-4 py-3 shadow-inner">
-            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-amber">
-              {LEARN_VOICE.mnemonicEyebrow}
+        {rootLearnContent?.vibeLine ? (
+          <div className="mt-4 space-y-2 rounded-2xl border border-sage/20 bg-gradient-to-br from-sage/5 to-parchment-deep/20 px-4 py-3 shadow-inner">
+            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
+              {LEARN_VOICE.vibeEyebrow}
             </p>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
-              {rootLearnContent.mnemonic}
+            <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
+              {rootLearnContent.vibeLine}
             </p>
           </div>
         ) : null}

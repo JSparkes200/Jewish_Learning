@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   COURSE_LEVELS,
   courseLevelProgressLabel,
@@ -14,6 +14,7 @@ import {
   shouldShowLevelStoryShortcut,
 } from "@/data/course-stories";
 import {
+  LEARN_HUB_PATH,
   LEARN_PROGRESS_EVENT,
   completionRatio,
   createEmptyLearnProgressState,
@@ -21,6 +22,7 @@ import {
   sectionUnlocked,
   type LearnProgressState,
 } from "@/lib/learn-progress";
+import { useMilestoneCelebration } from "@/components/MilestoneCelebration";
 
 function sectionTypePrefix(sec: SectionMeta): string {
   switch (sec.type) {
@@ -43,6 +45,8 @@ export function LearnLevelClient({ level }: { level: number }) {
   const [progress, setProgress] = useState<LearnProgressState>(() =>
     createEmptyLearnProgressState(),
   );
+  const { celebrate, MilestoneModal } = useMilestoneCelebration();
+  const celebratedRef = useRef(false);
 
   const refresh = useCallback(() => {
     setProgress(loadLearnProgress());
@@ -59,6 +63,34 @@ export function LearnLevelClient({ level }: { level: number }) {
     progress.completedSections,
   );
 
+  // Fire milestone celebration exactly once when level reaches 100%
+  useEffect(() => {
+    if (pct === 100 && !celebratedRef.current) {
+      celebratedRef.current = true;
+      const levelNames = ["", "Aleph", "Bet", "Gimel", "Dalet"];
+      const messages = [
+        "",
+        "You've finished every Aleph section. Sounds, survival vocab, and first grammar — all done.",
+        "Bet is complete. Verb agreement, conversation, and traditional text — you've made real progress.",
+        "Gimel done. Richer passages, root patterns, and Jewish vocabulary are now in your grasp.",
+        "You've cleared all four foundation levels. Dalet complete — the exit exams and bridge await.",
+      ];
+      celebrate({
+        kind: "level-complete",
+        letter: meta?.icon,
+        title: `Level ${level} Complete`,
+        heTitle: "סִיַּמְתָּ אֶת הַשַּׁלְבָּה",
+        message: messages[level] ?? `Level ${level} done — well done!`,
+        ctaLabel: level < 4 ? `Open Level ${level + 1}` : "Foundation exit",
+        ctaHref: level < 4 ? `/learn/${level + 1}` : "/learn/foundation-exit",
+      });
+    }
+    if (pct < 100) {
+      celebratedRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pct]);
+
   const storyShortcut =
     getStoryForLevel(level) && shouldShowLevelStoryShortcut(level, progress.completedSections)
       ? {
@@ -70,9 +102,10 @@ export function LearnLevelClient({ level }: { level: number }) {
 
   return (
     <div>
+      {MilestoneModal}
       <nav className="mb-6">
         <Link
-          href="/learn"
+          href={LEARN_HUB_PATH}
           className="font-label text-[10px] uppercase tracking-[0.2em] text-sage hover:underline"
         >
           ← Learn

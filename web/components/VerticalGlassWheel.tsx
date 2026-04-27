@@ -9,7 +9,14 @@ import {
   useTransform,
 } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 const MEZUZAH_TEXTURE = "/mezuzah-parchment-texture.jpg";
 
@@ -24,6 +31,8 @@ const CARD_BACKGROUNDS = [
 const CYLINDER_RADIUS_PX = 104;
 const DIAL_PERSPECTIVE = 1000;
 const WHEEL_SENSITIVITY = 0.055;
+/** Touch drag in px → same angle units as wheel delta (iOS has no `wheel` on finger drag). */
+const TOUCH_PAN_SENSITIVITY = 0.35;
 const SNAP_IDLE_MS = 130;
 const WHEEL_ACTIVE_EDGE_FRACTION = 0.16;
 const SPRING = { stiffness: 320, damping: 32, mass: 0.75 };
@@ -85,7 +94,21 @@ export function VerticalGlassWheel({
   const hoverClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const trenchRef = useRef<HTMLDivElement>(null);
+  const touchLastY = useRef<number | null>(null);
+  const touchMagnitude = useRef(0);
+  const touchSuppressClick = useRef(false);
   const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [layoutDesktop, setLayoutDesktop] = useState(true);
+  useLayoutEffect(() => {
+    setLayoutDesktop(window.matchMedia("(min-width: 640px)").matches);
+  }, []);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const sync = () => setLayoutDesktop(mq.matches);
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const angleTarget = useMotionValue(initialAngle);
   const smoothAngle = useSpring(angleTarget, SPRING);
@@ -173,9 +196,47 @@ export function VerticalGlassWheel({
       e.preventDefault();
       applyWheelDelta(e.deltaY);
     };
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) {
+        touchLastY.current = null;
+        return;
+      }
+      touchLastY.current = e.touches[0]!.clientY;
+      touchMagnitude.current = 0;
+      touchSuppressClick.current = false;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchLastY.current == null || e.touches.length !== 1) return;
+      const y = e.touches[0]!.clientY;
+      const dy = y - touchLastY.current;
+      touchLastY.current = y;
+      touchMagnitude.current += Math.abs(dy);
+      if (touchMagnitude.current > 10) {
+        touchSuppressClick.current = true;
+        e.preventDefault();
+      }
+      applyWheelDelta(dy * TOUCH_PAN_SENSITIVITY);
+      scheduleSnap();
+    };
+    const onTouchEnd = () => {
+      touchLastY.current = null;
+      if (touchMagnitude.current <= 10) {
+        touchSuppressClick.current = false;
+      }
+    };
     el.addEventListener("wheel", onWheelNative, { passive: false });
-    return () => el.removeEventListener("wheel", onWheelNative);
-  }, [applyWheelDelta, n, bodyOpen]);
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
+    return () => {
+      el.removeEventListener("wheel", onWheelNative);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [applyWheelDelta, n, bodyOpen, scheduleSnap]);
 
   const rotateToIndex = useCallback(
     (idx: number) => {
@@ -271,9 +332,10 @@ export function VerticalGlassWheel({
         height: `calc(${TRENCH_H})`,
         perspective: DIAL_PERSPECTIVE,
         perspectiveOrigin: "50% 50%",
+        touchAction: "none",
       }}
     >
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex max-[420px]:scale-[0.9] min-[421px]:scale-100 items-center justify-center">
         <motion.div
           className="relative"
           style={{
@@ -320,7 +382,13 @@ export function VerticalGlassWheel({
                     if (isExpanded) return;
                     scheduleClearHoverPreview();
                   }}
-                  onClick={() => openExpandedAtIndex(idx)}
+                  onClick={() => {
+                    if (touchSuppressClick.current) {
+                      touchSuppressClick.current = false;
+                      return;
+                    }
+                    openExpandedAtIndex(idx);
+                  }}
                   className={`group relative flex h-12 w-12 items-center justify-center rounded-full border-2 transition-[box-shadow,border-color,background-color,transform] duration-300 sm:h-14 sm:w-14 ${
                     isSelected
                       ? "border-[#5c4a3a] bg-[#faf7f2] shadow-[inset_0_2px_0_rgba(255,255,255,0.92),inset_0_-4px_8px_rgba(55,48,40,0.2),0_5px_10px_rgba(0,0,0,0.32),0_2px_3px_rgba(255,255,255,0.45)] hover:bg-[#fcfbf8]"
@@ -488,19 +556,33 @@ export function VerticalGlassWheel({
         {isExpanded && bodyOpen && items[activeIndex] ? (
           <motion.div
             key={items[activeIndex]!.key}
-            initial={{ opacity: 0, x: -20, y: "-50%", scale: 0.92 }}
-            animate={{ opacity: 1, x: 0, y: "-50%", scale: 1 }}
-            exit={{ opacity: 0, x: -20, y: "-50%", scale: 0.92 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="pointer-events-auto absolute z-[60] ml-6 w-[320px] sm:w-[360px]"
-            style={{
-              left: "100%",
-              top: "calc(5rem + min(46vh, 272px) / 2)",
-              transformOrigin: `0% ${yOffsetPercent}%`,
+            initial={{
+              opacity: 0,
+              x: layoutDesktop ? -20 : 0,
+              y: "-50%",
+              scale: 0.92,
             }}
+            animate={{ opacity: 1, x: 0, y: "-50%", scale: 1 }}
+            exit={{
+              opacity: 0,
+              x: layoutDesktop ? -20 : 0,
+              y: "-50%",
+              scale: 0.92,
+            }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="pointer-events-auto z-[60] w-[min(20rem,calc(100vw-1.5rem))] sm:absolute sm:ml-6 sm:w-[min(20rem,calc(100%-2rem))] max-sm:fixed max-sm:left-1/2 max-sm:top-1/2 max-sm:ml-0 md:w-[360px]"
+            style={
+              layoutDesktop
+                ? {
+                    left: "100%",
+                    top: "calc(5rem + min(46vh, 272px) / 2)",
+                    transformOrigin: `0% ${yOffsetPercent}%`,
+                  }
+                : { left: "50%", top: "50%" }
+            }
           >
             <div
-              className="relative flex h-[360px] w-full flex-col overflow-hidden rounded-3xl border border-white/20 p-6 shadow-2xl"
+              className="relative flex h-[min(24rem,70dvh)] w-full min-h-[16rem] flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-3xl border border-white/20 p-4 shadow-2xl sm:h-[360px] sm:overflow-hidden sm:p-6"
               style={{
                 background:
                   CARD_BACKGROUNDS[activeIndex % CARD_BACKGROUNDS.length],
@@ -509,10 +591,10 @@ export function VerticalGlassWheel({
               <div className="absolute -left-[100%] top-0 h-full w-[50%] -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-30" />
 
               <div className="relative z-10 flex flex-1 flex-col">
-                <span className="mb-2 inline-block w-max rounded-full border border-white/20 bg-black/20 px-3 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-white/90">
+                <span className="mb-2 inline-block w-max max-w-full rounded-full border border-white/20 bg-black/20 px-3 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-white/90">
                   {items[activeIndex]!.category}
                 </span>
-                <h3 className="mt-2 text-3xl font-semibold tracking-tight text-white drop-shadow-md">
+                <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white drop-shadow-md sm:text-3xl">
                   {items[activeIndex]!.label}
                 </h3>
                 <p className="mt-4 leading-relaxed text-white/85">

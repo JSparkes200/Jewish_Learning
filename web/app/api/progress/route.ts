@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimitIfExceeded } from "@/lib/api-rate-limit";
 import { progressPutBodySchema } from "@/lib/api-schemas";
@@ -7,17 +8,18 @@ import {
   kvGetProgressJson,
   kvSetProgressJson,
 } from "@/lib/cloud-progress-kv";
-import { hashProgressToken } from "@/lib/hash-progress-token";
 import { sanitizeLearnProgress } from "@/lib/learn-progress-backup";
 
-/** Uses `node:crypto` via hash-progress-token. */
 export const runtime = "nodejs";
 
-function bearerToken(req: NextRequest): string | null {
-  const h = req.headers.get("authorization");
-  if (!h?.toLowerCase().startsWith("bearer ")) return null;
-  return h.slice(7).trim();
-}
+/**
+ * Learn-progress cloud backup. Scoped by Clerk userId — one blob per user.
+ *
+ * Prior versions used a client-generated UUID Bearer token (anonymous). That
+ * scheme was an IDOR vector: anyone with the token owned the blob. Migrated to
+ * Clerk so Learn progress is tied to the authenticated account and revocable
+ * via normal Clerk session controls.
+ */
 
 function kvUnavailable() {
   return NextResponse.json(
@@ -30,15 +32,16 @@ export async function GET(req: NextRequest) {
   const limited = await rateLimitIfExceeded(req, "progress");
   if (limited) return limited;
 
-  if (!cloudProgressKvConfigured()) return kvUnavailable();
-  const token = bearerToken(req);
-  if (!token || token.length < 16) {
-    return NextResponse.json({ error: "Missing or invalid Bearer token." }, { status: 401 });
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const hash = hashProgressToken(token);
-  const raw = await kvGetProgressJson(hash);
+
+  if (!cloudProgressKvConfigured()) return kvUnavailable();
+
+  const raw = await kvGetProgressJson(userId);
   if (!raw) {
-    return NextResponse.json({ error: "No stored progress for this token." }, { status: 404 });
+    return NextResponse.json({ error: "No stored progress for this account." }, { status: 404 });
   }
   let parsed: unknown;
   try {
@@ -57,11 +60,13 @@ export async function PUT(req: NextRequest) {
   const limited = await rateLimitIfExceeded(req, "progress");
   if (limited) return limited;
 
-  if (!cloudProgressKvConfigured()) return kvUnavailable();
-  const token = bearerToken(req);
-  if (!token || token.length < 16) {
-    return NextResponse.json({ error: "Missing or invalid Bearer token." }, { status: 401 });
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  if (!cloudProgressKvConfigured()) return kvUnavailable();
+
   let body: unknown;
   try {
     body = await req.json();
@@ -78,8 +83,7 @@ export async function PUT(req: NextRequest) {
   const progress = sanitizeLearnProgress(
     parsed.data.progress as Record<string, unknown>,
   );
-  const hash = hashProgressToken(token);
-  await kvSetProgressJson(hash, JSON.stringify(progress));
+  await kvSetProgressJson(userId, JSON.stringify(progress));
   return NextResponse.json({ ok: true });
 }
 
@@ -87,12 +91,13 @@ export async function DELETE(req: NextRequest) {
   const limited = await rateLimitIfExceeded(req, "progress");
   if (limited) return limited;
 
-  if (!cloudProgressKvConfigured()) return kvUnavailable();
-  const token = bearerToken(req);
-  if (!token || token.length < 16) {
-    return NextResponse.json({ error: "Missing or invalid Bearer token." }, { status: 401 });
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const hash = hashProgressToken(token);
-  await kvDeleteProgress(hash);
+
+  if (!cloudProgressKvConfigured()) return kvUnavailable();
+
+  await kvDeleteProgress(userId);
   return NextResponse.json({ ok: true });
 }

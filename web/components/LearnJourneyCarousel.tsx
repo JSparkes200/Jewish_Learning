@@ -1,8 +1,9 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CoverFlowCarousel } from "@/components/CoverFlowCarousel";
 import { LearnJourneyDetailModal } from "@/components/LearnJourneyDetailModal";
+import { LearnJourneyPath } from "@/components/LearnJourneyPath";
 import { buildLearnJourneyRows } from "@/lib/learn-journey-hub";
 import type { LearnProgressState } from "@/lib/learn-progress";
 
@@ -13,21 +14,28 @@ export function LearnJourneyCarousel({
   progress: LearnProgressState;
   developerMode: boolean;
 }) {
+  const search = useSearchParams();
+  const signParam = search.get("sign")?.trim() ?? null;
+
   const rows = useMemo(
     () => buildLearnJourneyRows(progress, developerMode),
     [progress, developerMode],
   );
 
-  const items = useMemo(() => rows.map((r) => r.cover), [rows]);
-
   const [detailIdx, setDetailIdx] = useState<number | null>(null);
 
-  const onActivateCenter = useCallback(
+  const onSelectSign = useCallback(
     (idx: number) => {
       if (rows[idx]) setDetailIdx(idx);
     },
     [rows],
   );
+
+  useEffect(() => {
+    if (!signParam) return;
+    const i = rows.findIndex((r) => r.cover.key === signParam);
+    if (i >= 0) setDetailIdx(i);
+  }, [signParam, rows]);
 
   useEffect(() => {
     if (detailIdx == null) return;
@@ -42,14 +50,13 @@ export function LearnJourneyCarousel({
 
   return (
     <>
-      <CoverFlowCarousel
+      <LearnJourneyPath
         key={progressKey}
-        variant="minimal"
-        items={items}
-        onActivateCenter={onActivateCenter}
+        rows={rows}
+        progress={progress}
+        developerMode={developerMode}
+        onSelectSign={onSelectSign}
         centerActionLabel="Open →"
-        prevAriaLabel="Previous step"
-        nextAriaLabel="Next step"
       />
       {detailIdx != null && rows[detailIdx] ? (
         <LearnJourneyDetailModal

@@ -1,0 +1,94 @@
+# Hebrew Learning — robots.txt
+# Refuse AI training crawlers outright. Human-facing search crawlers may index
+# the public landing page but not APIs, developer tools, or auth pages.
+
+# ---- AI / LLM training crawlers: no access ----
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Perplexity-User
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Meta-ExternalFetcher
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: cohere-training-data-crawler
+Disallow: /
+
+User-agent: AI2Bot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+User-agent: DuckAssistBot
+Disallow: /
+
+User-agent: omgili
+Disallow: /
+
+User-agent: omgilibot
+Disallow: /
+
+User-agent: Kangaroo Bot
+Disallow: /
+
+# ---- All other crawlers: landing page only ----
+User-agent: *
+Disallow: /api/
+Disallow: /developer
+Disallow: /developer/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /progress
+Disallow: /settings
+Disallow: /migration
+Disallow: /legacy/

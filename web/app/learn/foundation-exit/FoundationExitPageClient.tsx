@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { DrillPrepGate } from "@/components/DrillPrepGate";
 import { McqDrill } from "@/components/McqDrill";
 import { FOUNDATION_EXIT_PACKS } from "@/data/foundation-exit-drills";
 import {
@@ -26,7 +25,6 @@ import {
   type FoundationExitStrands,
   type LearnProgressState,
 } from "@/lib/learn-progress";
-import { buildPrepCardsFromMcqPack } from "@/lib/drill-prep";
 
 const STRANDS: {
   key: keyof FoundationExitStrands;
@@ -207,37 +205,30 @@ export function FoundationExitPageClient() {
               {!on ? (
                 foundationReady ? (
                   <>
-                    <DrillPrepGate
-                      title={`${label} strand prep`}
-                      subtitle={hint}
-                      cards={buildPrepCardsFromMcqPack(pack, 6)}
-                      ctaLabel="Start strand quiz"
-                    >
-                      <McqDrill
-                        key={key}
-                        pack={pack}
-                        defaultShowNikkud
-                        skillTags={
-                          key === "grammar"
-                            ? ["grammar", "recognition", "definition"]
-                            : key === "reading"
-                              ? ["comprehension", "recognition", "definition"]
-                              : ["definition", "recognition"]
-                        }
-                        onPracticeAnswer={onPracticeAnswer}
-                        endHint={
-                          attempt
-                            ? meetsFoundationExitPassPercent(
-                                attempt.correct,
-                                attempt.total,
-                              )
-                              ? "This strand meets the score — marked passed. Finish the other strands to open the bridge."
-                              : `Score ${attempt.correct}/${attempt.total}. Need at least ${Math.ceil(FOUNDATION_EXIT_MIN_PCT * attempt.total - 1e-9)} of ${attempt.total} for ${Math.round(FOUNDATION_EXIT_MIN_PCT * 100)}%.`
-                            : "Scores at or above 90% mark this strand passed automatically."
-                        }
-                        onPackComplete={onStrandPackComplete(key)}
-                      />
-                    </DrillPrepGate>
+                    <McqDrill
+                      key={key}
+                      pack={pack}
+                      defaultShowNikkud
+                      skillTags={
+                        key === "grammar"
+                          ? ["grammar", "recognition", "definition"]
+                          : key === "reading"
+                            ? ["comprehension", "recognition", "definition"]
+                            : ["definition", "recognition"]
+                      }
+                      onPracticeAnswer={onPracticeAnswer}
+                      endHint={
+                        attempt
+                          ? meetsFoundationExitPassPercent(
+                              attempt.correct,
+                              attempt.total,
+                            )
+                            ? "This strand meets the score — marked passed. Finish the other strands to open the bridge."
+                            : `Score ${attempt.correct}/${attempt.total}. Need at least ${Math.ceil(FOUNDATION_EXIT_MIN_PCT * attempt.total - 1e-9)} of ${attempt.total} for ${Math.round(FOUNDATION_EXIT_MIN_PCT * 100)}%.`
+                          : "Scores at or above 90% mark this strand passed automatically."
+                      }
+                      onPackComplete={onStrandPackComplete(key)}
+                    />
                     {attempt &&
                     !meetsFoundationExitPassPercent(
                       attempt.correct,

@@ -6,7 +6,7 @@ import { CourseProgressHero } from "@/components/CourseProgressHero";
 import { HomeHubCarousel } from "@/components/HomeHubCarousel";
 import { HomeParshaHero } from "@/components/HomeParshaHero";
 import { COURSE_LEVELS, getSectionsForLevel } from "@/data/course";
-import { getNextLearnUp } from "@/lib/learn-next-up";
+import { getContinueDestination } from "@/lib/app-activity";
 import {
   LEARN_PROGRESS_EVENT,
   createEmptyLearnProgressState,
@@ -61,11 +61,8 @@ export function HomePageClient({
   const attempts = progress.mcqAttempts ?? 0;
   const correct = progress.mcqCorrect ?? 0;
 
-  const nextUp = useMemo(
-    () =>
-      getNextLearnUp(progress, {
-        yiddishProgress: loadYiddishProgress(),
-      }),
+  const continueCta = useMemo(
+    () => getContinueDestination(progress, loadYiddishProgress()),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- yiddishTick bumps storage-driven updates
     [progress, yiddishTick],
   );
@@ -73,7 +70,7 @@ export function HomePageClient({
   return (
     <>
       <CinematicIntro serverSignedIn={serverSignedIn} />
-      <div className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:pt-10">
+      <div className="mx-auto max-w-6xl pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-20 pt-6 sm:pt-10">
         {/* Two columns: [ menu + progress ] | parsha — shared w-44 rail matches hub + progress tiles */}
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-6 lg:gap-8">
           <div className="mx-auto flex w-44 shrink-0 flex-col md:mx-0">
@@ -89,15 +86,19 @@ export function HomePageClient({
                   heading="Your progress"
                 expandableHub
                 hubPanelAnchor="right-edge"
-                continueHref={nextUp.href}
-                  continueLabel={`${nextUp.label} →`}
+                continueHref={continueCta.href}
+                  continueLabel={
+                    continueCta.source === "last"
+                      ? `Continue · ${continueCta.label} →`
+                      : `${continueCta.label} →`
+                  }
                 />
               </div>
             </div>
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col pt-1 md:pt-0">
-            <div className="w-full max-w-none lg:max-w-2xl lg:pl-2 xl:max-w-3xl">
+            <div className="w-full min-w-0 max-w-none lg:max-w-2xl lg:pl-2 xl:max-w-3xl">
               <div
                 className="mb-3 flex items-center gap-3 rounded-xl border border-ink/12 bg-gradient-to-b from-white/55 to-white/35 px-3 py-2 shadow-[0_8px_24px_-12px_rgba(44,36,22,0.12)] backdrop-blur-md"
                 aria-hidden

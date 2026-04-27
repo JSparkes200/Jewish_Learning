@@ -72,6 +72,13 @@ export const HUB_SLIDES: readonly HubSlide[] = [
     category: "Course",
   },
   {
+    href: "/grammar",
+    title: "Grammar",
+    emoji: "דּ",
+    desc: "Verb tables, binyanim, noun patterns, particles — open while you study.",
+    category: "Reference",
+  },
+  {
     href: "/settings",
     title: "Settings",
     emoji: "⚙️",

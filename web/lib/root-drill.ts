@@ -40,14 +40,28 @@ export function getNextRootDrillWord(
   if (!words.length) return null;
   const [t1, t2, t3] = getRootTiers(words);
   const prog = getRootDrillInner(rootDrill, family.root);
-  const needMore = (tier: RootWordForm[]) =>
-    tier.filter((w) => (prog[w.h] ?? 0) < 3);
 
+  // SRS-like selection: Prioritize words with the lowest score
   const pick = (tier: RootWordForm[], label: 1 | 2 | 3) => {
-    const pool = needMore(tier);
+    // Filter out words that have already reached mastery (score >= 3)
+    const pool = tier.filter((w) => (prog[w.h] ?? 0) < 3);
     if (!pool.length) return null;
+
+    // Group words by their current score
+    const scoreGroups = new Map<number, RootWordForm[]>();
+    for (const w of pool) {
+      const score = prog[w.h] ?? 0;
+      if (!scoreGroups.has(score)) scoreGroups.set(score, []);
+      scoreGroups.get(score)!.push(w);
+    }
+
+    // Find the lowest score group that has words
+    const minScore = Math.min(...Array.from(scoreGroups.keys()));
+    const lowestScorePool = scoreGroups.get(minScore)!;
+
+    // Pick a random word from the lowest score group
     return {
-      word: pool[Math.floor(Math.random() * pool.length)]!,
+      word: lowestScorePool[Math.floor(Math.random() * lowestScorePool.length)]!,
       tier: label,
     };
   };
@@ -59,6 +73,9 @@ export function getNextRootDrillWord(
   const c = pick(t3, 3);
   if (c) return c;
 
+  // If all tiers are mastered, pick a random word from the entire family
+  // but bias towards words that haven't been seen recently (if we had timestamps)
+  // For now, just pick a random word to keep the drill going
   const all = [...t1, ...t2, ...t3];
   const w = all[Math.floor(Math.random() * all.length)]!;
   const tier: 1 | 2 | 3 = t1.includes(w) ? 1 : t2.includes(w) ? 2 : 3;

@@ -1,65 +1,58 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { rateLimitIfExceeded } from "@/lib/api-rate-limit";
 import {
   DEV_SESSION_COOKIE,
-  getExpectedDeveloperCredentials,
+  getDevSessionConfig,
   signDevSession,
 } from "@/lib/dev-session-server";
-
-const bodySchema = z.object({
-  username: z.string().min(1).max(128),
-  email: z.string().email().max(256),
-});
+import { requireOperatorUnlocked } from "@/lib/require-operator-unlock";
 
 /**
- * POST — verify username/email match server env; set HttpOnly session cookie.
+ * POST /api/dev/auth
+ *
+ * Requires:
+ *   1. A signed-in Clerk session.
+ *   2. That Clerk user's id to be in the DEVELOPER_CLERK_USER_IDS allowlist.
+ *
+ * No username/email/body is accepted — the *only* credential is the Clerk
+ * session, which Clerk already verified (MFA, CAPTCHA, breached-password etc).
+ * This route simply issues a short-lived (24h) bonus cookie bound to the
+ * current Clerk {userId, sessionId} that unlocks developer-only UI/routes.
+ *
+ * Returns 404 when dev auth is not configured, to avoid advertising the endpoint.
  */
 export async function POST(req: Request) {
   const limited = await rateLimitIfExceeded(req, "auth");
   if (limited) return limited;
 
-  const cred = getExpectedDeveloperCredentials();
-  if (!cred) {
-    return NextResponse.json(
-      {
-        error:
-          "Developer login is not configured. Set DEVELOPER_USERNAME, DEVELOPER_EMAIL, and DEVELOPER_SESSION_SECRET (24+ chars) on the server.",
-      },
-      { status: 503 },
-    );
+  const cfg = getDevSessionConfig();
+  if (!cfg) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  const { userId, sessionId } = await auth();
+  if (!userId || !sessionId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid body", issues: parsed.error.flatten() },
-      { status: 400 },
-    );
+  if (!cfg.allowedUserIds.includes(userId)) {
+    // Uniform error — never leak whether the userId was the issue.
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const u = parsed.data.username.trim().toLowerCase();
-  const e = parsed.data.email.trim().toLowerCase();
+  const operatorBlock = await requireOperatorUnlocked(userId);
+  if (operatorBlock) return operatorBlock;
 
-  if (u !== cred.username || e !== cred.email) {
-    return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
-  }
-
-  const token = signDevSession(u, e, cred.secret);
+  const token = signDevSession(userId, sessionId, cfg.secret);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(DEV_SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: 60 * 60 * 24, // 24h — matches payload TTL; no silent renewal.
   });
+  res.headers.set("Cache-Control", "no-store");
   return res;
 }

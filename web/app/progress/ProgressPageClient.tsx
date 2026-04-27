@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CourseMasteryList } from "@/components/CourseMasteryList";
 import { CourseProgressHero } from "@/components/CourseProgressHero";
+import { LetterCard } from "@/components/LetterCard";
 import { ProgressLegacyDashboard } from "@/components/ProgressLegacyDashboard";
 import {
   COURSE_LEVELS,
@@ -132,7 +133,7 @@ export function ProgressPageClient() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-muted">
+        <p className="section-label">
           Progress
         </p>
         <p className="mt-2 text-sm text-ink-muted">
@@ -145,9 +146,7 @@ export function ProgressPageClient() {
       </div>
 
       <div className="rounded-2xl border border-ink/10 border-t-sage/20 bg-parchment-card/40 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-          Optional cloud backup
-        </p>
+        <p className="section-label">Optional cloud backup</p>
         <p className="mt-2 text-xs text-ink-muted">
           On a deployed app with{" "}
           <strong className="text-ink">Vercel KV</strong> linked, you can push
@@ -188,83 +187,106 @@ export function ProgressPageClient() {
       ) : null}
 
       <div className="rounded-2xl border border-ink/10 border-t-sage/20 bg-parchment-card/50 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-          Course gates
-        </p>
-        <p className="mt-2 text-xs text-ink-muted">
-          Alphabet (resolved):{" "}
-          <strong className="text-ink">
-            {resolveAlphabetGateStatus(progress)}
-          </strong>
-          . Letters practiced:{" "}
-          <strong className="text-ink">
-            {alphabetLettersDone}/{ALPHABET_LETTER_IDS.length}
-          </strong>
-          . Alphabet final:{" "}
-          {progress.alphabetFinalExamPassed ? (
-            <strong className="text-sage">passed</strong>
-          ) : (
-            <span className="text-ink-muted">not complete</span>
-          )}
-          . Alef–Dalet path:{" "}
-          {isFoundationCourseComplete(progress) ? (
-            <strong className="text-sage">complete</strong>
-          ) : (
-            <span className="text-ink-muted">in progress</span>
-          )}
-          . Foundation exit: reading{" "}
-          {getFoundationExitStrands(progress).reading ? "✓" : "·"} grammar{" "}
-          {getFoundationExitStrands(progress).grammar ? "✓" : "·"} lexicon{" "}
-          {getFoundationExitStrands(progress).lexicon ? "✓" : "·"}. Bridge:{" "}
-          {isBridgeUnlocked(progress) ? (
-            <strong className="text-sage">unlocked</strong>
-          ) : (
-            <span className="text-ink-muted">locked</span>
-          )}
-          . Bridge study units:{" "}
-          <strong className="text-ink">
-            {
-              BRIDGE_UNITS.filter(
-                (u) => effectiveBridgeUnitsCompleted(progress)[u.id],
-              ).length
-            }
-            /{BRIDGE_UNITS.length}
-          </strong>
-          . Bridge final (~75%):{" "}
-          {getBridgeModulePassed(progress) ? (
-            <strong className="text-sage">passed</strong>
-          ) : (
-            <span className="text-ink-muted">not complete</span>
-          )}
-          .
-        </p>
-        <div className="mt-3 flex flex-wrap gap-3 text-[10px]">
-          <Link href="/learn/alphabet" className="text-sage hover:underline">
-            Alphabet
-          </Link>
+        <p className="section-label">Course milestones</p>
+        <p className="mt-1.5 text-[11px] text-ink-muted">
           <Link
-            href="/learn/foundation-exit"
-            className="text-sage hover:underline"
+            className="text-sage underline decoration-sage/30"
+            href="/learn#journey"
           >
-            Foundation exit
-          </Link>
-          <Link href="/learn/bridge" className="text-sage hover:underline">
-            Bridge
-          </Link>
-          <Link href="/learn/tracks" className="text-sage hover:underline">
-            Specialty tracks
-          </Link>
-          <Link href="/learn" className="text-sage hover:underline">
-            Learn path (tap i)
-          </Link>
-          <Link href="/learn/yiddish" className="text-sage hover:underline">
-            Yiddish
-          </Link>
+            Journey path on Learn
+          </Link>{" "}
+          — re-enter the winding path anytime; your completed stages are marked
+          there and below.
+        </p>
+
+        {/* Visual gate checklist */}
+        <ul className="mt-3 space-y-2">
+          {[
+            {
+              label: "Alphabet",
+              detail: `${alphabetLettersDone}/${ALPHABET_LETTER_IDS.length} letters · exam ${progress.alphabetFinalExamPassed ? "passed" : "pending"}`,
+              done: !!progress.alphabetFinalExamPassed,
+              href: "/learn/alphabet",
+            },
+            {
+              label: "Alef–Dalet course",
+              detail: isFoundationCourseComplete(progress)
+                ? "All levels complete"
+                : "In progress",
+              done: isFoundationCourseComplete(progress),
+              href: "/learn#journey",
+            },
+            {
+              label: "Foundation exit",
+              detail: (() => {
+                const strands = getFoundationExitStrands(progress);
+                const parts = [
+                  strands.reading ? "reading ✓" : "reading ·",
+                  strands.grammar ? "grammar ✓" : "grammar ·",
+                  strands.lexicon ? "lexicon ✓" : "lexicon ·",
+                ];
+                return parts.join("  ");
+              })(),
+              done:
+                getFoundationExitStrands(progress).reading &&
+                getFoundationExitStrands(progress).grammar &&
+                getFoundationExitStrands(progress).lexicon,
+              href: "/learn/foundation-exit",
+            },
+            {
+              label: "Bridge",
+              detail: isBridgeUnlocked(progress)
+                ? `${BRIDGE_UNITS.filter((u) => effectiveBridgeUnitsCompleted(progress)[u.id]).length}/${BRIDGE_UNITS.length} units · ${getBridgeModulePassed(progress) ? "final passed" : "final pending"}`
+                : "Locked — complete foundation exit first",
+              done: getBridgeModulePassed(progress),
+              href: "/learn/bridge",
+            },
+          ].map(({ label, detail, done, href }) => (
+            <li key={label}>
+              <Link
+                href={href}
+                className="flex items-start gap-3 rounded-xl border border-ink/8 bg-parchment-deep/20 px-3 py-2.5 transition hover:border-sage/25 hover:bg-parchment-deep/35"
+              >
+                <span
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                    done
+                      ? "bg-sage/20 text-sage"
+                      : "bg-ink/8 text-ink-faint"
+                  }`}
+                >
+                  {done ? "✓" : "·"}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium text-ink">
+                    {label}
+                  </span>
+                  <span className="mt-0.5 block text-[10px] leading-snug text-ink-muted">
+                    {detail}
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-3 flex flex-wrap gap-2 border-t border-ink/8 pt-3">
+          {[
+            { href: "/learn#journey", label: "Journey path" },
+            { href: "/learn/alphabet", label: "Alphabet" },
+            { href: "/learn/foundation-exit", label: "Foundation exit" },
+            { href: "/learn/bridge", label: "Bridge" },
+            { href: "/learn/tracks", label: "Tracks" },
+            { href: "/learn/yiddish", label: "Yiddish" },
+          ].map(({ href, label }) => (
+            <Link key={href} href={href} className="nav-chip">
+              {label}
+            </Link>
+          ))}
         </div>
       </div>
 
       <div className="rounded-2xl border border-ink/10 border-t-sage/25 bg-parchment-card/50 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+        <p className="section-label">
           Specialty badges
         </p>
         <p className="mt-2 text-xs text-ink-muted">
@@ -300,7 +322,7 @@ export function ProgressPageClient() {
                     next ? (
                       <Link
                         href={next.href}
-                        className="shrink-0 font-label text-[9px] uppercase tracking-wide text-sage underline"
+                        className="shrink-0 font-label text-[9px] uppercase tracking-wide text-sage transition hover:text-sage/70"
                       >
                         Next: {next.tier} →
                       </Link>
@@ -314,7 +336,7 @@ export function ProgressPageClient() {
                   ) : null}
                 </div>
                 <p className="mt-1 text-[11px] text-ink-muted">{track.blurb}</p>
-                <p className="mt-2 font-label text-[8px] uppercase tracking-wide text-ink-faint">
+                <p className="mt-2 section-label">
                   Aims
                 </p>
                 <ul className="mt-1 list-inside list-disc text-[11px] leading-relaxed text-ink-muted">
@@ -346,7 +368,7 @@ export function ProgressPageClient() {
                         title={track.tierGoals[tier]}
                         className={`min-w-[5.5rem] flex-1 rounded-lg border px-2 py-1.5 ${tierBadgeShell[tier]}`}
                       >
-                        <p className="font-label text-[8px] uppercase tracking-wide text-ink-muted">
+                        <p className="section-label">
                           {tier.charAt(0).toUpperCase() + tier.slice(1)}
                         </p>
                         <p className="mt-0.5 text-center text-sm">
@@ -366,14 +388,14 @@ export function ProgressPageClient() {
         </ul>
         <Link
           href="/learn/tracks"
-          className="mt-4 inline-block rounded-lg bg-sage px-3 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+          className="mt-4 inline-flex items-center rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white transition hover:brightness-110"
         >
           Open specialty tracks →
         </Link>
       </div>
 
       <div className="rounded-2xl border border-ink/10 border-t-amber/20 bg-parchment-card/50 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+        <p className="section-label">
           Yiddish course
         </p>
         <p className="mt-2 text-xs text-ink-muted">
@@ -394,14 +416,14 @@ export function ProgressPageClient() {
         </p>
         <Link
           href="/learn/yiddish"
-          className="mt-3 inline-block rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
+          className="mt-3 inline-flex items-center rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white transition hover:brightness-110"
         >
           Open Yiddish →
         </Link>
       </div>
 
       <div className="rounded-2xl border border-ink/10 border-t-amber/25 bg-parchment-card/50 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+        <p className="section-label">
           Root drill (שׁוֹרָשִׁים)
         </p>
         <p className="mt-2 text-xs text-ink-muted">
@@ -423,7 +445,7 @@ export function ProgressPageClient() {
           {" "}
           / {rootDrillSummary.totalForms} forms solid (≥3 hits each)
         </p>
-        <p className="mt-3 font-label text-[9px] uppercase tracking-[0.12em] text-ink-faint">
+        <p className="mt-3 section-label mt-3">
           Roots study groups
         </p>
         <ul className="mt-2 flex flex-col gap-1.5">
@@ -453,14 +475,14 @@ export function ProgressPageClient() {
         </ul>
         <Link
           href="/roots"
-          className="mt-3 inline-block text-[10px] text-sage hover:underline"
+          className="mt-3 nav-chip"
         >
           Open roots hub →
         </Link>
       </div>
 
       <div className="rounded-2xl border border-ink/10 border-t-sage/20 bg-parchment-card/50 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+        <p className="section-label">
           Word levels (course gates)
         </p>
         <p className="mt-2 text-xs text-ink-muted">
@@ -524,7 +546,7 @@ export function ProgressPageClient() {
       </div>
 
       <div className="rounded-2xl border border-ink/10 border-t-amber/25 bg-parchment-card/50 p-4">
-        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+        <p className="section-label">
           Study streak
         </p>
         {hasStreak ? (
@@ -563,7 +585,7 @@ export function ProgressPageClient() {
       </div>
 
       <div>
-        <p className="mb-3 font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+        <p className="mb-3 section-label">
           By level
         </p>
         <ul className="space-y-3">
@@ -574,33 +596,40 @@ export function ProgressPageClient() {
               progress.completedSections,
             );
             return (
-              <li
-                key={L.n}
-                className="rounded-xl border border-ink/10 bg-parchment-card/30 p-3"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-label text-[11px] uppercase tracking-wide text-ink">
-                    {L.label}
-                  </span>
-                  <span className="text-[10px] text-ink-muted">
-                    {done}/{total} · {pct}%
-                  </span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-parchment-deep/80">
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${pct}%`,
-                      background: `linear-gradient(90deg, ${L.hex}, ${L.hex}99)`,
-                    }}
-                  />
-                </div>
-                <Link
-                  href={`/learn/${L.n}`}
-                  className="mt-2 inline-block text-[10px] text-sage hover:underline"
-                >
-                  Level {L.n} sections →
-                </Link>
+              <li key={L.n}>
+                <LetterCard letter={L} className="px-3 pb-3 pt-8">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-baseline gap-2 text-ink">
+                      <span
+                        className="shrink-0 font-hebrew text-lg leading-none"
+                        aria-hidden
+                      >
+                        {L.icon}
+                      </span>
+                      <span className="font-label text-[11px] uppercase tracking-wide">
+                        {L.label}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-[10px] text-ink-muted">
+                      {done}/{total} · {pct}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-parchment-deep/80">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${pct}%`,
+                        background: `linear-gradient(90deg, ${L.hex}, ${L.hex}99)`,
+                      }}
+                    />
+                  </div>
+                  <Link
+                    href={`/learn/${L.n}`}
+                    className="mt-2 inline-block text-[10px] text-sage hover:underline"
+                  >
+                    Level {L.n} sections →
+                  </Link>
+                </LetterCard>
               </li>
             );
           })}

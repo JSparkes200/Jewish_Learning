@@ -46,19 +46,18 @@ function middlewareFailureResponse(message: string, hint?: string) {
  * Default: require a Clerk session. Public exceptions:
  * - Home (landing)
  * - Clerk sign-in / sign-up
+ * - Guest try-before-signup: Hebrew alphabet (Alef–Bet) track only
  * - Static legacy HTML under `/legacy/*` (place files in `public/legacy/`)
- * - Password-reset + anonymous KV progress APIs (Bearer) until migrated to Clerk + user-scoped KV
+ * - Clerk webhook ingress
+ * - Hebcal snapshot (read-only calendar data)
  */
 const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
-  /** Guest try-before-signup: Hebrew alphabet (Alef–Bet) track only */
   "/learn/alphabet(.*)",
   "/legacy(.*)",
   "/api/webhooks(.*)",
-  "/api/auth/(.*)",
-  "/api/progress(.*)",
   "/api/hebcal(.*)",
 ]);
 

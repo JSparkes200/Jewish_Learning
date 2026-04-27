@@ -4,8 +4,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppShell } from "@/components/AppShell";
 import { ExerciseAskRabbiButton } from "@/components/ExerciseAskRabbiButton";
 import { Hebrew } from "@/components/Hebrew";
+import { useHebrewSpeech } from "@/hooks/useHebrewSpeech";
+import { getCourseSentence } from "@/data/course-sentences";
+import { glossForHebrewToken } from "@/data/course-sentence-token-glosses";
+import {
+  sentenceFeedbackWhy,
+  sentenceVariant,
+} from "@/lib/correct-sentence-variant";
 import { generateContent } from "@/lib/generate-content";
 import { LEARN_VOICE } from "@/lib/learn-user-voice";
+import { tokenizeHebrew } from "@/hooks/useHebrewSpeech";
 import type {
   DashboardGameId,
   GradedPracticeContext,
@@ -44,6 +52,8 @@ export function CorrectSentenceDrill({
   flowContinue,
 }: Props) {
   const { setRabbiAskContext } = useAppShell();
+  const { speak, voices } = useHebrewSpeech();
+  const ttsAvailable = voices.length > 0;
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -97,12 +107,37 @@ export function CorrectSentenceDrill({
               "this cue",
             translit: item.translit,
             shoresh: item.shoresh,
-            mnemonic: item.mnemonic,
             culturalNote: item.vibeNote,
           })
         : null,
     [item, rabbiMeaningEn],
   );
+
+  const courseSentence = useMemo(
+    () => (item?.promptHe ? getCourseSentence(item.promptHe) : null),
+    [item?.promptHe],
+  );
+
+  const pickFeedback = useMemo(() => {
+    if (picked == null || !item) return null;
+    const he = item.optionsHe[picked]!;
+    const en = (item.optionsEn?.[picked] ?? "").trim();
+    const correctHe = item.optionsHe[item.correctIndex]!;
+    const correctEn = (item.optionsEn?.[item.correctIndex] ?? "").trim();
+    const v =
+      courseSentence != null
+        ? sentenceVariant(courseSentence, he)
+        : null;
+    const why = !isRight
+      ? v != null
+        ? sentenceFeedbackWhy(v, false)
+        : "Compare the word glosses and the natural line below — your choice doesn’t match the best fit for this prompt."
+      : v != null
+        ? sentenceFeedbackWhy(v, true)
+        : "Nice — this is the most natural line here.";
+    const tokens = tokenizeHebrew(he);
+    return { he, en, correctHe, correctEn, v, why, tokens };
+  }, [picked, item, courseSentence, isRight]);
 
   useEffect(() => {
     if (!rabbiTargetHe.trim()) {
@@ -201,24 +236,14 @@ export function CorrectSentenceDrill({
         {prompt}
       </p>
 
-      {learnContent ? (
-        <div className="mt-4 space-y-2 rounded-2xl border border-amber/30 bg-gradient-to-br from-amber/12 to-parchment-deep/30 px-4 py-3 shadow-inner">
-          <p className="font-label text-[9px] uppercase tracking-[0.2em] text-amber">
-            {LEARN_VOICE.mnemonicEyebrow}
+      {learnContent?.vibeLine ? (
+        <div className="mt-4 space-y-2 rounded-2xl border border-sage/20 bg-gradient-to-br from-sage/5 to-parchment-deep/20 px-4 py-3 shadow-inner">
+          <p className="font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
+            {LEARN_VOICE.vibeEyebrow}
           </p>
-          <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
-            {learnContent.mnemonic}
+          <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
+            {learnContent.vibeLine}
           </p>
-          {learnContent.vibeLine ? (
-            <>
-              <p className="pt-1 font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
-                {LEARN_VOICE.vibeEyebrow}
-              </p>
-              <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
-                {learnContent.vibeLine}
-              </p>
-            </>
-          ) : null}
         </div>
       ) : null}
 
@@ -249,15 +274,148 @@ export function CorrectSentenceDrill({
         })}
       </div>
 
-      {picked != null ? (
+      {picked != null && pickFeedback ? (
         <div className="mt-4 rounded-2xl border-2 border-ink/10 bg-parchment/90 p-4 text-sm shadow-inner">
-          {isRight ? (
-            <p className="text-sage">{LEARN_VOICE.mcqCorrect}</p>
-          ) : (
-            <p className="text-ink-muted">
-              {LEARN_VOICE.correctSentenceEncourageWrong}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              {isRight ? (
+                <p className="text-sage">{LEARN_VOICE.mcqCorrect}</p>
+              ) : (
+                <p className="text-ink-muted">
+                  {LEARN_VOICE.correctSentenceEncourageWrong}
+                </p>
+              )}
+            </div>
+            {ttsAvailable && (
+              <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-1.5">
+                <button
+                  type="button"
+                  onClick={() =>
+                    speak(
+                      item.optionsHe[picked]!,
+                      `cs-picked-${item.id}`,
+                    )
+                  }
+                  className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-ink/15 bg-parchment-card/80 px-3 text-ink-muted transition hover:border-sage/30 hover:text-ink"
+                  aria-label="Play your chosen sentence"
+                >
+                  <span className="text-lg leading-none" aria-hidden>
+                    🔊
+                  </span>
+                  <span className="font-label text-[9px] uppercase tracking-wide">
+                    Yours
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    speak(
+                      item.optionsHe[item.correctIndex]!,
+                      `cs-correct-${item.id}`,
+                    )
+                  }
+                  className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-sage/30 bg-sage/10 px-3 text-sage transition hover:bg-sage/20"
+                  aria-label="Play natural line"
+                >
+                  <span className="text-lg leading-none" aria-hidden>
+                    🔊
+                  </span>
+                  <span className="font-label text-[9px] uppercase tracking-wide">
+                    Natural
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3 space-y-2 rounded-xl border border-ink/8 bg-parchment-card/60 px-3 py-2.5">
+            <p className="font-label text-[9px] uppercase tracking-[0.12em] text-ink-faint">
+              Your line
+            </p>
+            <Hebrew className="text-base font-medium leading-relaxed text-ink">
+              {pickFeedback.he}
+            </Hebrew>
+            {pickFeedback.en ? (
+              <p className="text-xs leading-relaxed text-ink-muted">
+                {pickFeedback.en}
+              </p>
+            ) : null}
+          </div>
+
+          {pickFeedback.why && (
+            <p className="mt-3 text-xs leading-relaxed text-ink-muted">
+              {pickFeedback.why}
             </p>
           )}
+
+          {pickFeedback.tokens.length > 0 && (
+            <div className="mt-3">
+              <p className="font-label text-[9px] uppercase tracking-[0.12em] text-ink-faint">
+                Word gloss
+              </p>
+              <ul className="mt-1.5 space-y-1.5 text-xs">
+                {pickFeedback.tokens.map((t, i) => {
+                  const g = glossForHebrewToken(t);
+                  return (
+                    <li
+                      key={i}
+                      className="flex flex-wrap gap-x-2 gap-y-0.5 border-b border-ink/5 py-0.5 last:border-0"
+                    >
+                      <Hebrew as="span" className="text-ink">
+                        {t}
+                      </Hebrew>
+                      <span className="text-ink-faint">→</span>
+                      <span className="text-ink-muted">
+                        {g ?? "— (see full line above)"}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          {!isRight && (
+            <div className="mt-4 rounded-xl border border-sage/25 bg-sage/5 px-3 py-2.5">
+              <p className="font-label text-[9px] uppercase tracking-[0.12em] text-sage/90">
+                Natural line
+              </p>
+              <Hebrew className="mt-1 text-base font-medium text-ink">
+                {pickFeedback.correctHe}
+              </Hebrew>
+              {pickFeedback.correctEn ? (
+                <p className="mt-1 text-xs text-ink-muted">
+                  {pickFeedback.correctEn}
+                </p>
+              ) : null}
+            </div>
+          )}
+          
+          {item.streetVariant && isRight && (
+            <div className="mt-4 rounded-xl bg-sage/5 p-3 border border-sage/15">
+              <p className="font-label text-[9px] uppercase tracking-wide text-sage/80 mb-1">
+                Street Hebrew Variant
+              </p>
+              <div className="flex items-center justify-between gap-2">
+                <Hebrew className="text-base text-ink">{item.streetVariant}</Hebrew>
+                {ttsAvailable && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      speak(item.streetVariant!, `cs-street-${item.id}`)
+                    }
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-sage/30 bg-sage/10 text-sage transition hover:bg-sage/20"
+                    aria-label="Play street variant"
+                  >
+                    <span className="text-sm leading-none" aria-hidden>
+                      🔊
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={next}

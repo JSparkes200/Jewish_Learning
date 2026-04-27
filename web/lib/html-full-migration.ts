@@ -197,7 +197,7 @@ export const HTML_FULL_MIGRATION_WORKSTREAMS: readonly HtmlMigrationWorkstream[]
       label: "Auth, sessions, scoped storage",
       legacyRef: "`authIsLoggedIn`, `ivrit_session_v1`, scoped `ivrit_lr__user`",
       detail:
-        "Clerk sign-in/sign-up + middleware protect Learn and most routes; saved lemmas API uses Clerk privateMetadata. Optional KV `/api/progress` (Bearer) remains for anonymous backup. Legacy HTML username/password flows are retired in favor of Clerk.",
+        "Clerk sign-in/sign-up + middleware protect Learn and most routes; saved lemmas API uses Clerk privateMetadata. Optional KV `/api/progress` (Clerk userId-keyed) for signed-in learners. Legacy HTML username/password flows are retired in favor of Clerk.",
       suggestedOrder: 9,
       weight: 8,
       status: "partial",

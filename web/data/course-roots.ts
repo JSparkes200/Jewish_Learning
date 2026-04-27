@@ -10,6 +10,8 @@ export type CourseRootFamily = {
   words: RootWordForm[];
   sentence?: string;
   trans?: string;
+  rootType?: "standard" | "pe-yod" | "lamed-he" | "hollow" | "geminate" | "pe-nun";
+  grammarNote?: string;
 };
 
 /** Same order as legacy — used for roots tab / graduated drill parity. */
@@ -17,6 +19,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "הלך",
     meaning: "movement / going",
+    rootType: "pe-yod",
+    grammarNote: "This root behaves irregularly. Notice how the first letter (ה) completely disappears in the future tense (יֵלֵךְ) and the infinitive (לָלֶכֶת).",
     words: [
       { h: "הָלַךְ", p: "halach", e: "walked (past m.)" },
       { h: "הוֹלֵךְ", p: "holech", e: "walking (present m.)" },
@@ -31,6 +35,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "כתב",
     meaning: "writing",
+    rootType: "standard",
+    grammarNote: "A perfect, standard three-letter root. The letters כ-ת-ב stay visible in almost every form.",
     words: [
       { h: "כָּתַב", p: "katav", e: "wrote (past m.)" },
       { h: "כּוֹתֵב", p: "kotev", e: "writing (present m.)" },
@@ -47,6 +53,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "אמר",
     meaning: "speech / saying",
+    rootType: "standard",
+    grammarNote: "A standard root, but because the first letter is a guttural Aleph (א), the vowels around it shift slightly (e.g., יֹאמַר instead of יִאְמַר).",
     words: [
       { h: "אָמַר", p: "amar", e: "said (past m.)" },
       { h: "אוֹמֵר", p: "omer", e: "saying (present m.)" },
@@ -61,6 +69,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "ידע",
     meaning: "knowledge / knowing",
+    rootType: "pe-yod",
+    grammarNote: "A classic 'Pe-Yod' root. The first letter (י) drops out entirely in the future (יֵדַע) and infinitive (לָדַעַת).",
     words: [
       { h: "יָדַע", p: "yada", e: "knew (past m.)" },
       { h: "יוֹדֵעַ", p: "yode'a", e: "knows (present m.)" },
@@ -77,6 +87,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "ראה",
     meaning: "seeing / vision",
+    rootType: "lamed-he",
+    grammarNote: "A 'Lamed-He' root. The final ה drops or changes to a י in the past tense (רָאִיתִי) and infinitive (לִרְאוֹת).",
     words: [
       { h: "רָאָה", p: "ra'a", e: "saw (past m.)" },
       { h: "רוֹאֶה", p: "ro'e", e: "sees (present m.)" },
@@ -92,6 +104,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "שמע",
     meaning: "hearing / listening",
+    rootType: "standard",
+    grammarNote: "A standard root, but the final letter (ע) is guttural, which forces a 'sneaky' a-vowel (patach ganuv) at the end of words like שׁוֹמֵעַ.",
     words: [
       { h: "שָׁמַע", p: "shama", e: "heard (past m.)" },
       { h: "שׁוֹמֵעַ", p: "shome'a", e: "hearing (present m.)" },
@@ -107,6 +121,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "אהב",
     meaning: "love / liking",
+    rootType: "standard",
+    grammarNote: "A standard root, but the middle letter (ה) is guttural, which changes the vowels slightly (e.g., אוֹהֵב instead of אוֹהֵב).",
     words: [
       { h: "אָהַב", p: "ahav", e: "loved (past m.)" },
       { h: "אוֹהֵב", p: "ohev", e: "loves (present m.)" },
@@ -121,6 +137,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "בוא",
     meaning: "coming / arrival",
+    rootType: "hollow",
+    grammarNote: "A 'Hollow' root. The middle letter (ו) disappears in the past tense (בָּא) but reappears in the future (יָבוֹא) and infinitive (לָבוֹא).",
     words: [
       { h: "בָּא", p: "ba", e: "came (past m.)" },
       { h: "בָּאָה", p: "ba'a", e: "came (past f.)" },
@@ -135,6 +153,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "נתן",
     meaning: "giving",
+    rootType: "pe-nun",
+    grammarNote: "A double 'Pe-Nun' and 'Lamed-Nun' root. The first נ drops in the future (יִתֵּן) and both נ's drop in the infinitive (לָתֵת).",
     words: [
       { h: "נָתַן", p: "natan", e: "gave (past m.)" },
       { h: "נוֹתֵן", p: "noten", e: "giving (present m.)" },
@@ -149,6 +169,8 @@ export const STATIC_ROOT_FAMILIES: readonly CourseRootFamily[] = [
   {
     root: "שלם",
     meaning: "wholeness / peace / payment",
+    rootType: "standard",
+    grammarNote: "A perfect, standard three-letter root. The letters ש-ל-ם stay visible in almost every form.",
     words: [
       { h: "שָׁלוֹם", p: "shalom", e: "peace / hello / goodbye" },
       { h: "שָׁלֵם", p: "shalem", e: "whole / complete" },

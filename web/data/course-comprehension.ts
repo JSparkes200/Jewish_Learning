@@ -21,8 +21,8 @@ export type ComprehensionPassage = {
 export const COMPREHENSION_BY_SECTION: Record<string, ComprehensionPassage> = {
   "2-comp": {
     source: "Blended modern spoken + textual Hebrew",
-    h: "בַּשָּׁבוּעַ הָרִאשׁוֹן בַּכִּתָּה הַחֲדָשָׁה נֹעַם לֹא הִרְגִּישׁ בַּיִת. הַמּוֹרָה הָיְתָה דּוֹגְרִי, אֲבָל גַּם נְעִימָה, וְהִיא הִדְרִיכָה אֶת הַתַּלְמִידִים לְתַרְגֵּל בְּיַחַד. לְאַט לְאַט הוּא מָצָא אֶת הַמָּקוֹם שֶׁלּוֹ וְהִרְגִּישׁ נִינוֹחַ. בְּסוֹף הַשִּׁעוּר הֵם אָמְרוּ תְּפִלָּה קְצָרָה וּבְרָכָה לִפְנֵי הָאֹכֶל. הַמּוֹרָה הִסְבִּירָה שֶׁמָּסוֹרֶת וּתְּפִלָּה יְכוֹלוֹת לָתֵת לָאָדָם שֹׁרֶשׁ וְגַם אֹפִּי.",
-    e: "During his first week in the new class, Noam did not feel at home. The teacher was direct, but also pleasant, and she guided the students to practise together. Little by little he found his place and felt at ease. At the end of the lesson they said a short prayer and a blessing before eating. The teacher explained that tradition and prayer can give a person both roots and character.",
+    h: "בַּשָּׁבוּעַ הָרִאשׁוֹן בַּכִּתָּה הַחֲדָשָׁה, נֹעַם לֹא הִרְגִּישׁ בַּיִת. הַמּוֹרָה הָיְתָה יְשִׁירָה מְאוֹד, אֲבָל גַּם נְעִימָה, וְהִיא בִּקְּשָׁה מֵהַתַּלְמִידִים לְתַרְגֵּל בְּיַחַד. לְאַט לְאַט הוּא מָצָא אֶת הַמָּקוֹם שֶׁלּוֹ וְהִרְגִּישׁ נִינוֹחַ. בְּסוֹף הַשִּׁעוּר הֵם אָמְרוּ בְּרָכָה קְצָרָה לִפְנֵי הָאֹכֶל. הַמּוֹרָה הִסְבִּירָה שֶׁמָּסוֹרֶת יְכוֹלָה לָתֵת לָאָדָם שֹׁרֶשׁ וְגַם אֹפִּי.",
+    e: "During his first week in the new class, Noam did not feel at home. The teacher was very direct, but also pleasant, and she asked the students to practice together. Little by little he found his place and felt at ease. At the end of the lesson they said a short blessing before eating. The teacher explained that tradition can give a person both roots and character.",
     note: "This passage blends spoken Israeli classroom language with text-and-tradition vocabulary so the learner can feel both registers working together.",
     questions: [
       {
@@ -52,14 +52,14 @@ export const COMPREHENSION_BY_SECTION: Record<string, ComprehensionPassage> = {
         opts: [
           "They went home silently",
           "They read a news article",
-          "They said a short prayer and blessing",
+          "They said a short blessing",
           "They wrote a long exam",
         ],
         ans: 2,
-        note: "The passage says they said a short prayer and a blessing before eating.",
+        note: "The passage says they said a short blessing before eating.",
       },
       {
-        q: "According to the teacher, what can tradition and prayer give a person?",
+        q: "According to the teacher, what can tradition give a person?",
         opts: [
           "Money and status",
           "Roots and character",
@@ -67,18 +67,18 @@ export const COMPREHENSION_BY_SECTION: Record<string, ComprehensionPassage> = {
           "Only quiet",
         ],
         ans: 1,
-        note: "The final sentence connects tradition and prayer with roots and character.",
+        note: "The final sentence connects tradition with roots and character.",
       },
       {
         q: "How is the teacher described?",
         opts: [
           "Only strict and cold",
-          "Direct but also pleasant",
+          "Very direct but also pleasant",
           "Absent most of the time",
           "Angry with Noam",
         ],
         ans: 1,
-        note: "She is direct (דוגרי) but also pleasant (נעימה).",
+        note: "She is very direct (ישירה מאוד) but also pleasant (נעימה).",
       },
       {
         q: "In the passage, what does נִינוֹחַ most closely mean?",

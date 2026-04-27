@@ -15,7 +15,7 @@ import {
 import type { RabbiAskPayload } from "@/components/RabbiCard";
 import { RabbiAskModalBody } from "@/components/RabbiAskModalBody";
 import { RabbiTipBody } from "@/components/RabbiTipBody";
-import { getNextLearnUp } from "@/lib/learn-next-up";
+import { getContinueDestination, recordNavigation } from "@/lib/app-activity";
 import { getRabbiTip } from "@/lib/rabbi-tips";
 import {
   LEARN_PROGRESS_EVENT,
@@ -45,7 +45,84 @@ export type NextUpSuggestion = {
   label: string;
   href: string;
   icon?: string;
+  /** “Continue” when resuming last place, “Next up” for suggested curriculum step. */
+  actionLabel?: "Continue" | "Next up";
 };
+
+// ─── Icon primitives ─────────────────────────────────────────────────────────
+// Inline SVGs (Lucide-compatible stroke style) so we need no extra dependency.
+
+function XIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function QuestionMarkCircleIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <line x1="12" y1="17" x2="12.01" y2="17" strokeWidth="2.5" />
+    </svg>
+  );
+}
+
+function BookOpenIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
+}
 
 type AppShellContextValue = {
   openModal: (content: ReactNode) => void;
@@ -113,11 +190,11 @@ function ModalLayer({
         <button
           ref={closeRef}
           type="button"
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-parchment/90 text-xl leading-none text-ink-muted transition hover:bg-parchment-deep hover:text-ink"
+          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-ink/10 bg-parchment/90 text-ink-muted transition hover:bg-parchment-deep hover:text-ink"
           aria-label="Close dialog"
           onClick={onClose}
         >
-          ×
+          <XIcon className="h-4 w-4" />
         </button>
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-5 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pt-12 [scrollbar-gutter:stable]">
           {content}
@@ -141,19 +218,19 @@ function NextUpBar({
   const pathname = usePathname();
   if (pathname === "/" || !suggestion) return null;
 
-  const icon = suggestion.icon ?? "📚";
+  const action = suggestion.actionLabel ?? "Next up";
 
   if (!expanded) {
     return (
-      <div className="fixed bottom-3 left-3 z-[90]">
+      <div className="fixed bottom-4 left-4 z-[90]">
         <button
           type="button"
           onClick={onToggle}
-          className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-ink/20 bg-gradient-to-br from-rust to-rust/85 text-xl text-white shadow-[0_10px_28px_rgba(30,18,8,0.18)] transition hover:brightness-110"
-          aria-label="Expand Next up"
+          className="flex h-14 w-14 items-center justify-center rounded-full border border-ink/20 bg-gradient-to-br from-rust to-rust/85 text-white shadow-[0_10px_28px_rgba(30,18,8,0.22),0_2px_8px_rgba(139,58,26,0.35)] transition hover:brightness-110 active:scale-95"
+          aria-label={`Expand ${action}`}
           aria-expanded="false"
         >
-          {icon}
+          <BookOpenIcon className="h-6 w-6" />
         </button>
       </div>
     );
@@ -161,38 +238,36 @@ function NextUpBar({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-[90] border-t border-ink/15 bg-gradient-to-b from-[#f8f0e0] to-[#efe5cc] px-3 py-2 shadow-[0_-6px_24px_rgba(30,18,8,0.08)]"
+      className="fixed bottom-0 left-0 right-0 z-[90] border-t border-ink/12 bg-gradient-to-b from-[#faf3e6]/95 to-[#f0e6ce]/95 px-3 py-2 shadow-[0_-8px_28px_rgba(30,18,8,0.1)] backdrop-blur-sm"
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
     >
-      <div className="mx-auto flex max-w-2xl items-center gap-2">
+      <div className="mx-auto flex max-w-2xl items-center gap-3">
         <button
           type="button"
           onClick={onToggle}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rust to-rust/85 text-lg text-white shadow-md transition hover:brightness-110"
-          aria-label="Collapse Next up"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rust to-rust/85 text-white shadow-md transition hover:brightness-110 active:scale-95"
+          aria-label={`Collapse ${action}`}
           aria-expanded="true"
         >
-          {icon}
+          <BookOpenIcon className="h-5 w-5" />
         </button>
         <button
           type="button"
           onClick={onGo}
-          className="min-w-0 flex-1 text-left"
+          className="min-w-0 flex-1 cursor-pointer text-left"
         >
-          <div className="font-label text-[11px] uppercase tracking-[0.18em] text-ink">
-            Next up
-          </div>
-          <span className="block truncate text-xs text-ink-muted">
+          <div className="section-label">{action}</div>
+          <span className="mt-0.5 block truncate text-xs leading-tight text-ink-muted">
             {suggestion.label}
           </span>
         </button>
         <button
           type="button"
           onClick={onGo}
-          className="shrink-0 px-2 text-2xl text-rust transition hover:opacity-80"
-          aria-label="Go to suggestion"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-rust/25 bg-rust/10 text-rust transition hover:bg-rust/20 active:scale-95"
+          aria-label={action === "Continue" ? "Go to where you left off" : "Go to suggested next step"}
         >
-          →
+          <ChevronRightIcon className="h-5 w-5" />
         </button>
       </div>
     </div>
@@ -202,11 +277,7 @@ function NextUpBar({
 function ShellInner({ children }: { children: ReactNode }) {
   const [modal, setModal] = useState<ReactNode>(null);
   const [nextUpExpanded, setNextUpExpanded] = useState(false);
-  const [nextUp, setNextUpState] = useState<NextUpSuggestion | null>({
-    label: "Continue in Learn — course & levels",
-    href: "/learn",
-    icon: "📚",
-  });
+  const [nextUp, setNextUpState] = useState<NextUpSuggestion | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [trialActive, setTrialActive] = useState(false);
   const [rabbiAskPayload, setRabbiAskContext] = useState<RabbiAskPayload | null>(
@@ -215,6 +286,10 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    recordNavigation(pathname);
+  }, [pathname]);
 
   const closeModal = useCallback(() => setModal(null), []);
   const openModal = useCallback((content: ReactNode) => {
@@ -281,11 +356,13 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const syncNextUp = () => {
-      setNextUpState(
-        getNextLearnUp(loadLearnProgress(), {
-          yiddishProgress: loadYiddishProgress(),
-        }),
-      );
+      const c = getContinueDestination(loadLearnProgress(), loadYiddishProgress());
+      setNextUpState({
+        href: c.href,
+        label: c.label,
+        icon: c.icon,
+        actionLabel: c.actionLabel,
+      });
     };
     syncNextUp();
     window.addEventListener(LEARN_PROGRESS_EVENT, syncNextUp);
@@ -377,7 +454,7 @@ function ShellInner({ children }: { children: ReactNode }) {
                     ? "Trial active: Rabbi tips now; full AI when connected"
                     : "Short tip for this page"
                 }
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm font-semibold shadow-sm transition hover:bg-sage/10 ${
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border shadow-sm transition hover:bg-sage/10 ${
                   trialActive
                     ? "border-rust/35 bg-rust/10 text-rust"
                     : "border-sage/25 bg-parchment/90 text-sage"
@@ -391,7 +468,7 @@ function ShellInner({ children }: { children: ReactNode }) {
                   )
                 }
               >
-                ?
+                <QuestionMarkCircleIcon className="h-[18px] w-[18px]" />
               </button>
             </div>
           </div>

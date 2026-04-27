@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import { speakHebrew } from "@/lib/speech-hebrew";
 import {
@@ -15,7 +15,13 @@ function normalize(s: string): string {
   return s.trim().toLowerCase();
 }
 
-export function SavedWordsSection({ filter }: { filter: string }) {
+export function SavedWordsSection({
+  filter,
+  children,
+}: {
+  filter: string;
+  children?: ReactNode;
+}) {
   const [words, setWords] = useState<SavedWordEntry[]>([]);
 
   const refresh = useCallback(() => {
@@ -50,6 +56,8 @@ export function SavedWordsSection({ filter }: { filter: string }) {
         devices. Included in{" "}
         <strong className="font-medium text-ink">schema v3</strong> JSON backups.
       </p>
+
+      {children ?? null}
 
       {filtered.length === 0 ? (
         <p className="mt-4 text-sm text-ink-faint">

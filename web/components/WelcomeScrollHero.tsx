@@ -81,7 +81,7 @@ export function WelcomeScrollHero({
 
   const topRoll = (
     <div
-      className="mx-auto h-2.5 max-w-[min(100%,20rem)] rounded-full bg-gradient-to-b from-amber-900/45 via-amber-950/55 to-amber-950/70 shadow-md ring-1 ring-ink/10"
+      className="mx-auto h-2.5 max-w-[min(100%,20rem)] rounded-full bg-gradient-to-b from-ink/40 via-ink-muted/50 to-ink-muted/65 shadow-md ring-1 ring-ink/10"
       aria-hidden
     />
   );
@@ -89,13 +89,13 @@ export function WelcomeScrollHero({
   const parchmentAndBottomRoll = (
     <>
       <div
-        className="relative -mt-px border-x-2 border-amber-900/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_8px_24px_rgba(44,36,22,0.12)]"
+        className="relative -mt-px border-x-2 border-ink/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_8px_24px_rgba(44,36,22,0.12)]"
         style={SCROLL_PANEL_STYLE}
       >
         <ScrollBody />
       </div>
       <div
-        className="mx-auto -mt-px h-2.5 max-w-[min(100%,20rem)] rounded-full bg-gradient-to-b from-amber-950/70 via-amber-950/55 to-amber-900/45 shadow-md ring-1 ring-ink/10"
+        className="mx-auto -mt-px h-2.5 max-w-[min(100%,20rem)] rounded-full bg-gradient-to-b from-ink-muted/65 via-ink-muted/50 to-ink/40 shadow-md ring-1 ring-ink/10"
         aria-hidden
       />
     </>

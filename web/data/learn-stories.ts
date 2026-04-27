@@ -20,15 +20,15 @@ export type CurriculumStory = {
 const L1: CurriculumStory = {
   level: 1,
   id: "aleph-dani-home",
-  title: "Dani at home",
+  title: "Morning at home",
   gradeBand: "Survival Hebrew — first sentences (roughly A1)",
   register: "everyday",
-  he: "דָּנִי הוּא יֶלֶד קָטָן. הוּא אוֹמֵר שָׁלוֹם לְכֻלָּם. שָׁלוֹם אִמָּא! שָׁלוֹם אַבָּא! כֻּלָּם אוֹהֲבִים אֶת דָּנִי.",
-  en: "Dani is a small boy. He says hello to everyone. Hello mom! Hello dad! Everyone loves Dani.",
+  he: "בֹּקֶר טוֹב! אֲנִי יוֹשֵׁב בַּבַּיִת. אִמָּא שׁוֹתָה קָפֶה, וְאַבָּא קוֹרֵא סֵפֶר. הַכֶּלֶב שֶׁלָּנוּ יָשֵׁן. אֲנַחְנוּ אוֹכְלִים לֶחֶם. מַה אַתָּה עוֹשֶׂה הַיּוֹם?",
+  en: "Good morning! I am sitting at home. Mom is drinking coffee, and dad is reading a book. Our dog is sleeping. We are eating bread. What are you doing today?",
   syntaxNotes: [
-    "Hebrew often drops the word “is”: הוּא יֶלֶד = “he (is) a boy.”",
-    "לְ־ before כֻּלָּם means “to everyone” — the preposition is glued to the next word.",
-    "אֶת marks a definite direct object: אוֹהֲבִים אֶת דָּנִי = “they love Dani” (Dani is definite by name).",
+    "Hebrew often drops the word “is” or “am”: אֲנִי יוֹשֵׁב = “I (am) sitting.”",
+    "Verbs change based on who is doing the action: יוֹשֵׁב (m. sg.), שׁוֹתָה (f. sg.), אוֹכְלִים (m. pl.).",
+    "וְ־ “and” attaches directly to the next word: וְאַבָּא.",
   ],
 };
 
@@ -38,13 +38,12 @@ const L2: CurriculumStory = {
   title: "A day at the market",
   gradeBand: "Elementary narrative — past tense hooks (roughly A1–A2)",
   register: "everyday",
-  he: "אֶתְמוֹל הָלַכְתִּי לַשּׁוּק. קָנִיתִי לֶחֶם וּמַיִם. פָּגַשְׁתִּי חָבֵר וְדִבַּרְנוּ הַרְבֵּה. הַיּוֹם אֲנִי בַּבַּיִת.",
-  en: "Yesterday I went to the market. I bought bread and water. I met a friend and we talked a lot. Today I am at home.",
+  he: "אֶתְמוֹל בַּבֹּקֶר הָלַכְתִּי לַשּׁוּק עִם חָבֵר. הָיָה חַם מְאוֹד. קָנִינוּ פֵּרוֹת, יְרָקוֹת, וְלֶחֶם טָרִי. פָּגַשְׁנוּ אֲנָשִׁים נֶחְמָדִים וְדִבַּרְנוּ הַרְבֵּה. אַחַר כָּךְ, יָשַׁבְנוּ בְּבֵית קָפֶה וְשָׁתִינוּ מַיִם קָרִים. הָיָה יוֹם מְצֻיָּן.",
+  en: "Yesterday morning I went to the market with a friend. It was very hot. We bought fruits, vegetables, and fresh bread. We met nice people and talked a lot. Afterwards, we sat in a cafe and drank cold water. It was an excellent day.",
   syntaxNotes: [
-    "Past tense, 1st person: הָלַכְתִּי “I went,” קָנִיתִי “I bought,” פָּגַשְׁתִּי “I met.”",
-    "וְ־ “and” attaches to the next word: וּמַיִם, וְדִבַּרְנוּ.",
-    "לַ־ on שׁוּק shows motion toward: “to the market.”",
-    "הַיּוֹם אֲנִי בַּבַּיִת — no “am” needed before a place phrase.",
+    "Past tense verbs tell you who did the action at the end of the word: הָלַכְתִּי “I went,” קָנִינוּ “we bought.”",
+    "Adjectives come after the noun they describe: לֶחֶם טָרִי (fresh bread), מַיִם קָרִים (cold water).",
+    "לַ־ on שׁוּק shows motion toward a specific place: “to the market.”",
   ],
 };
 
@@ -54,12 +53,12 @@ const L3: CurriculumStory = {
   title: "Shabbat at home",
   gradeBand: "Guided reading — family + ritual vocabulary (roughly A2)",
   register: "home-liturgy",
-  he: "בְּכָל שַׁבָּת אֲנַחְנוּ מִתְכַּנְּסִים יַחַד. אָבִי קוֹרֵא תּוֹרָה. אִמִּי מְבָרֶכֶת אֶת הַנֵּרוֹת. יֵשׁ שָׁלוֹם וְאַהֲבָה בַּבַּיִת.",
-  en: "Every Shabbat we gather together. My father reads Torah. My mother blesses the candles. There is peace and love in the home.",
+  he: "בְּיוֹם שִׁשִּׁי בָּעֶרֶב, כָּל הַמִּשְׁפָּחָה מִתְכַּנֶּסֶת סָבִיב לַשֻּׁלְחָן. הַבַּיִת נָקִי וּמֵרִיחַ טוֹב. אִמָּא מְבָרֶכֶת עַל הַנֵּרוֹת, וְאַבָּא מְקַדֵּשׁ עַל הַיַּיִן. אֲנַחְנוּ שָׁרִים שִׁירִים, אוֹכְלִים אֲרוּחָה טְעִימָה, וּמְדַבְּרִים עַל מַה שֶּׁקָּרָה הַשָּׁבוּעַ. יֵשׁ תְּחוּשָׁה שֶׁל שָׁלוֹם וְשַׁלְוָה בָּאֲוִיר.",
+  en: "On Friday evening, the whole family gathers around the table. The house is clean and smells good. Mom blesses the candles, and dad makes Kiddush over the wine. We sing songs, eat a tasty meal, and talk about what happened this week. There is a feeling of peace and tranquility in the air.",
   syntaxNotes: [
-    "מִתְכַּנְּסִים — Hitpa‘el plural (“we gather ourselves” → we gather).",
-    "אָבִי / אִמִּי — possessive suffixes: “my father,” “my mother.”",
-    "אֶת הַנֵּרוֹת — definite direct object before the candles.",
+    "מִתְכַּנֶּסֶת — Hitpa‘el verb form, often used for reflexive or reciprocal actions (“gathers itself”).",
+    "עַל — literally “on” or “over,” used here for blessing over things (candles, wine).",
+    "מַה שֶּׁקָּרָה — “what (that) happened.” The שֶׁ connects clauses together.",
     "יֵשׁ + noun: “there is …” without a separate word for “there.”",
   ],
 };
@@ -67,16 +66,16 @@ const L3: CurriculumStory = {
 const L4: CurriculumStory = {
   level: 4,
   id: "dalet-news-budget",
-  title: "News snippet",
+  title: "News report",
   gradeBand: "Longer clause chains — public register (roughly B1)",
   register: "public-register",
-  he: "הַמֶּמְשָׁלָה הִצְהִירָה עַל תַּקְצִיב חָדָשׁ לְחִינּוּךְ. הָאוֹפּוֹזִיצְיָה טָעֲנָה שֶׁזֶּה סְתָם לֹא מַסְפִּיק. אֲבָל הַמַּצָּב, בְּעֶרֶךְ, הִשְׁתַּפֵּר.",
-  en: "The government announced a new education budget. The opposition claimed it's just not enough. But the situation has more or less improved.",
+  he: "הַמֶּמְשָׁלָה הִצְהִירָה הַבֹּקֶר עַל תָּכְנִית חֲדָשָׁה לְשִׁפּוּר הַחִנּוּךְ בַּפֶּרִיפֶרְיָה. שַׂר הָאוֹצָר הִבְטִיחַ לְהַקְצוֹת תַּקְצִיב מְיֻחָד לַמַּטָּרָה זוֹ. לַמְרוֹת זֹאת, הָאוֹפּוֹזִיצְיָה טָעֲנָה שֶׁהַתָּכְנִית לֹא מַסְפֶּקֶת וְשֶׁהִיא רַק הַבְטָחַת בְּחִירוֹת. בֵּינְתַיִם, הַמּוֹרִים מַמְתִּינִים לִרְאוֹת אִם הַמַּצָּב בֶּאֱמֶת יִשְׁתַּפֵּר.",
+  en: "The government announced a new plan this morning to improve education in the periphery. The Finance Minister promised to allocate a special budget for this purpose. Despite this, the opposition claimed that the plan is insufficient and that it is just an election promise. Meanwhile, the teachers are waiting to see if the situation will truly improve.",
   syntaxNotes: [
-    "הִצְהִירָה עַל — verb + “about/on” for reporting announcements.",
-    "שֶׁזֶּה — subordinate clause (“that this …”) inside reported speech.",
-    "בְּעֶרֶךְ — adverbial “approximately / more or less” modifying the clause.",
-    "הִשְׁתַּפֵּר — Hitpa‘el perfect 3rd masc. (“improved”) agreeing with הַמַּצָּב.",
+    "לְשִׁפּוּר — “for the improvement of.” Using a verbal noun (gerund) is common in formal Hebrew.",
+    "לַמְרוֹת זֹאת — “despite this.” A higher-register connector for contrasting ideas.",
+    "שֶׁהַתָּכְנִית... וְשֶׁהִיא — “that the plan... and that it.” The שֶׁ is repeated for each clause.",
+    "יִשְׁתַּפֵּר — Hitpa‘el future 3rd masc. (“will improve”).",
   ],
 };
 

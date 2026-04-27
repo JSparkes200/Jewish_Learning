@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Hebrew } from "@/components/Hebrew";
 import { LibraryCoverCarousel } from "@/components/LibraryCoverCarousel";
 import { SavedWordsSection } from "@/components/SavedWordsSection";
+import { SavedWordsFlashcard } from "@/components/SavedWordsFlashcard";
+import { loadSavedWords, SAVED_WORDS_EVENT } from "@/lib/saved-words";
 import { LIBRARY_EXTERNAL_LINKS } from "@/data/library-external-links";
 import {
   mergeLegacyLibraryIntoWebApp,
@@ -35,6 +37,8 @@ export function LibraryPageClient() {
   const [formMsg, setFormMsg] = useState<string | null>(null);
   const [legacyImportMsg, setLegacyImportMsg] = useState<string | null>(null);
   const [legacyLibTick, setLegacyLibTick] = useState(0);
+  const [flashcardOpen, setFlashcardOpen] = useState(false);
+  const [savedWordsList, setSavedWordsList] = useState(() => loadSavedWords());
 
   const legacyLibHint = useMemo(() => {
     return previewLegacyLibraryImport();
@@ -50,6 +54,13 @@ export function LibraryPageClient() {
     window.addEventListener(LIBRARY_SAVED_EVENT, refreshSaved);
     return () => window.removeEventListener(LIBRARY_SAVED_EVENT, refreshSaved);
   }, [refreshSaved]);
+
+  useEffect(() => {
+    const refresh = () => setSavedWordsList(loadSavedWords());
+    refresh();
+    window.addEventListener(SAVED_WORDS_EVENT, refresh);
+    return () => window.removeEventListener(SAVED_WORDS_EVENT, refresh);
+  }, []);
 
   const filteredLinks = useMemo(() => {
     const q = normalize(query);
@@ -357,7 +368,27 @@ export function LibraryPageClient() {
         )}
       </section>
 
-      <SavedWordsSection filter={query} />
+      {flashcardOpen && savedWordsList.length > 0 ? (
+        <section className="surface-elevated p-5">
+          <SavedWordsFlashcard
+            words={savedWordsList}
+            onClose={() => setFlashcardOpen(false)}
+          />
+        </section>
+      ) : null}
+
+      <SavedWordsSection filter={query}>
+        {savedWordsList.length >= 2 && !flashcardOpen ? (
+          <button
+            type="button"
+            onClick={() => setFlashcardOpen(true)}
+            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-sage/30 bg-sage/8 px-4 py-2 font-label text-[10px] uppercase tracking-wide text-sage transition hover:bg-sage/15 hover:border-sage/50"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5" aria-hidden><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
+            Drill saved words ({savedWordsList.length})
+          </button>
+        ) : null}
+      </SavedWordsSection>
 
       <section>
         <p className="text-sm text-ink-muted">

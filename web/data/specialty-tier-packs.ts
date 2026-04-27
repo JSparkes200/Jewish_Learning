@@ -9,6 +9,7 @@ import {
   type SpecialtyTierId,
 } from "./specialty-tracks";
 import { TRADITIONAL_SPECIALTY_PACKS } from "./specialty-tier-packs-traditional";
+import { CASUAL_TIER_PACKS } from "./specialty-tier-packs-casual";
 
 function mcq(
   title: string,
@@ -949,6 +950,7 @@ const MODERN_HEBREW_PACKS: Record<string, McqDrillPack> = {
 
 const PACKS: Record<string, McqDrillPack> = {
   ...MODERN_HEBREW_PACKS,
+  ...CASUAL_TIER_PACKS,
   ...TRADITIONAL_SPECIALTY_PACKS,
 };
 

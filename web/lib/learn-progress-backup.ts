@@ -3,6 +3,7 @@
  */
 
 import { COURSE_LEVELS, getSectionsForLevel } from "@/data/course";
+import { mergeAppSessionFields, parseAppSessionField } from "@/lib/app-session.model";
 import type {
   RootsCurriculumProgress,
   RootsGroupProgress,
@@ -33,6 +34,7 @@ import {
   parseStreakFromJson,
   parseStudyGameStats,
   parseVocabLevelsField,
+  parseLastCoursePosition,
   DASHBOARD_GAME_IDS,
   LESSON_ANSWER_TOTAL_CAP,
   type LearnProgressState,
@@ -177,6 +179,12 @@ export function sanitizeLearnProgress(
 
   const sgs = parseStudyGameStats(raw.studyGameStats);
   if (sgs) out.studyGameStats = sgs;
+
+  const lcp = parseLastCoursePosition(raw.lastCoursePosition);
+  if (lcp) out.lastCoursePosition = lcp;
+
+  const aps = parseAppSessionField(raw.appSession);
+  if (aps) out.appSession = aps;
 
   return out;
 }
@@ -466,6 +474,19 @@ export function mergeLearnProgressStates(
     other.rootsCurriculum,
   );
   if (mergedRootsCurr) out.rootsCurriculum = mergedRootsCurr;
+
+  const a = base.lastCoursePosition;
+  const b = other.lastCoursePosition;
+  if (a && b) {
+    out.lastCoursePosition = a.at >= b.at ? a : b;
+  } else if (a) {
+    out.lastCoursePosition = a;
+  } else if (b) {
+    out.lastCoursePosition = b;
+  }
+
+  const mergedSess = mergeAppSessionFields(base.appSession, other.appSession);
+  if (mergedSess) out.appSession = mergedSess;
 
   return out;
 }

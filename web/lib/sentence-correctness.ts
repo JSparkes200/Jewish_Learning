@@ -1,5 +1,6 @@
 import type { LegacyCorpusEntry } from "@/data/corpus-d";
 import type { McqDrillPack } from "@/data/section-drill-types";
+import { getCourseSentence } from "@/data/course-sentences";
 import {
   LEARN_VOICE,
   buildCorrectSentenceUserPrompt,
@@ -10,12 +11,14 @@ export type CorrectSentenceItem = {
   id: string;
   promptEn: string;
   optionsHe: string[];
+  /** Full-line English for each shuffled option (same index as `optionsHe`). */
+  optionsEn: string[];
   correctIndex: number;
   promptHe?: string;
   translit?: string;
-  mnemonic?: string;
   vibeNote?: string;
   shoresh?: string;
+  streetVariant?: string;
 };
 
 export type CorrectSentencePack = {
@@ -34,21 +37,6 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function sentenceFrame(level: number, targetHe: string): string {
-  if (level <= 1) return `אֲנִי רוֹאֶה ${targetHe} הַיּוֹם.`;
-  if (level === 2) return `בַּשִּׁעוּר אֲנַחְנוּ מִתְרַגְּלִים אֶת ${targetHe}.`;
-  if (level === 3) return `בַּקֶּטַע הַזֶּה, הַמֻּנָּח ${targetHe} חָשׁוּב לַהֲבָנָה.`;
-  return `בְּהֶקְשֵׁר פוֹרְמָלִי, הַבִּטּוּי ${targetHe} מְחַיֵּב דִּיּוּק.`;
-}
-
-function malformedVariant(targetHe: string): string {
-  return `אֲנִי אֲנִי רוֹאֶה ${targetHe} הַיּוֹם.`;
-}
-
-function wrongOrderVariant(targetHe: string): string {
-  return `${targetHe} אֲנִי הַיּוֹם רוֹאֶה אֶת.`;
-}
-
 function makeItem(
   id: string,
   level: number,
@@ -58,28 +46,37 @@ function makeItem(
   meta?: {
     translit?: string;
     vibeNote?: string;
-    mnemonic?: string;
     shoresh?: string;
   },
-): CorrectSentenceItem {
-  const correct = sentenceFrame(level, targetHe);
-  const wrongSemantics = sentenceFrame(level, wrongA);
-  const options = shuffle([
-    correct,
-    wrongSemantics,
-    malformedVariant(targetHe),
-    wrongOrderVariant(targetHe),
-  ]);
+): CorrectSentenceItem | null {
+  const courseSentence = getCourseSentence(targetHe);
+  
+  // If we don't have a hand-authored sentence for this word, we skip it
+  // This ensures we only show grammatically correct, pedagogical sentences
+  if (!courseSentence) return null;
+
+  const pairs: { he: string; en: string }[] = [
+    { he: courseSentence.correct, en: courseSentence.translationEn.correct },
+    { he: courseSentence.wrongSemantics, en: courseSentence.translationEn.wrongSemantics },
+    { he: courseSentence.wrongGrammar, en: courseSentence.translationEn.wrongGrammar },
+    { he: courseSentence.wrongOrder, en: courseSentence.translationEn.wrongOrder },
+  ];
+  const order = shuffle([0, 1, 2, 3]);
+  const optionsHe = order.map((i) => pairs[i]!.he);
+  const optionsEn = order.map((i) => pairs[i]!.en);
+  const correctIndex = order.indexOf(0);
+
   return {
     id,
     promptEn: buildCorrectSentenceUserPrompt(targetEn),
-    optionsHe: options,
-    correctIndex: options.indexOf(correct),
+    optionsHe,
+    optionsEn,
+    correctIndex,
     promptHe: targetHe,
     translit: meta?.translit,
     vibeNote: meta?.vibeNote,
-    mnemonic: meta?.mnemonic,
     shoresh: meta?.shoresh,
+    streetVariant: courseSentence.streetVariant,
   };
 }
 
@@ -97,13 +94,12 @@ export function buildCorrectSentencePackFromPool(
     const row = shuffled[i]!;
     const wrong = shuffled[(i + 1) % shuffled.length]!;
     if (!row.h?.trim() || !row.e?.trim()) continue;
-    items.push(
-      makeItem(`pool-${i}`, level, row.h.trim(), row.e.trim(), wrong.h.trim(), {
-        translit: row.p?.trim() || undefined,
-        vibeNote: row.col?.trim() || undefined,
-        shoresh: row.shoresh?.trim() || undefined,
-      }),
-    );
+    const item = makeItem(`pool-${i}`, level, row.h.trim(), row.e.trim(), wrong.h.trim(), {
+      translit: row.p?.trim() || undefined,
+      vibeNote: row.col?.trim() || undefined,
+      shoresh: row.shoresh?.trim() || undefined,
+    });
+    if (item) items.push(item);
   }
   if (!items.length) return null;
   return {
@@ -128,14 +124,12 @@ export function buildCorrectSentencePackFromMcq(
     const h = row.promptHe.trim();
     const e = row.correctEn.trim();
     if (!h || !e) continue;
-    items.push(
-      makeItem(`sec-${row.id}-${i}`, level, h, e, wrong.promptHe.trim(), {
-        translit: row.translit?.trim() || undefined,
-        vibeNote: row.vibeNote?.trim() || undefined,
-        mnemonic: row.mnemonic?.trim() || undefined,
-        shoresh: row.shoresh?.trim() || undefined,
-      }),
-    );
+    const item = makeItem(`sec-${row.id}-${i}`, level, h, e, wrong.promptHe.trim(), {
+      translit: row.translit?.trim() || undefined,
+      vibeNote: row.vibeNote?.trim() || undefined,
+      shoresh: row.shoresh?.trim() || undefined,
+    });
+    if (item) items.push(item);
   }
   if (!items.length) return null;
   return {

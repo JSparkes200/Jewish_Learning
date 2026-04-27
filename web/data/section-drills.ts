@@ -4,6 +4,7 @@
  */
 
 import type { McqDrillPack, McqItem } from "./section-drill-types";
+import { grammarModuleDrillPacks } from "./section-drills-grammar-modules";
 import { upperLevelDrillExtras } from "./section-drills-upper-extras";
 import { upperLevelDrillPacks } from "./section-drills-upper-levels";
 
@@ -43,8 +44,6 @@ const level1Packs: Record<string, McqDrillPack> = {
         shoresh: "שלם",
         vibeNote:
           "In Hebrew, shalom comes from the root for completeness.\n\nThat’s why one word can greet someone, send them off, or wish them peace — it’s all about the deeper idea of being whole and connected.",
-        mnemonic:
-          "Shalom carries a whole cluster of meanings — calm, wholeness, the sense of everything settling into place.\n\nNow picture a quiet ocean at the end of the day. When the waves finally rest, you feel whole (שלם).\n\nThat’s the feeling tucked inside the word.",
       },
       {
         id: "g2",
@@ -52,8 +51,6 @@ const level1Packs: Record<string, McqDrillPack> = {
         correctEn: "Good morning",
         distractorsEn: ["Good evening", "Good night", "See you soon"],
         translit: "boker tov",
-        mnemonic:
-          "**Boker** is morning; imagine daylight unlatching the day — טוֹב tags it as a good one.",
       },
       {
         id: "g3",
@@ -61,8 +58,6 @@ const level1Packs: Record<string, McqDrillPack> = {
         correctEn: "Good evening",
         distractorsEn: ["Good morning", "Welcome", "How are you?"],
         translit: "erev tov",
-        mnemonic:
-          "**Erev** like ‘even’ — evening’s literally when the day *evens* out.",
       },
       {
         id: "g4",
@@ -70,8 +65,6 @@ const level1Packs: Record<string, McqDrillPack> = {
         correctEn: "Good night",
         distractorsEn: ["Good morning", "Goodbye", "Please"],
         translit: "layla tov",
-        mnemonic:
-          "**Layla** lands soft like ‘lull’ — tuck the night in with טוֹב.",
       },
       {
         id: "g5",
@@ -145,43 +138,49 @@ const level1Packs: Record<string, McqDrillPack> = {
   "1-read": {
     kind: "mcq",
     title: "Read the story — key words",
-    intro: "Vocabulary from Dani’s short reading passage.",
+    intro: "Vocabulary from the Level 1 morning-at-home passage.",
     items: [
       {
         id: "rd1",
-        promptHe: "יֶלֶד קָטָן",
-        correctEn: "A small boy / child",
-        distractorsEn: ["A big city", "A teacher", "A book"],
+        promptHe: "בֹּקֶר טוֹב",
+        correctEn: "Good morning",
+        distractorsEn: ["Good night", "Thank you", "Excuse me"],
       },
       {
         id: "rd2",
-        promptHe: "הוּא אוֹמֵר",
-        correctEn: "He says",
-        distractorsEn: ["They eat", "We sleep", "I run"],
+        promptHe: "אֲנִי יוֹשֵׁב בַּבַּיִת",
+        correctEn: "I am sitting at home",
+        distractorsEn: ["We are eating bread", "Mom is drinking coffee", "Our dog is sleeping"],
       },
       {
         id: "rd3",
-        promptHe: "שָׁלוֹם אִמָּא",
-        correctEn: "Hello mom / peace, Mom",
-        distractorsEn: ["Good night Dad", "Thank you teacher", "See you tomorrow"],
+        promptHe: "שׁוֹתָה",
+        correctEn: "drinks / is drinking (f.)",
+        distractorsEn: ["reads", "sits", "sleeps"],
       },
       {
         id: "rd4",
-        promptHe: "שָׁלוֹם אַבָּא",
-        correctEn: "Hello Dad / peace, Dad",
-        distractorsEn: ["Good morning Mom", "Excuse me", "I'm sorry"],
+        promptHe: "קָפֶה",
+        correctEn: "coffee",
+        distractorsEn: ["bread", "book", "dog"],
       },
       {
         id: "rd5",
-        promptHe: "כֻּלָּם",
-        correctEn: "Everyone / all of them",
-        distractorsEn: ["No one", "Only me", "Two people"],
+        promptHe: "שֶׁלָּנוּ",
+        correctEn: "our",
+        distractorsEn: ["I", "you (m.)", "they"],
       },
       {
         id: "rd6",
-        promptHe: "אוֹהֲבִים אֶת דָּנִי",
-        correctEn: "They love Dani",
-        distractorsEn: ["They see Dani", "They teach Dani", "They forget Dani"],
+        promptHe: "אוֹכְלִים לֶחֶם",
+        correctEn: "eat bread / are eating bread",
+        distractorsEn: ["drink coffee", "read a book", "sit at home"],
+      },
+      {
+        id: "rd7",
+        promptHe: "מַה אַתָּה עוֹשֶׂה הַיּוֹם?",
+        correctEn: "What are you doing today?",
+        distractorsEn: ["Where do you live?", "Who is that?", "When is lunch?"],
       },
     ],
   },
@@ -935,6 +934,7 @@ const level1Packs: Record<string, McqDrillPack> = {
 const packs: Record<string, McqDrillPack> = {
   ...level1Packs,
   ...upperLevelDrillPacksMerged,
+  ...grammarModuleDrillPacks,
 };
 
 export function getMcqPackForSection(sectionId: string): McqDrillPack | null {

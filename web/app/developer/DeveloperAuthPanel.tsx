@@ -4,30 +4,46 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { setDeveloperModeBypass } from "@/lib/developer-mode";
 
+/**
+ * One-click developer session panel. The caller must already be signed in to
+ * Clerk with an allowlisted userId. There is no username/email input — the
+ * server derives identity from the Clerk session and issues a cookie bound to it.
+ */
 export function DeveloperAuthPanel() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [operatorGate, setOperatorGate] = useState(false);
+  const [operatorUnlocked, setOperatorUnlocked] = useState(true);
+  const [operatorCode, setOperatorCode] = useState("");
+  const [operatorBusy, setOperatorBusy] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/dev/session", { credentials: "include" });
+      const res = await fetch("/api/dev/session", {
+        credentials: "include",
+        cache: "no-store",
+      });
       const data = (await res.json()) as {
         authenticated?: boolean;
         configured?: boolean;
+        operatorGate?: boolean;
+        operatorUnlocked?: boolean;
       };
       setConfigured(data.configured === true);
       const ok = data.authenticated === true;
       setAuthenticated(ok);
       setDeveloperModeBypass(ok);
+      setOperatorGate(data.operatorGate === true);
+      setOperatorUnlocked(data.operatorUnlocked !== false);
     } catch {
       setConfigured(false);
       setAuthenticated(false);
       setDeveloperModeBypass(false);
+      setOperatorGate(false);
+      setOperatorUnlocked(true);
     } finally {
       setLoading(false);
     }
@@ -37,24 +53,48 @@ export function DeveloperAuthPanel() {
     void refresh();
   }, [refresh]);
 
-  const onLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmitOperator = async () => {
+    setMessage(null);
+    setOperatorBusy(true);
+    try {
+      const res = await fetch("/api/operator/unlock", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: operatorCode }),
+      });
+      if (!res.ok) {
+        const d = (await res.json().catch(() => ({}))) as { error?: string };
+        setMessage(d.error ?? "Approval failed");
+        return;
+      }
+      setOperatorCode("");
+      setOperatorUnlocked(true);
+      setMessage("Owner approval saved for this browser session.");
+      void refresh();
+    } catch {
+      setMessage("Network error");
+    } finally {
+      setOperatorBusy(false);
+    }
+  };
+
+  const onLogin = async () => {
     setMessage(null);
     setLoading(true);
     try {
       const res = await fetch("/api/dev/auth", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setMessage(data.error ?? res.statusText);
+        // Never reveal whether the reason was "not configured" vs "not allowlisted";
+        // both surface as the same generic message.
+        setMessage("Developer access is not available for this account.");
         setDeveloperModeBypass(false);
         setAuthenticated(false);
       } else {
-        setMessage("Signed in. Course gates are unlocked in this browser.");
+        setMessage("Signed in. Course gates are unlocked in this browser for 24 hours.");
         setAuthenticated(true);
         setDeveloperModeBypass(true);
       }
@@ -83,29 +123,46 @@ export function DeveloperAuthPanel() {
         Developer mode (owner unlock)
       </h3>
       <p className="mt-2 text-xs text-ink-muted">
-        Set on the server:{" "}
-        <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-          DEVELOPER_USERNAME
-        </code>
-        ,{" "}
-        <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-          DEVELOPER_EMAIL
-        </code>
-        ,{" "}
-        <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
-          DEVELOPER_SESSION_SECRET
-        </code>{" "}
-        (24+ random characters). Sign in with the same username and email as in
-        your allowlist; this sets an HttpOnly cookie and bypasses Learn, bridge,
-        specialty, and Yiddish section locks in this browser.
+        Bound to your Clerk account. If your Clerk user ID is in the server-side
+        allowlist, clicking <em>Start developer session</em> issues a 24-hour
+        HttpOnly cookie that bypasses Learn, bridge, specialty, and Yiddish
+        section locks in this browser only. Signing out of Clerk invalidates
+        this session.
       </p>
       {loading && configured === null ? (
         <p className="mt-2 text-xs text-ink-faint">Checking session…</p>
       ) : configured === false ? (
         <p className="mt-2 text-xs text-amber">
-          Developer login is not configured on this deployment (set the three env
-          vars on Vercel or in <code className="text-[11px]">.env.local</code>).
+          Developer access isn&apos;t available on this deployment for your
+          account.
         </p>
+      ) : operatorGate && !operatorUnlocked ? (
+        <div className="mt-3 space-y-2">
+          <p className="text-xs text-amber">
+            This deployment requires an owner approval code (server env{" "}
+            <code className="rounded bg-ink/5 px-1">OPERATOR_APPROVAL_CODE</code>
+            ) before developer tools or paid APIs can be used. Enter the code once;
+            it is not stored in the app bundle.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <input
+              type="password"
+              value={operatorCode}
+              onChange={(e) => setOperatorCode(e.target.value)}
+              autoComplete="off"
+              placeholder="Approval code"
+              className="w-full max-w-sm rounded-lg border border-ink/15 bg-parchment-deep/30 px-3 py-2 text-sm text-ink placeholder:text-ink-faint"
+            />
+            <button
+              type="button"
+              disabled={operatorBusy || !operatorCode.trim()}
+              onClick={() => void onSubmitOperator()}
+              className="rounded-lg border border-amber/40 bg-amber/10 px-3 py-2 font-label text-[10px] uppercase tracking-wide text-ink hover:bg-amber/20 disabled:opacity-50"
+            >
+              {operatorBusy ? "…" : "Save approval"}
+            </button>
+          </div>
+        </div>
       ) : authenticated ? (
         <div className="mt-3">
           <p className="text-sm text-sage">
@@ -128,35 +185,14 @@ export function DeveloperAuthPanel() {
           </button>
         </div>
       ) : (
-        <form onSubmit={(e) => void onLogin(e)} className="mt-3 space-y-2">
-          <label className="block text-[11px] text-ink-muted">
-            Username
-            <input
-              type="text"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 block w-full max-w-xs rounded border border-ink/15 bg-parchment-deep/30 px-2 py-1 font-mono text-xs"
-            />
-          </label>
-          <label className="block text-[11px] text-ink-muted">
-            Email
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full max-w-xs rounded border border-ink/15 bg-parchment-deep/30 px-2 py-1 font-mono text-xs"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110 disabled:opacity-50"
-          >
-            Sign in
-          </button>
-        </form>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => void onLogin()}
+          className="mt-3 rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110 disabled:opacity-50"
+        >
+          Start developer session
+        </button>
       )}
       {message ? <p className="mt-2 text-xs text-ink-muted">{message}</p> : null}
     </div>

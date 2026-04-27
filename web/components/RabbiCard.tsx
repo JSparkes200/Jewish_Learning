@@ -54,15 +54,20 @@ export function RabbiCard({
   );
   const [wordDetailUnauthorized, setWordDetailUnauthorized] = useState(false);
   const [followUpText, setFollowUpText] = useState("");
+  const [needsOperator, setNeedsOperator] = useState(false);
+  const [operatorCode, setOperatorCode] = useState("");
+  const [unlockBusy, setUnlockBusy] = useState(false);
 
   const runAsk = useCallback(
     async (learnerQuestion?: string) => {
       setLoading(true);
       setError(null);
+      setNeedsOperator(false);
       try {
         const res = await fetch("/api/rabbi", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             targetHe,
             level: learnerLevel,
@@ -72,9 +77,18 @@ export function RabbiCard({
             learnerQuestion: learnerQuestion?.trim() || undefined,
           }),
         });
-        const data = (await res.json()) as ApiOk | ApiErr;
+        const data = (await res.json()) as ApiErr & {
+          needsOperatorUnlock?: boolean;
+        } & ApiOk;
         if (!res.ok) {
-          setError("error" in data ? data.error : "Request failed");
+          if (res.status === 403 && data.needsOperatorUnlock) {
+            setNeedsOperator(true);
+            setError(
+              data.error ?? "This deployment needs a one-time owner approval.",
+            );
+          } else {
+            setError("error" in data ? data.error : "Request failed");
+          }
           return;
         }
         if ("markdown" in data) {
@@ -91,12 +105,39 @@ export function RabbiCard({
     [targetHe, learnerLevel, translit, meaningEn, ragContext],
   );
 
+  const submitOperatorUnlock = useCallback(async () => {
+    setUnlockBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/operator/unlock", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: operatorCode }),
+      });
+      if (!res.ok) {
+        const d = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(d.error ?? "Unlock failed");
+        return;
+      }
+      setOperatorCode("");
+      setNeedsOperator(false);
+      void runAsk(undefined);
+    } catch {
+      setError("Network error");
+    } finally {
+      setUnlockBusy(false);
+    }
+  }, [operatorCode, runAsk]);
+
   useEffect(() => {
     if (variant !== "sheet") return;
     setMarkdown(null);
     setError(null);
     setOpen(false);
     setFollowUpText("");
+    setNeedsOperator(false);
+    setOperatorCode("");
     void runAsk(undefined);
   }, [variant, targetHe, learnerLevel, translit, meaningEn, ragContext, runAsk]);
 
@@ -282,6 +323,27 @@ export function RabbiCard({
         <p className="mt-3 text-sm text-rust" role="alert">
           {error}
         </p>
+      ) : null}
+
+      {needsOperator ? (
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <input
+            type="password"
+            value={operatorCode}
+            onChange={(e) => setOperatorCode(e.target.value)}
+            autoComplete="off"
+            placeholder="Owner approval code"
+            className="w-full max-w-sm rounded-lg border border-ink/15 bg-parchment-deep/30 px-3 py-2 text-sm text-ink placeholder:text-ink-faint"
+          />
+          <button
+            type="button"
+            disabled={unlockBusy || !operatorCode.trim()}
+            onClick={() => void submitOperatorUnlock()}
+            className="rounded-lg border border-amber/40 bg-amber/10 px-3 py-2 font-label text-[10px] uppercase tracking-wide text-ink hover:bg-amber/20 disabled:opacity-50"
+          >
+            {unlockBusy ? "…" : "Unlock"}
+          </button>
+        </div>
       ) : null}
 
       {showArticle && markdown ? (

@@ -87,7 +87,7 @@ export function corpusLabel(n: number): string {
 
 /** Intro copy for the Learn home (foundation track). */
 export const FOUNDATION_TRACK_INTRO =
-  "Alef–Dalet is your foundation: voweled reading, the grammar spine, and Hebrew you might actually use in a day. Each level drills a tight circle of words; the big corpus counts describe how wide the dictionary net is — not a pile you must finish tonight. After Dalet you’ll step into foundation exit, the bridge, and the specialty badges beyond.";
+  "Alef–Dalet is your foundation. We'll start with survival Hebrew and voweled reading, and slowly build up to unpointed texts and complex grammar. Don't worry about the big dictionary numbers—focus on the core drills. After Dalet, you’ll step into the bridge and specialty tracks.";
 
 export type SectionMeta = {
   id: string;
@@ -130,6 +130,12 @@ export const LEVEL_1_SECTIONS: SectionMeta[] = [
   { id: "1-12", label: "Food & nature", defaultShowNikkud: true },
   { id: "1-13", label: "Core verbs — לִ… infinitives", defaultShowNikkud: true },
   { id: "1-14", label: "Common expressions", defaultShowNikkud: true },
+  /** Niqqud → full spelling: matres (vav, yod, final forms) and reading unvowelled text. */
+  {
+    id: "1-matres",
+    label: "Unvowelled reading — matres & ktiv male",
+    defaultShowNikkud: false,
+  },
 ];
 
 /** Subsection index for levels 2–4 (ids + unlocks stable; labels = foundation framing). */
@@ -162,6 +168,11 @@ export const LEVEL_BLENDED_INDEX: Record<number, SectionMeta[]> = {
       unlockMastered: 10,
       defaultShowNikkud: false,
     },
+    {
+      id: "2-prep-suf",
+      label: "Prepositions + pronouns — אִתִּי, לָנוּ, אוֹתָנוּ",
+      defaultShowNikkud: true,
+    },
   ],
   3: [
     { id: "3-ethics-1", label: "Ideas in text — truth, justice, wisdom", defaultShowNikkud: true },
@@ -190,6 +201,16 @@ export const LEVEL_BLENDED_INDEX: Record<number, SectionMeta[]> = {
       type: "comprehension",
       unlockMastered: 12,
       defaultShowNikkud: false,
+    },
+    {
+      id: "3-binyan-logic",
+      label: "Binyanim as a system — one root, many jobs",
+      defaultShowNikkud: true,
+    },
+    {
+      id: "3-smikhut",
+      label: "Smikhut — construct pairs (בֵּית־הַסֵּפֶר, מִשְׁפַּחַת־…)",
+      defaultShowNikkud: true,
     },
   ],
   4: [
@@ -220,6 +241,16 @@ export const LEVEL_BLENDED_INDEX: Record<number, SectionMeta[]> = {
       type: "comprehension",
       unlockMastered: 14,
       defaultShowNikkud: false,
+    },
+    {
+      id: "4-passive",
+      label: "Passive in formal Hebrew — Nif’al, Pu’al, Huf’al in context",
+      defaultShowNikkud: true,
+    },
+    {
+      id: "4-if-clauses",
+      label: "If-clauses — אִם (open) vs אִלּוּ / לוּ (counterfactual)",
+      defaultShowNikkud: true,
     },
   ],
 };

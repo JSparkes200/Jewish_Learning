@@ -13,3 +13,13 @@ function shuffleArray<T>(arr: T[]): T[] {
 export function buildInlineMcqChoices(item: McqItem): string[] {
   return shuffleArray([item.correctEn, ...item.distractorsEn.slice(0, 3)]);
 }
+
+/** Hebrew answer choices: correctHe + first three distractorsHe, shuffled. */
+export function buildInlineMcqHebrewChoices(item: McqItem): string[] {
+  const c = item.correctHe?.trim();
+  const d = item.distractorsHe ?? [];
+  if (!c || d.length < 3) {
+    return buildInlineMcqChoices(item);
+  }
+  return shuffleArray([c, ...d.slice(0, 3)]);
+}

@@ -20,17 +20,20 @@
     "export:knowledge": "tsx scripts/export-knowledge.ts"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.0.11",
+    "@clerk/nextjs": "^7.2.3",
     "@hebcal/core": "^4.5.1",
+    "@react-three/fiber": "^9.6.0",
     "@sentry/nextjs": "^10.47.0",
+    "@types/three": "^0.184.0",
     "@upstash/ratelimit": "^2.0.8",
     "@vercel/kv": "^3.0.0",
     "framer-motion": "^12.38.0",
-    "next": "^15.1.7",
+    "next": "^16.2.4",
     "openai": "^6.33.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
+    "three": "^0.184.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

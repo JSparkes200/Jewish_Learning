@@ -10,10 +10,14 @@ import {
   specialtyTierStorageKey,
 } from "@/data/specialty-tracks";
 import { getDeveloperModeBypass } from "@/lib/developer-mode";
+import type { AppSession } from "@/lib/app-session.model";
+import { parseAppSessionField } from "@/lib/app-session.model";
 import type {
   RootsCurriculumProgress,
   RootsGroupProgress,
 } from "@/data/roots-curriculum";
+
+export type { AppSession } from "@/lib/app-session.model";
 
 export type { RootsCurriculumProgress, RootsGroupProgress } from "@/data/roots-curriculum";
 
@@ -43,6 +47,14 @@ export type FoundationExitStrands = {
   reading: boolean;
   grammar: boolean;
   lexicon: boolean;
+};
+
+/** Foundation line resume anchor (`/learn/{1–4}/{sectionId}`). */
+export type LastCoursePosition = {
+  level: number;
+  sectionId: string;
+  /** `Date.now()` when the learner was last in this section or it became “next up”. */
+  at: number;
 };
 
 export type LearnProgressState = {
@@ -123,7 +135,19 @@ export type LearnProgressState = {
    * Progressive roots hub: grouped intro → drill → test, plus block checkpoints.
    */
   rootsCurriculum?: RootsCurriculumProgress;
+  /**
+   * Last place in the main Alef–Dalet line for resume; see `touchLastCoursePosition`.
+   */
+  lastCoursePosition?: LastCoursePosition;
+  /**
+   * Cross-app navigation log + last resumable page (not auth/home-only); see
+   * `lib/app-activity`.
+   */
+  appSession?: AppSession;
 };
+
+/** Foundation course map URL — add this query to skip auto-resume to the last section. */
+export const LEARN_HUB_PATH = "/learn?hub=1" as const;
 
 export type SkillMetricKey =
   | "recognition"
@@ -1314,6 +1338,92 @@ export function markNumbersDrillEngaged(
   };
 }
 
+/**
+ * Coerce and validate `lastCoursePosition` from storage or import JSON.
+ * Returns `undefined` if missing or invalid.
+ */
+export function parseLastCoursePosition(raw: unknown): LastCoursePosition | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  if (
+    typeof o.level !== "number" ||
+    !Number.isInteger(o.level) ||
+    o.level < 1 ||
+    o.level > 4
+  ) {
+    return undefined;
+  }
+  if (typeof o.sectionId !== "string" || !o.sectionId) return undefined;
+  const secs = getSectionsForLevel(o.level);
+  if (!secs.some((s) => s.id === o.sectionId)) return undefined;
+  const at =
+    typeof o.at === "number" && Number.isFinite(o.at) && o.at > 0
+      ? o.at
+      : Date.now();
+  return { level: o.level, sectionId: o.sectionId, at };
+}
+
+export function touchLastCoursePosition(
+  state: LearnProgressState,
+  level: number,
+  sectionId: string,
+): LearnProgressState {
+  const lcp = parseLastCoursePosition({ level, sectionId, at: Date.now() });
+  if (!lcp) return state;
+  return { ...state, lastCoursePosition: lcp };
+}
+
+/**
+ * After a subsection is marked done, set resume to the next `getNextLearnUp` target
+ * when that URL is a foundation section; otherwise clear resume.
+ */
+export function withResumeFromNextUpHref(
+  state: LearnProgressState,
+  nextHref: string,
+): LearnProgressState {
+  const m = nextHref.match(/^\/learn\/([1-4])\/([^/?#]+)/);
+  if (m) {
+    const level = parseInt(m[1], 10);
+    const sectionId = decodeURIComponent(m[2]);
+    const lcp = parseLastCoursePosition({
+      level,
+      sectionId,
+      at: Date.now(),
+    });
+    if (lcp) return { ...state, lastCoursePosition: lcp };
+  }
+  if (!state.lastCoursePosition) return state;
+  const { lastCoursePosition: _removed, ...rest } = state;
+  return rest;
+}
+
+/**
+ * Valid `/learn/L/section` path to open for resume, or `null` if nothing to resume
+ * (locked section, bad data, etc.).
+ */
+export function getFoundationResumePath(progress: LearnProgressState): string | null {
+  const pos = progress.lastCoursePosition;
+  if (!pos) return null;
+  const lcp = parseLastCoursePosition(pos);
+  if (!lcp) return null;
+  const { level, sectionId } = lcp;
+  const secs = getSectionsForLevel(level);
+  if (!secs.some((s) => s.id === sectionId)) return null;
+  if (
+    !getDeveloperModeBypass() &&
+    !sectionUnlocked(
+      level,
+      secs,
+      sectionId,
+      progress.completedSections,
+      progress.vocabLevels,
+    )
+  ) {
+    return null;
+  }
+  return `/learn/${level}/${encodeURIComponent(sectionId)}`;
+}
+
 export function loadLearnProgress(): LearnProgressState {
   if (typeof window === "undefined") return { ...defaultState };
   try {
@@ -1372,6 +1482,8 @@ export function loadLearnProgress(): LearnProgressState {
     }
     const studyGameStats = parseStudyGameStats(p.studyGameStats);
     const rootsCurriculum = parseRootsCurriculumField(p.rootsCurriculum);
+    const lastCoursePosition = parseLastCoursePosition(p.lastCoursePosition);
+    const appSession = parseAppSessionField(p.appSession);
 
     return {
       completedSections:
@@ -1413,6 +1525,8 @@ export function loadLearnProgress(): LearnProgressState {
         : {}),
       ...(studyGameStats ? { studyGameStats } : {}),
       ...(rootsCurriculum ? { rootsCurriculum } : {}),
+      ...(lastCoursePosition ? { lastCoursePosition } : {}),
+      ...(appSession ? { appSession } : {}),
     };
   } catch {
     return { ...defaultState };
@@ -1421,6 +1535,12 @@ export function loadLearnProgress(): LearnProgressState {
 
 /** Fired after `saveLearnProgress` so shell can refresh Next up, etc. */
 export const LEARN_PROGRESS_EVENT = "hebrew-web-learn-progress";
+
+/**
+ * Fired when optional cloud merge for signed-in users has finished (or skipped),
+ * so `/learn` can resume after local storage reflects merged data.
+ */
+export const LEARN_CLOUD_HYDRATED_EVENT = "hebrew-learn-progress-cloud-hydrated" as const;
 
 /**
  * Notify listeners after the current React update finishes. A synchronous

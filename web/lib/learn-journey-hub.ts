@@ -10,6 +10,7 @@ import {
   getFoundationExitStrands,
   isBridgeUnlocked,
   isFoundationCourseComplete,
+  isSpecialtyTierRecordedPassed,
   isSpecialtyTracksUnlocked,
 } from "@/lib/learn-progress";
 
@@ -203,4 +204,53 @@ export function learnJourneyCoverItems(
   developerMode: boolean,
 ): LearnJourneyCoverFields[] {
   return buildLearnJourneyRows(progress, developerMode).map((r) => r.cover);
+}
+
+/** A journey row is “cleared” for path progression when its core milestone is done. */
+export function isJourneyRowComplete(
+  row: LearnJourneyRow,
+  progress: LearnProgressState,
+): boolean {
+  switch (row.slot.kind) {
+    case "level": {
+      const sections = getSectionsForLevel(row.slot.n);
+      return (
+        sections.length > 0 &&
+        sections.every((s) => progress.completedSections[s.id])
+      );
+    }
+    case "foundation_exit": {
+      const e = getFoundationExitStrands(progress);
+      return e.reading && e.grammar && e.lexicon;
+    }
+    case "bridge":
+      return progress.bridgeModulePassed === true;
+    case "specialty":
+      return isSpecialtyTierRecordedPassed(
+        progress,
+        row.slot.trackId,
+        "bronze",
+      );
+    default:
+      return false;
+  }
+}
+
+/**
+ * Where the learner “stands” on the path: first sign not yet completed,
+ * or the last sign if everything is done.
+ */
+export function getJourneyPathState(
+  rows: LearnJourneyRow[],
+  progress: LearnProgressState,
+  developerMode: boolean,
+): { completed: boolean[]; currentStopIndex: number; allComplete: boolean } {
+  const completed = rows.map((r) =>
+    developerMode ? true : isJourneyRowComplete(r, progress),
+  );
+  const firstIncomplete = completed.findIndex((c) => !c);
+  const n = rows.length;
+  const currentStopIndex = n === 0 ? 0 : firstIncomplete === -1 ? n - 1 : firstIncomplete;
+  const allComplete = n > 0 && firstIncomplete === -1;
+  return { completed, currentStopIndex, allComplete };
 }

@@ -1,7 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { rabbiBodySchema } from "@/lib/api-schemas";
-import { rateLimitIfExceeded } from "@/lib/api-rate-limit";
+import {
+  dailyUserQuotaIfExceeded,
+  rateLimitIfExceeded,
+  rateLimitUserIfExceeded,
+} from "@/lib/api-rate-limit";
 import {
   buildRabbiUserMessage,
   generateRabbiMarkdown,
@@ -9,9 +13,13 @@ import {
   loadRabbiSystemPrompt,
   runLightragRetrieval,
 } from "@/lib/rabbi-llm";
+import { requireOperatorUnlocked } from "@/lib/require-operator-unlock";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+/** Hard daily cap per user — caps OpenAI spend from a single compromised / abusive account. */
+const RABBI_DAILY_CAP_PER_USER = 80;
 
 /**
  * POST /api/rabbi
@@ -22,14 +30,31 @@ export const maxDuration = 60;
  * retrieval is skipped and the model uses "Context unavailable" per the Rabbi prompt.
  */
 export async function POST(req: Request) {
-  const limited = await rateLimitIfExceeded(req, "rabbi");
-  if (limited) {
-    return limited;
+  const ipLimited = await rateLimitIfExceeded(req, "rabbi");
+  if (ipLimited) {
+    return ipLimited;
   }
 
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const operatorBlock = await requireOperatorUnlocked(userId);
+  if (operatorBlock) return operatorBlock;
+
+  const userLimited = await rateLimitUserIfExceeded(userId, "rabbi");
+  if (userLimited) {
+    return userLimited;
+  }
+
+  const quotaExceeded = await dailyUserQuotaIfExceeded(
+    userId,
+    "rabbi",
+    RABBI_DAILY_CAP_PER_USER,
+  );
+  if (quotaExceeded) {
+    return quotaExceeded;
   }
 
   if (!process.env.OPENAI_API_KEY) {

@@ -75,11 +75,6 @@ import {
   pushProgressToCloud,
 } from "@/lib/cloud-progress-client";
 import {
-  CLOUD_SYNC_TOKEN_KEY,
-  getOrCreateCloudSyncToken,
-  regenerateCloudSyncToken,
-} from "@/lib/cloud-sync-token";
-import {
   loadSavedWords,
   mergeSavedWordLists,
   saveSavedWords,
@@ -139,7 +134,7 @@ export function DeveloperTools() {
       `alphabetGate, alphabetLettersTraced, alphabetFinalExamPassed, foundationExit, bridgeModulePassed, bridgeUnitsCompleted, specialtyTierPassed — inside ${LEARN_PROGRESS_KEY} (course gates)`,
       `${LIBRARY_SAVED_KEY} — Library saved passages`,
       `ivrit_lib (or ivrit_lib__&lt;user&gt;) — legacy HTML “My Library”; merge on Developer / Library`,
-      `${CLOUD_SYNC_TOKEN_KEY} — anonymous Bearer token for Vercel KV cloud backup (same KV as password-reset codes when configured)`,
+      `Vercel KV cloud backup is keyed by your Clerk userId (/api/progress) — no local sync key is stored in this browser`,
     ],
     [],
   );
@@ -886,10 +881,9 @@ export function DeveloperTools() {
           <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">KV_REST_*</code>{" "}
           is set on the server, this app can store a{" "}
           <strong className="text-ink">sanitized</strong> copy of Learn progress
-          in KV. Access is gated by a random{" "}
-          <strong className="text-ink">sync key</strong> in this browser (not a
-          login). Anyone with the key can read or overwrite the backup — treat it
-          like a secret. See{" "}
+          in KV, keyed by your{" "}
+          <strong className="text-ink">Clerk account</strong>. Only your signed-in
+          session can read or overwrite it. See{" "}
           <code className="rounded bg-parchment-deep/50 px-1 text-[11px]">
             docs/cloud-progress.md
           </code>
@@ -908,7 +902,6 @@ export function DeveloperTools() {
             className="rounded-lg bg-sage px-4 py-2 font-label text-[10px] uppercase tracking-wide text-white hover:brightness-110"
             onClick={async () => {
               setCloudFeedback(null);
-              getOrCreateCloudSyncToken();
               const r = await pushProgressToCloud();
               setCloudFeedback(
                 r.ok
@@ -924,7 +917,6 @@ export function DeveloperTools() {
             className="rounded-lg border border-ink/15 px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink hover:bg-parchment-deep/40"
             onClick={async () => {
               setCloudFeedback(null);
-              getOrCreateCloudSyncToken();
               const r = await pullProgressFromCloud("merge");
               setCloudFeedback(
                 r.ok
@@ -952,7 +944,6 @@ export function DeveloperTools() {
               ) {
                 return;
               }
-              getOrCreateCloudSyncToken();
               const r = await pullProgressFromCloud("replace");
               setCloudFeedback(
                 r.ok
@@ -972,88 +963,10 @@ export function DeveloperTools() {
             className="rounded-lg border border-ink/15 px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink-muted hover:bg-parchment-deep/40"
             onClick={async () => {
               setCloudFeedback(null);
-              const t = getOrCreateCloudSyncToken();
-              try {
-                await navigator.clipboard.writeText(t);
-                setCloudFeedback({
-                  variant: "ok",
-                  text: "Sync key copied — store it safely to restore on another device.",
-                });
-              } catch {
-                setCloudFeedback({
-                  variant: "err",
-                  text: "Could not copy. Check browser permissions.",
-                });
-              }
-            }}
-          >
-            Copy sync key
-          </button>
-          <button
-            type="button"
-            className="rounded-lg border border-ink/15 px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink-muted hover:bg-parchment-deep/40"
-            onClick={() => {
-              setCloudFeedback(null);
-              if (typeof window === "undefined") return;
-              const paste = window.prompt(
-                "Paste sync key from your other browser (UUID format).",
-              );
-              if (!paste?.trim()) return;
-              const v = paste.trim();
-              if (v.length < 16) {
-                setCloudFeedback({
-                  variant: "err",
-                  text: "Key too short.",
-                });
-                return;
-              }
-              try {
-                localStorage.setItem(CLOUD_SYNC_TOKEN_KEY, v);
-                setCloudFeedback({
-                  variant: "ok",
-                  text: "Sync key saved — use Restore from cloud when KV is configured.",
-                });
-              } catch {
-                setCloudFeedback({
-                  variant: "err",
-                  text: "Could not save key.",
-                });
-              }
-            }}
-          >
-            Paste sync key
-          </button>
-          <button
-            type="button"
-            className="rounded-lg border border-amber/35 px-4 py-2 font-label text-[10px] uppercase tracking-wide text-amber hover:bg-amber/10"
-            onClick={() => {
-              setCloudFeedback(null);
               if (
                 typeof window !== "undefined" &&
                 !window.confirm(
-                  "Generate a new sync key? The old key will no longer match this browser — save the old key if you still need the cloud backup.",
-                )
-              ) {
-                return;
-              }
-              regenerateCloudSyncToken();
-              setCloudFeedback({
-                variant: "ok",
-                text: "New sync key generated for this browser.",
-              });
-            }}
-          >
-            New sync key
-          </button>
-          <button
-            type="button"
-            className="rounded-lg border border-ink/15 px-4 py-2 font-label text-[10px] uppercase tracking-wide text-ink-muted hover:bg-parchment-deep/40"
-            onClick={async () => {
-              setCloudFeedback(null);
-              if (
-                typeof window !== "undefined" &&
-                !window.confirm(
-                  "Delete the cloud backup for the current sync key? Local progress is unchanged.",
+                  "Delete the cloud backup tied to your Clerk account? Local progress is unchanged.",
                 )
               ) {
                 return;
@@ -1061,7 +974,7 @@ export function DeveloperTools() {
               const r = await deleteCloudProgress();
               setCloudFeedback(
                 r.ok
-                  ? { variant: "ok", text: "Cloud backup deleted for this key." }
+                  ? { variant: "ok", text: "Cloud backup deleted for your account." }
                   : { variant: "err", text: r.error },
               );
             }}

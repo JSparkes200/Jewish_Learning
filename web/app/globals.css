@@ -132,7 +132,7 @@ body {
   }
 
   .btn-elevated-primary {
-    @apply rounded-xl bg-sage px-4 py-2.5 font-label text-[10px] uppercase tracking-wide text-white;
+    @apply inline-flex min-h-[2.75rem] cursor-pointer items-center justify-center rounded-xl bg-sage px-5 py-2.5 font-label text-xs uppercase tracking-wide text-white;
     box-shadow:
       4px 6px 16px rgba(74, 104, 48, 0.45),
       -2px -2px 8px rgba(255, 255, 255, 0.35);
@@ -157,7 +157,7 @@ body {
   }
 
   .btn-elevated-rust {
-    @apply rounded-xl bg-rust px-4 py-2.5 font-label text-[10px] uppercase tracking-wide text-white;
+    @apply inline-flex min-h-[2.75rem] cursor-pointer items-center justify-center rounded-xl bg-rust px-5 py-2.5 font-label text-xs uppercase tracking-wide text-white;
     box-shadow:
       4px 6px 16px rgba(139, 58, 26, 0.45),
       -2px -2px 8px rgba(255, 255, 255, 0.35);
@@ -182,7 +182,7 @@ body {
   }
 
   .btn-elevated-secondary {
-    @apply rounded-xl border bg-parchment-card/90 px-4 py-2.5 font-label text-[10px] uppercase tracking-wide text-ink-muted;
+    @apply inline-flex min-h-[2.75rem] cursor-pointer items-center justify-center rounded-xl border bg-parchment-card/90 px-5 py-2.5 font-label text-xs uppercase tracking-wide text-ink-muted;
     border-color: rgb(44 36 22 / 0.12);
     box-shadow: var(--elev-raised);
     transition:
@@ -205,6 +205,36 @@ body {
     @apply rounded-xl border bg-parchment-deep/40 text-ink placeholder:text-ink-faint;
     border-color: rgb(44 36 22 / 0.12);
     box-shadow: var(--elev-pressed);
+  }
+
+  /**
+   * Consistent section/card header label — replaces the scattered
+   * `font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted` pattern.
+   */
+  .section-label {
+    @apply font-label text-[10px] uppercase tracking-[0.18em] text-ink-muted;
+  }
+
+  /**
+   * Navigation pill chip — for quick-link rows, tag navigation, etc.
+   * Replaces tiny underlined text links with a proper tappable affordance.
+   */
+  .nav-chip {
+    @apply inline-flex cursor-pointer items-center rounded-full border border-sage/30 bg-sage/[0.07] px-3 py-1 font-label text-[10px] uppercase tracking-wide text-sage transition-all duration-150 hover:border-sage/50 hover:bg-sage/[0.14] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50;
+  }
+
+  /**
+   * Notification banner — left-bordered accent card for system messages.
+   * Replaces bare bordered divs in Learn/Progress pages.
+   */
+  .banner-amber {
+    @apply rounded-r-2xl rounded-tl-none border border-amber/30 bg-amber/[0.08] pl-4 pr-4 py-3;
+    border-left: 3px solid rgb(200 112 32 / 0.5);
+  }
+
+  .banner-sage {
+    @apply rounded-r-2xl rounded-tl-none border border-sage/30 bg-sage/[0.08] pl-4 pr-4 py-3;
+    border-left: 3px solid rgb(74 104 48 / 0.5);
   }
 }
 
@@ -289,6 +319,17 @@ body {
   }
 }
 
+/* Learn home: gentle bob on the path marker (respects .motion-reduce) */
+@keyframes journey-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
 /* Parsha bilingual: English cell glow when Hebrew verse is hovered/focused */
 .parsha-verse-en {
   transition:
@@ -299,5 +340,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .parsha-verse-en {
     transition: none;
+  }
+}
+
+.journey-path-marker-bob {
+  animation: journey-bob 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-path-marker-bob {
+    animation: none;
   }
 }

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CorrectSentenceDrill } from "@/components/CorrectSentenceDrill";
-import { DrillPrepGate } from "@/components/DrillPrepGate";
 import { HebrewTapText } from "@/components/HebrewTapText";
 import { McqDrill } from "@/components/McqDrill";
 import { NikkudExerciseToggle } from "@/components/NikkudExerciseToggle";
@@ -36,7 +35,6 @@ import {
 } from "@/lib/learn-progress";
 import { useLearnProgressSync } from "@/lib/use-learn-progress-sync";
 import { buildCorrectSentencePackFromMcq } from "@/lib/sentence-correctness";
-import { buildPrepCardsFromMcqPack } from "@/lib/drill-prep";
 
 function bridgeUnitUnlocked(
   state: Parameters<typeof effectiveBridgeUnitsCompleted>[0],
@@ -264,12 +262,6 @@ export function BridgePageClient() {
                           {unit.en}
                         </p>
                         <div className="mt-6 space-y-4">
-                          <DrillPrepGate
-                            title={`${unit.title} prep`}
-                            subtitle="Read, tap-hear, then quiz."
-                            cards={buildPrepCardsFromMcqPack(unit.practicePack, 5)}
-                            ctaLabel="Start unit drills"
-                          >
                             <McqDrill
                               key={unit.id}
                               pack={unit.practicePack}
@@ -283,7 +275,6 @@ export function BridgePageClient() {
                                 onPracticeAnswer={onPracticeAnswer}
                               />
                             ) : null}
-                          </DrillPrepGate>
                           {!uDone ? (
                             <button
                               type="button"
@@ -338,12 +329,6 @@ export function BridgePageClient() {
                   {bridgePctLabel}%.
                 </p>
                 <div className="mt-4">
-                  <DrillPrepGate
-                    title="Bridge final prep"
-                    subtitle="Quick review before the checkpoint exam."
-                    cards={buildPrepCardsFromMcqPack(BRIDGE_FINAL_EXAM_PACK, 6)}
-                    ctaLabel="Start final checkpoint"
-                  >
                     <McqDrill
                       pack={BRIDGE_FINAL_EXAM_PACK}
                       defaultShowNikkud={false}
@@ -362,7 +347,6 @@ export function BridgePageClient() {
                       }
                       onPackComplete={onBridgePackComplete}
                     />
-                  </DrillPrepGate>
                 </div>
                 {lastBridgeAttempt &&
                 !meetsFoundationExitPassPercent(

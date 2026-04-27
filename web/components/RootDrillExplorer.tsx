@@ -194,6 +194,11 @@ export function RootDrillExplorer({
           You&apos;ll use this root family to help new forms stick — core idea:{" "}
           <span className="font-medium text-ink">{drillFamily.meaning}</span>.
         </p>
+        {drillFamily.grammarNote ? (
+          <p className="mt-2 text-xs italic text-ink-muted/80">
+            {drillFamily.grammarNote}
+          </p>
+        ) : null}
         <p className="mt-2 font-label text-[9px] uppercase tracking-wide text-ink-faint">
           {tierLab} · {prog}/3 times solid for this shape
         </p>
@@ -209,24 +214,14 @@ export function RootDrillExplorer({
         <p className="mt-2 text-center text-sm italic text-amber">
           {drillRound.word.p}
         </p>
-        {rootLearnContent ? (
-          <div className="mt-4 space-y-2 rounded-2xl border border-amber/30 bg-parchment/80 px-4 py-3 shadow-inner">
-            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-amber">
-              {LEARN_VOICE.mnemonicEyebrow}
+        {rootLearnContent?.vibeLine ? (
+          <div className="mt-4 space-y-2 rounded-2xl border border-sage/20 bg-gradient-to-br from-sage/5 to-parchment-deep/20 px-4 py-3 shadow-inner">
+            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
+              {LEARN_VOICE.vibeEyebrow}
             </p>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
-              {rootLearnContent.mnemonic}
+            <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
+              {rootLearnContent.vibeLine}
             </p>
-            {rootLearnContent.vibeLine ? (
-              <>
-                <p className="pt-1 font-label text-[9px] uppercase tracking-[0.2em] text-sage/90">
-                  {LEARN_VOICE.vibeEyebrow}
-                </p>
-                <p className="whitespace-pre-line text-xs leading-relaxed text-ink-muted">
-                  {rootLearnContent.vibeLine}
-                </p>
-              </>
-            ) : null}
           </div>
         ) : null}
         <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
