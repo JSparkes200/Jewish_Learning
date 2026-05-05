@@ -8,7 +8,7 @@
     "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "lint:root-sw": "cd .. && node web/node_modules/eslint/bin/eslint.js -c eslint.config.mjs sw.js",
     "test": "vitest run",
     "test:watch": "vitest",

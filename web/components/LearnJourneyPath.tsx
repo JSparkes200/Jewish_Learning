@@ -382,18 +382,6 @@ export function LearnJourneyPath({
     [n, runSnap],
   );
 
-  if (n === 0) {
-    return (
-      <div className="surface-elevated overflow-hidden p-4 sm:p-6">
-        <p className="text-sm text-ink-muted" role="status">
-          No journey steps yet.
-        </p>
-      </div>
-    );
-  }
-
-  const frontIdx = n === 0 ? 0 : mod(Math.round(floatIndex), n);
-
   /**
    * Paint order: DOM order = back → front. Without this, 2D `z-index` (and 5000 “hero”
    * boosts) often overrides true `translateZ` under `preserve-3d`, so a thin side card
@@ -410,6 +398,18 @@ export function LearnJourneyPath({
     items.sort((a, b) => a.u - b.u || b.circ - a.circ);
     return items.map((x) => x.i);
   }, [n, floatIndex]);
+
+  if (n === 0) {
+    return (
+      <div className="surface-elevated overflow-hidden p-4 sm:p-6">
+        <p className="text-sm text-ink-muted" role="status">
+          No journey steps yet.
+        </p>
+      </div>
+    );
+  }
+
+  const frontIdx = n === 0 ? 0 : mod(Math.round(floatIndex), n);
 
   return (
     <div

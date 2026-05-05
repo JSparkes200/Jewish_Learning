@@ -438,7 +438,7 @@ export function SettingsPageClient() {
             <Link href="/sign-in" className="text-sage underline hover:text-sage/80">
               Sign in
             </Link>{" "}
-            if you haven't already.
+            if you haven&apos;t already.
           </p>
           <Feedback fb={cloudFb} />
           <div className="mt-3 flex flex-wrap gap-2">

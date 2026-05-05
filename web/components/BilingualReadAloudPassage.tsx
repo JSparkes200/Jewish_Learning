@@ -157,7 +157,7 @@ export function BilingualReadAloudPassage({
         const enWords = enTokensByPhrase[pi] ?? [];
         const enN = enWords.length;
         const heN = heWords.length;
-        let wStart = pi === startPhrase ? startWord : 0;
+        const wStart = pi === startPhrase ? startWord : 0;
         if (wStart >= heWords.length) continue;
 
         for (let wi = wStart; wi < heWords.length; wi++) {

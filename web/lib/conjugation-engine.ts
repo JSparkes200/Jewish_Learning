@@ -395,7 +395,7 @@ export function buildConjugationMcqChoices(
     [candidates[i], candidates[j]] = [candidates[j]!, candidates[i]!];
   }
 
-  let distractors = candidates.slice(0, 3);
+  const distractors = candidates.slice(0, 3);
   if (distractors.length < 3) {
     for (const p of CONJUGATION_PUZZLES) {
       if (distractors.length >= 3) break;

@@ -284,7 +284,7 @@ export function PlacementPageClient() {
             Placement Quiz
           </p>
           <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-            12 questions across four levels. There's no pass or fail — just find
+            12 questions across four levels. There&apos;s no pass or fail — just find
             the right starting point. The result sets your active level in the
             course.
           </p>
