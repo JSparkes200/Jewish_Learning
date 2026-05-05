@@ -4,7 +4,10 @@ import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
 import {
   DEV_SESSION_COOKIE,
+  builtInDeveloperMfaSatisfied,
   getDevSessionConfig,
+  isBuiltInDeveloperUserId,
+  isUserIdAllowed,
   matchesClerkSession,
   verifyDevSessionToken,
 } from "@/lib/dev-session-server";
@@ -25,29 +28,33 @@ export default async function DeveloperToolsLayout({
   children: React.ReactNode;
 }) {
   const cfg = getDevSessionConfig();
+  const { userId, sessionId } = await auth();
 
   if (process.env.NODE_ENV !== "production") {
     // Local dev: allow through if no config, otherwise still enforce allowlist.
-    if (cfg) {
-      const { userId } = await auth();
-      if (!userId || !cfg.allowedUserIds.includes(userId)) {
-        notFound();
-      }
+    if (cfg && (!userId || !isUserIdAllowed(userId))) {
+      notFound();
+    }
+    return <>{children}</>;
+  }
+
+  if (!userId || !sessionId) {
+    redirect("/sign-in?redirect_url=/developer");
+  }
+
+  if (!isUserIdAllowed(userId)) {
+    notFound();
+  }
+
+  if (isBuiltInDeveloperUserId(userId)) {
+    if (!(await builtInDeveloperMfaSatisfied(userId))) {
+      redirect("/developer");
     }
     return <>{children}</>;
   }
 
   if (!cfg) {
     // Dev auth disabled on this deployment — pretend nothing is here.
-    notFound();
-  }
-
-  const { userId, sessionId } = await auth();
-  if (!userId || !sessionId) {
-    redirect("/sign-in?redirect_url=/developer");
-  }
-
-  if (!cfg.allowedUserIds.includes(userId)) {
     notFound();
   }
 

@@ -16,6 +16,7 @@ export function DeveloperAuthPanel() {
   const [loading, setLoading] = useState(true);
   const [operatorGate, setOperatorGate] = useState(false);
   const [operatorUnlocked, setOperatorUnlocked] = useState(true);
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [operatorCode, setOperatorCode] = useState("");
   const [operatorBusy, setOperatorBusy] = useState(false);
 
@@ -31,17 +32,20 @@ export function DeveloperAuthPanel() {
         configured?: boolean;
         operatorGate?: boolean;
         operatorUnlocked?: boolean;
+        mfaRequired?: boolean;
       };
       setConfigured(data.configured === true);
       const ok = data.authenticated === true;
       setAuthenticated(ok);
       setDeveloperModeBypass(ok);
+      setMfaRequired(data.mfaRequired === true);
       setOperatorGate(data.operatorGate === true);
       setOperatorUnlocked(data.operatorUnlocked !== false);
     } catch {
       setConfigured(false);
       setAuthenticated(false);
       setDeveloperModeBypass(false);
+      setMfaRequired(false);
       setOperatorGate(false);
       setOperatorUnlocked(true);
     } finally {
@@ -135,6 +139,11 @@ export function DeveloperAuthPanel() {
         <p className="mt-2 text-xs text-amber">
           Developer access isn&apos;t available on this deployment for your
           account.
+        </p>
+      ) : mfaRequired ? (
+        <p className="mt-2 text-xs text-amber">
+          Developer access is reserved for this Clerk account, but two-factor
+          authentication must be enabled on the account before gates unlock.
         </p>
       ) : operatorGate && !operatorUnlocked ? (
         <div className="mt-3 space-y-2">

@@ -12,8 +12,13 @@
  */
 
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export const DEV_SESSION_COOKIE = "hebrew-dev-session";
+
+const BUILT_IN_DEVELOPER_USER_IDS = [
+  "user_3C3QIOm2ZtPQ1YK4CCLyr42HTml",
+] as const;
 
 /** 24h — short-lived by design. Re-auth required thereafter. */
 const DEV_SESSION_TTL_SECONDS = 60 * 60 * 24;
@@ -86,14 +91,33 @@ export function verifyDevSessionToken(
   return payload;
 }
 
-/** Parsed comma-separated Clerk user-id allowlist. Empty array ⇒ dev auth disabled. */
+export function isBuiltInDeveloperUserId(userId: string): boolean {
+  return BUILT_IN_DEVELOPER_USER_IDS.includes(
+    userId as (typeof BUILT_IN_DEVELOPER_USER_IDS)[number],
+  );
+}
+
+export async function builtInDeveloperMfaSatisfied(userId: string): Promise<boolean> {
+  if (!isBuiltInDeveloperUserId(userId)) return false;
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    return (user as { twoFactorEnabled?: boolean }).twoFactorEnabled === true;
+  } catch {
+    return false;
+  }
+}
+
+/** Parsed comma-separated Clerk user-id allowlist plus built-in owner IDs. */
 export function getAllowedDeveloperUserIds(): readonly string[] {
   const raw = process.env.DEVELOPER_CLERK_USER_IDS?.trim();
-  if (!raw) return [];
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  const envIds = raw
+    ? raw
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+    : [];
+  return [...new Set([...BUILT_IN_DEVELOPER_USER_IDS, ...envIds])];
 }
 
 export function devCredentialsConfigured(): boolean {
@@ -114,9 +138,7 @@ export function getDevSessionConfig(): {
 }
 
 export function isUserIdAllowed(userId: string): boolean {
-  const cfg = getDevSessionConfig();
-  if (!cfg) return false;
-  return cfg.allowedUserIds.includes(userId);
+  return getAllowedDeveloperUserIds().includes(userId);
 }
 
 /**

@@ -15,16 +15,27 @@ import {
  * fetch policies too.
  */
 
-type Result = { ok: true } | { ok: false; error: string };
+type Result =
+  | { ok: true }
+  | {
+      ok: false;
+      error: string;
+      reason?: "not-signed-in" | "kv-unavailable" | "not-found" | "load-failed";
+    };
 
 function notSignedIn(): Result {
-  return { ok: false, error: "Sign in to sync Learn progress." };
+  return {
+    ok: false,
+    error: "Sign in to sync Learn progress.",
+    reason: "not-signed-in",
+  };
 }
 
 function kvUnavailable(): Result {
   return {
     ok: false,
     error: "Cloud backup is not configured (link Vercel KV on the server).",
+    reason: "kv-unavailable",
   };
 }
 
@@ -58,10 +69,15 @@ export async function pullProgressFromCloud(
     return {
       ok: false,
       error: "No cloud backup found for your account yet.",
+      reason: "not-found",
     };
   }
   if (!res.ok) {
-    return { ok: false, error: "Could not load cloud backup." };
+    return {
+      ok: false,
+      error: "Could not load cloud backup.",
+      reason: "load-failed",
+    };
   }
   const data = (await res.json()) as { progress?: LearnProgressState };
   const remote = data.progress;

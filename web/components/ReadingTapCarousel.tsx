@@ -23,8 +23,9 @@ import {
   touchReadingCarouselPassage,
   type LearnProgressState,
 } from "@/lib/learn-progress";
+import { stripNikkud } from "@/lib/hebrew-nikkud";
 import { LEARN_VOICE } from "@/lib/learn-user-voice";
-import { speakHebrew } from "@/lib/speech-hebrew";
+import { cancelHebrewSpeech, speakHebrew } from "@/lib/speech-hebrew";
 
 const PUNCT_RE = /[.,!?;:'"׃]/g;
 
@@ -223,15 +224,21 @@ export function ReadingTapCarousel({
       const q = currentQuizQuestion(modal);
       if (!q) return;
       const ok = val === q.c;
-      const newScore = ok ? modal.score + 1 : modal.score;
       recordAnswer(ok);
       setQuizPicked(val);
       setQuizLocked(true);
-      const snap = { ...modal, score: newScore };
-      window.setTimeout(() => advanceQuiz(snap), ok ? 550 : 1200);
     },
-    [modal, quizLocked, currentQuizQuestion, recordAnswer, advanceQuiz],
+    [modal, quizLocked, currentQuizQuestion, recordAnswer],
   );
+
+  const onContinueQuiz = useCallback(() => {
+    if (modal?.kind !== "quiz" || quizPicked == null) return;
+    const q = currentQuizQuestion(modal);
+    if (!q) return;
+    const ok = quizPicked === q.c;
+    const newScore = ok ? modal.score + 1 : modal.score;
+    advanceQuiz({ ...modal, score: newScore });
+  }, [modal, quizPicked, currentQuizQuestion, advanceQuiz]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -308,6 +315,7 @@ export function ReadingTapCarousel({
                   modal={modal}
                   picked={quizPicked}
                   onPick={onPickQuizOption}
+                  onContinue={onContinueQuiz}
                   onClose={closeModal}
                   onBackToPassage={() => {
                     setQuizPicked(null);
@@ -487,24 +495,90 @@ function PassageBody({
   );
 }
 
+/** Speed presets aligned with learner pace (speech `rate`; engine default baseline is ~1). */
+const QUIZ_SPEECH_PRESETS = [
+  { label: "Slow", rate: 0.72 },
+  { label: "Study", rate: 0.88 },
+  { label: "Normal", rate: 1 },
+  { label: "Faster", rate: 1.12 },
+] as const;
+
+function matchReadingVocabLemma(
+  vocab: ReadingCarouselItem["vocab"],
+  hebrewLemma: string,
+): { h: string; p: string; e: string } | null {
+  if (!vocab?.length || !hebrewLemma.trim()) return null;
+  const t = hebrewLemma.trim();
+  const direct = vocab.find((v) => v.h === t);
+  if (direct) return direct;
+  const bare = stripNikkud(t);
+  return vocab.find((v) => stripNikkud(v.h.trim()) === bare) ?? null;
+}
+
 function QuizBody({
   modal,
   picked,
   onPick,
+  onContinue,
   onClose,
   onBackToPassage,
 }: {
   modal: Extract<ModalPhase, { kind: "quiz" }>;
   picked: string | null;
   onPick: (val: string) => void;
+  onContinue: () => void;
   onClose: () => void;
   onBackToPassage: () => void;
 }) {
   const q = modal.phase === "tq" ? modal.item.tq?.[modal.qIdx] : modal.item.wq?.[modal.qIdx];
+  const [speechRate, setSpeechRate] = useState<number>(
+    () => QUIZ_SPEECH_PRESETS[1]!.rate,
+  );
+
+  const hebrewToHear = useMemo(() => {
+    if (!q) return "";
+    return modal.phase === "tq"
+      ? (q as ReadingPassageTq).w
+      : q.c;
+  }, [q, modal.phase]);
+
+  const correctLemma = useMemo(() => {
+    if (!hebrewToHear || !modal.item.vocab) return null;
+    return matchReadingVocabLemma(modal.item.vocab, hebrewToHear);
+  }, [modal.item.vocab, hebrewToHear]);
+
+  const replayAudio = useCallback(() => {
+    if (!hebrewToHear) return;
+    speakHebrew(hebrewToHear, { rate: speechRate });
+  }, [hebrewToHear, speechRate]);
+
+  useEffect(() => {
+    setSpeechRate(QUIZ_SPEECH_PRESETS[1]!.rate);
+    cancelHebrewSpeech();
+  }, [modal.phase, modal.qIdx, modal.item.id]);
+
+  useEffect(() => {
+    return () => cancelHebrewSpeech();
+  }, []);
+
+  useEffect(() => {
+    if (!q || picked == null || !hebrewToHear) return;
+    speakHebrew(hebrewToHear, { rate: QUIZ_SPEECH_PRESETS[1]!.rate });
+  }, [picked, modal.qIdx, modal.phase, q, hebrewToHear]);
+
   if (!q) return null;
+
   const isTq = modal.phase === "tq";
   const tqQ = q as ReadingPassageTq;
   const wqQ = q as ReadingPassageWq;
+
+  const showReveal = picked != null;
+  const gotIt = picked != null && picked === q.c;
+  const authorNote =
+    "note" in q && typeof q.note === "string" ? q.note.trim() : "";
+
+  /** Whether the teaching note adds anything beyond vocab blurb fallback. */
+  const hasRevealDetail = Boolean(correctLemma) || Boolean(authorNote);
 
   return (
     <>
@@ -519,12 +593,16 @@ function QuizBody({
         </p>
       </div>
       <div className="space-y-4 p-4 text-center">
+        <div aria-live="polite" className="sr-only">
+          {picked != null ? (gotIt ? "Correct." : "Answer revealed.") : ""}
+        </div>
+
         {isTq ? (
           <>
             <Hebrew className="block text-4xl text-ink">{tqQ.w}</Hebrew>
             <button
               type="button"
-              onClick={() => speakHebrew(tqQ.w)}
+              onClick={() => speakHebrew(tqQ.w, { rate: speechRate })}
               className="mt-2 rounded-lg border border-ink/15 px-3 py-1 font-label text-[9px] uppercase text-ink-muted"
             >
               Play word
@@ -534,7 +612,7 @@ function QuizBody({
           <p className="text-xl italic text-ink">&ldquo;{wqQ.e}&rdquo;</p>
         )}
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {q.o.map((opt) => {
+          {q.o.map((opt, oi) => {
             const show = picked != null;
             const isCorrect = opt === q.c;
             const isSel = opt === picked;
@@ -547,7 +625,7 @@ function QuizBody({
             }
             return (
               <button
-                key={opt}
+                key={`${modal.qIdx}-${modal.phase}-${oi}`}
                 type="button"
                 disabled={show}
                 onClick={() => onPick(opt)}
@@ -562,6 +640,121 @@ function QuizBody({
             );
           })}
         </div>
+
+        {showReveal ? (
+          <div
+            className="rounded-2xl border border-ink/12 bg-parchment-deep/50 p-4 text-left text-sm text-ink"
+            role="region"
+            aria-label="Feedback and pronunciation"
+          >
+            <p
+              className={`font-label text-[10px] uppercase tracking-[0.12em] ${
+                gotIt ? "text-sage" : "text-rust"
+              }`}
+            >
+              {gotIt ? "Nice — that's right" : "Answer revealed"}
+            </p>
+            {isTq ? (
+              <p className="mt-2 text-ink-muted">
+                Correct spelling: <span className="font-medium text-ink">{tqQ.c}</span> · Pointed Hebrew:
+              </p>
+            ) : (
+              <p className="mt-2 text-ink-muted">
+                {!gotIt ? (
+                  <>
+                    The Hebrew matching &ldquo;{wqQ.e}&rdquo; is:
+                  </>
+                ) : (
+                  <>
+                    Sense for &ldquo;{wqQ.e}&rdquo; in this text:
+                  </>
+                )}
+              </p>
+            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Hebrew className="text-2xl text-ink">{hebrewToHear}</Hebrew>
+              <button
+                type="button"
+                className="rounded-lg border border-ink/18 bg-white/70 px-3 py-1.5 font-label text-[9px] uppercase tracking-wide text-ink shadow-sm hover:bg-white"
+                onClick={replayAudio}
+              >
+                Play Hebrew again
+              </button>
+            </div>
+            <div className="mt-4">
+              <p className="font-label text-[9px] uppercase tracking-[0.12em] text-ink-muted">
+                Speech pace
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Speech playback speed">
+                {QUIZ_SPEECH_PRESETS.map((preset) => {
+                  const sel = Math.abs(speechRate - preset.rate) < 0.01;
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      className={`rounded-full border px-3 py-1 font-label text-[9px] uppercase tracking-wide transition ${
+                        sel
+                          ? "border-sage bg-sage/15 text-sage-dark ring-1 ring-sage/40"
+                          : "border-ink/12 bg-transparent text-ink-muted hover:bg-parchment-deep/60"
+                      }`}
+                      onClick={() => {
+                        setSpeechRate(preset.rate);
+                        speakHebrew(hebrewToHear, { rate: preset.rate });
+                      }}
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mt-4 space-y-2 border-t border-ink/10 pt-4 text-[13px] leading-relaxed text-ink-muted">
+              {correctLemma ? (
+                <p>
+                  <span className="font-medium text-ink">Sounds like</span>{" "}
+                  <span className="text-amber-dark/90 italic">{correctLemma.p}</span>
+                  {correctLemma.e ? (
+                    <>
+                      {" "}
+                      — common gloss{" "}
+                      <span className="text-ink">{correctLemma.e}</span>.
+                    </>
+                  ) : (
+                    "."
+                  )}
+                </p>
+              ) : null}
+              {authorNote ? (
+                <p className="text-ink">
+                  <span className="font-medium">Note.</span> {authorNote}
+                </p>
+              ) : null}
+              {!hasRevealDetail ? (
+                <p>
+                  Use the pronunciation you hear as a model, and cross-check the
+                  pointed spelling above.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        {showReveal ? (
+          <button
+            type="button"
+            onClick={onContinue}
+            className="w-full rounded-xl bg-sage px-4 py-3 font-label text-[10px] uppercase tracking-wide text-white shadow-sm hover:brightness-110"
+          >
+            {modal.phase === "tq" && (modal.item.tq?.length ?? 0) > modal.qIdx + 1
+              ? "Next transliteration"
+              : modal.phase === "tq" && (modal.item.wq?.length ?? 0) > 0
+                ? "Continue to word choice"
+                : modal.phase === "wq" && (modal.item.wq?.length ?? 0) > modal.qIdx + 1
+                  ? "Next word choice"
+                  : "See results"}
+          </button>
+        ) : null}
+
         <div className="flex flex-wrap justify-center gap-2 border-t border-ink/10 pt-4">
           <button
             type="button"

@@ -19,6 +19,7 @@ import {
   LEARN_PROGRESS_EVENT,
   completionRatio,
   createEmptyLearnProgressState,
+  getFoundationResumePath,
   isFoundationCourseComplete,
   loadLearnProgress,
   resolveAlphabetGateStatus,
@@ -26,7 +27,6 @@ import {
   setAlphabetGate,
   type LearnProgressState,
 } from "@/lib/learn-progress";
-import { getUniversalResumePath } from "@/lib/app-activity";
 
 const QUICK_LINKS: readonly { href: string; label: string }[] = [
   { href: "/learn/alphabet", label: "Alphabet" },
@@ -54,7 +54,7 @@ export function LearnPageClient() {
     if (searchParams.get("hub") === "1") return;
     const run = () => {
       if (resumeOnceRef.current) return;
-      const path = getUniversalResumePath(loadLearnProgress());
+      const path = getFoundationResumePath(loadLearnProgress());
       if (path) {
         resumeOnceRef.current = true;
         router.replace(path);

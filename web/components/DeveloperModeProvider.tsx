@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { useEffect } from "react";
 import { setDeveloperModeBypass } from "@/lib/developer-mode";
 
@@ -11,7 +12,15 @@ export function DeveloperModeProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { isLoaded, isSignedIn, userId } = useAuth();
+
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn || !userId) {
+      setDeveloperModeBypass(false);
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       try {
@@ -25,7 +34,7 @@ export function DeveloperModeProvider({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isLoaded, isSignedIn, userId]);
 
   return <>{children}</>;
 }

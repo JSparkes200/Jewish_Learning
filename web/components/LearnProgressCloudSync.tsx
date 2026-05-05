@@ -11,8 +11,6 @@ import {
   LEARN_PROGRESS_EVENT,
 } from "@/lib/learn-progress";
 
-const SESSION_KEY = "hebrew-cloud-pulled-uid:";
-
 function markHydrated() {
   if (typeof window === "undefined") return;
   (window as unknown as { hebrewLearnCloudReady?: boolean }).hebrewLearnCloudReady =
@@ -28,48 +26,76 @@ function markHydrated() {
 export function LearnProgressCloudSync() {
   const { isLoaded, isSignedIn, userId } = useAuth();
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hydratedUser = useRef<string | null>(null);
+  const inFlightHydrationUser = useRef<string | null>(null);
+
+  const pushNow = useCallback(() => {
+    if (!isSignedIn || !userId) return;
+    if (pushTimer.current) {
+      clearTimeout(pushTimer.current);
+      pushTimer.current = null;
+    }
+    void pushProgressToCloud();
+  }, [isSignedIn, userId]);
 
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn || !userId) {
+      hydratedUser.current = null;
+      inFlightHydrationUser.current = null;
       markHydrated();
       return;
     }
-    const k = SESSION_KEY + userId;
-    if (sessionStorage.getItem(k)) {
+    if (hydratedUser.current === userId) {
       markHydrated();
+      pushNow();
       return;
     }
+    if (inFlightHydrationUser.current === userId) return;
+
+    inFlightHydrationUser.current = userId;
     const w = window as unknown as { hebrewLearnCloudReady?: boolean };
     w.hebrewLearnCloudReady = false;
     (async () => {
+      let shouldSeedCloud = false;
       try {
-        await pullProgressFromCloud("merge");
+        const pull = await pullProgressFromCloud("merge");
+        shouldSeedCloud = pull.ok || pull.reason === "not-found";
+      } catch {
+        shouldSeedCloud = false;
       } finally {
-        sessionStorage.setItem(k, "1");
+        if (inFlightHydrationUser.current !== userId) return;
+        hydratedUser.current = userId;
+        inFlightHydrationUser.current = null;
         markHydrated();
+        if (shouldSeedCloud) {
+          pushNow();
+        }
       }
     })();
-  }, [isLoaded, isSignedIn, userId]);
+  }, [isLoaded, isSignedIn, userId, pushNow]);
 
   const schedulePush = useCallback(() => {
-    if (!isSignedIn) return;
+    if (!isSignedIn || !userId) return;
     if (pushTimer.current) clearTimeout(pushTimer.current);
     pushTimer.current = setTimeout(() => {
       pushTimer.current = null;
       void pushProgressToCloud();
-    }, 2500);
-  }, [isSignedIn]);
+    }, 1000);
+  }, [isSignedIn, userId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onProgress = () => schedulePush();
+    const onPageHide = () => pushNow();
     window.addEventListener(LEARN_PROGRESS_EVENT, onProgress);
+    window.addEventListener("pagehide", onPageHide);
     return () => {
       window.removeEventListener(LEARN_PROGRESS_EVENT, onProgress);
+      window.removeEventListener("pagehide", onPageHide);
       if (pushTimer.current) clearTimeout(pushTimer.current);
     };
-  }, [schedulePush]);
+  }, [pushNow, schedulePush]);
 
   return null;
 }

@@ -7,12 +7,15 @@ export type ReadingPassageTq = {
   w: string;
   c: string;
   o: readonly string[];
+  /** Shown after an answer alongside vocab; overrides auto-generated vocab blurb lines. */
+  note?: string;
 };
 
 export type ReadingPassageWq = {
   e: string;
   c: string;
   o: readonly string[];
+  note?: string;
 };
 
 export type ReadingPassageRd = {

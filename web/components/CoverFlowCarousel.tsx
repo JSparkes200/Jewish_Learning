@@ -254,7 +254,7 @@ export function CoverFlowCarousel({
             const gated = item.locked === true;
             return (
               <button
-                key={`${item.key}-${idx}`}
+                key={`${item.key}-slot-${d}`}
                 type="button"
                 data-carousel-card
                 onClick={() => {

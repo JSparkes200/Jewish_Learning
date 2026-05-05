@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { rateLimitIfExceeded } from "@/lib/api-rate-limit";
 import {
   DEV_SESSION_COOKIE,
+  builtInDeveloperMfaSatisfied,
   getDevSessionConfig,
+  isBuiltInDeveloperUserId,
   signDevSession,
 } from "@/lib/dev-session-server";
 import { requireOperatorUnlocked } from "@/lib/require-operator-unlock";
@@ -34,6 +36,10 @@ export async function POST(req: Request) {
   const { userId, sessionId } = await auth();
   if (!userId || !sessionId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (isBuiltInDeveloperUserId(userId) && !(await builtInDeveloperMfaSatisfied(userId))) {
+    return NextResponse.json({ error: "Two-factor authentication required" }, { status: 403 });
   }
 
   if (!cfg.allowedUserIds.includes(userId)) {

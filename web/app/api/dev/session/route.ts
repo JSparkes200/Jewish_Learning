@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   DEV_SESSION_COOKIE,
+  builtInDeveloperMfaSatisfied,
   getDevSessionConfig,
+  isBuiltInDeveloperUserId,
+  isUserIdAllowed,
   matchesClerkSession,
   verifyDevSessionToken,
 } from "@/lib/dev-session-server";
@@ -21,12 +24,28 @@ export async function GET() {
   // Only callers with a Clerk session can see whether dev auth is configured,
   // and even then only if they're an allowed user. Everyone else sees the
   // same response shape as "not configured" to avoid enumeration.
-  const allowedCaller =
-    cfg != null &&
-    userId != null &&
-    cfg.allowedUserIds.includes(userId);
+  const allowedCaller = userId != null && isUserIdAllowed(userId);
 
-  if (!allowedCaller || !cfg || !sessionId) {
+  if (!allowedCaller || !sessionId) {
+    const res = NextResponse.json({ authenticated: false, configured: false });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
+  }
+
+  if (isBuiltInDeveloperUserId(userId)) {
+    const mfaSatisfied = await builtInDeveloperMfaSatisfied(userId);
+    const res = NextResponse.json({
+      authenticated: mfaSatisfied,
+      configured: true,
+      mfaRequired: !mfaSatisfied,
+      operatorGate: false,
+      operatorUnlocked: mfaSatisfied,
+    });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
+  }
+
+  if (!cfg) {
     const res = NextResponse.json({ authenticated: false, configured: false });
     res.headers.set("Cache-Control", "no-store");
     return res;

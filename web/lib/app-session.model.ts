@@ -88,6 +88,8 @@ export function canSetAsResume(
 ): boolean {
   if (pathname === "/" || fullPath === "/") return false;
   if (isAuthPathname(pathname)) return false;
+  if (pathname === "/learn") return false;
+  if (/^\/learn\/\d+$/.test(pathname)) return false;
   const v = validateResumePath(fullPath);
   return v != null;
 }
